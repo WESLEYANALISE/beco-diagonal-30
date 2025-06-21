@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Calendar, Camera, Trophy, Upload, Target, TrendingUp, Award, Clock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -9,40 +8,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Header from '@/components/Header';
-
 const Desafio = () => {
   const [currentDay, setCurrentDay] = useState(1);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
-
-  const progressPercentage = (currentDay / 90) * 100;
-
-  const milestones = [
-    { day: 30, title: "Primeiros Resultados", description: "Pelos começam a aparecer", completed: currentDay >= 30 },
-    { day: 60, title: "Crescimento Visível", description: "Densidade aumenta significativamente", completed: currentDay >= 60 },
-    { day: 90, title: "Transformação Completa", description: "Barba cheia conquistada!", completed: currentDay >= 90 }
-  ];
-
-  const weeklyTips = [
-    "Semana 1-2: Seja paciente, os primeiros pelos podem demorar para aparecer",
-    "Semana 3-4: Comece a ver pequenos pelos brotando",
-    "Semana 5-8: Crescimento mais visível, mantenha a constância",
-    "Semana 9-12: Densidade aumentando, resultados ficando evidentes"
-  ];
-
+  const progressPercentage = currentDay / 90 * 100;
+  const milestones = [{
+    day: 30,
+    title: "Primeiros Resultados",
+    description: "Pelos começam a aparecer",
+    completed: currentDay >= 30
+  }, {
+    day: 60,
+    title: "Crescimento Visível",
+    description: "Densidade aumenta significativamente",
+    completed: currentDay >= 60
+  }, {
+    day: 90,
+    title: "Transformação Completa",
+    description: "Barba cheia conquistada!",
+    completed: currentDay >= 90
+  }];
+  const weeklyTips = ["Semana 1-2: Seja paciente, os primeiros pelos podem demorar para aparecer", "Semana 3-4: Comece a ver pequenos pelos brotando", "Semana 5-8: Crescimento mais visível, mantenha a constância", "Semana 9-12: Densidade aumentando, resultados ficando evidentes"];
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         setSelectedPhoto(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
@@ -59,7 +57,7 @@ const Desafio = () => {
             <TabsTrigger value="progresso">Meu Progresso</TabsTrigger>
             <TabsTrigger value="foto">Foto do Dia</TabsTrigger>
             <TabsTrigger value="dicas">Dicas Semanais</TabsTrigger>
-            <TabsTrigger value="comunidade">Comunidade</TabsTrigger>
+            
           </TabsList>
 
           <TabsContent value="progresso" className="space-y-8">
@@ -112,11 +110,8 @@ const Desafio = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {milestones.map((milestone, index) => (
-                    <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        milestone.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                      }`}>
+                  {milestones.map((milestone, index) => <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${milestone.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                         {milestone.completed ? <Award className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
                       </div>
                       <div className="flex-1">
@@ -126,8 +121,7 @@ const Desafio = () => {
                       <Badge variant={milestone.completed ? "default" : "secondary"}>
                         {milestone.completed ? "Conquistado" : "Em Progresso"}
                       </Badge>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
             </Card>
@@ -167,50 +161,31 @@ const Desafio = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  {selectedPhoto ? (
-                    <div className="space-y-4">
-                      <img 
-                        src={selectedPhoto} 
-                        alt="Foto do dia" 
-                        className="max-w-xs mx-auto rounded-lg shadow-md"
-                      />
+                  {selectedPhoto ? <div className="space-y-4">
+                      <img src={selectedPhoto} alt="Foto do dia" className="max-w-xs mx-auto rounded-lg shadow-md" />
                       <Button variant="outline" onClick={() => setSelectedPhoto(null)}>
                         Trocar Foto
                       </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
+                    </div> : <div className="space-y-4">
                       <Upload className="w-12 h-12 mx-auto text-gray-400" />
                       <div>
                         <p className="text-lg font-medium">Envie sua foto do dia</p>
                         <p className="text-sm text-gray-600">PNG, JPG até 10MB</p>
                       </div>
                       <div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handlePhotoUpload}
-                          className="hidden"
-                          id="photo-upload"
-                        />
+                        <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" id="photo-upload" />
                         <Button asChild>
                           <label htmlFor="photo-upload" className="cursor-pointer">
                             Escolher Arquivo
                           </label>
                         </Button>
                       </div>
-                    </div>
-                  )}
+                    </div>}
                 </div>
 
                 <div className="space-y-4">
                   <h3 className="font-semibold">Observações do Dia</h3>
-                  <Textarea
-                    placeholder="Como você se sente hoje? Notou alguma mudança? Compartilhe suas observações..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={4}
-                  />
+                  <Textarea placeholder="Como você se sente hoje? Notou alguma mudança? Compartilhe suas observações..." value={notes} onChange={e => setNotes(e.target.value)} rows={4} />
                   <Button className="w-full bg-blue-600 hover:bg-blue-700">
                     Salvar Registro do Dia
                   </Button>
@@ -228,11 +203,11 @@ const Desafio = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-4">
-                  {Array.from({ length: Math.min(currentDay, 12) }, (_, i) => (
-                    <div key={i} className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs">
+                  {Array.from({
+                  length: Math.min(currentDay, 12)
+                }, (_, i) => <div key={i} className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs">
                       Dia {currentDay - i}
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 <Button variant="outline" className="w-full mt-4">
                   Ver Todas as Fotos
@@ -254,12 +229,10 @@ const Desafio = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-6">
-                  {weeklyTips.map((tip, index) => (
-                    <div key={index} className="p-4 border rounded-lg">
+                  {weeklyTips.map((tip, index) => <div key={index} className="p-4 border rounded-lg">
                       <h3 className="font-semibold mb-2">Semanas {index * 2 + 1}-{index * 2 + 2}</h3>
                       <p className="text-gray-600">{tip}</p>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
             </Card>
@@ -292,11 +265,17 @@ const Desafio = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {[
-                    { name: "João Silva", day: 90, before: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=150&h=150&fit=crop", after: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=150&h=150&fit=crop" },
-                    { name: "Pedro Santos", day: 75, before: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=150&h=150&fit=crop", after: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=150&h=150&fit=crop" }
-                  ].map((transformation, index) => (
-                    <div key={index} className="p-4 border rounded-lg">
+                  {[{
+                  name: "João Silva",
+                  day: 90,
+                  before: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=150&h=150&fit=crop",
+                  after: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=150&h=150&fit=crop"
+                }, {
+                  name: "Pedro Santos",
+                  day: 75,
+                  before: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=150&h=150&fit=crop",
+                  after: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=150&h=150&fit=crop"
+                }].map((transformation, index) => <div key={index} className="p-4 border rounded-lg">
                       <div className="flex items-center gap-4 mb-4">
                         <div className="text-center">
                           <img src={transformation.before} alt="Antes" className="w-16 h-16 rounded-full object-cover" />
@@ -317,16 +296,13 @@ const Desafio = () => {
                       <p className="text-sm text-gray-700">
                         "Incrível como o minoxidil transformou minha barba! Consistência realmente funciona."
                       </p>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Desafio;
