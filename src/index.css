@@ -122,6 +122,15 @@
       font-size: 16px !important;
     }
   }
+
+  /* Dark mode text spacing fix */
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    letter-spacing: -0.025em;
+  }
+
+  .dark p, .dark span {
+    letter-spacing: 0.01em;
+  }
 }
 
 @layer utilities {
@@ -151,4 +160,115 @@
   .touch-target {
     @apply min-h-[44px] min-w-[44px];
   }
+
+  /* Better text spacing for mobile */
+  .text-spacing-mobile {
+    letter-spacing: 0.025em;
+    line-height: 1.5;
+  }
+
+  /* Improved carousel styling */
+  .carousel-container {
+    @apply relative w-full;
+  }
+
+  .carousel-container .embla__slide {
+    @apply flex-[0_0_auto] min-w-0;
+  }
+
+  /* Dark mode specific improvements */
+  .dark .gradient-amber {
+    background: linear-gradient(135deg, rgb(217 119 6), rgb(194 65 12));
+  }
+
+  .dark .card-shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Responsive text scaling */
+  @media (max-width: 375px) {
+    .text-responsive-sm {
+      font-size: 0.75rem;
+    }
+    
+    .text-responsive-base {
+      font-size: 0.875rem;
+    }
+    
+    .text-responsive-lg {
+      font-size: 1rem;
+    }
+  }
+
+  /* Animation improvements */
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Better button spacing */
+  .btn-mobile {
+    @apply py-3 px-4 text-sm font-medium rounded-lg;
+  }
+
+  /* Improved card layouts for mobile */
+  .card-mobile {
+    @apply p-3 rounded-lg shadow-sm;
+  }
+
+  /* Fix carousel button positioning */
+  .carousel-button-fix {
+    @apply absolute top-1/2 -translate-y-1/2 z-10;
+  }
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: rgb(31 41 55);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgb(75 85 99);
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgb(107 114 128);
+}
+
+/* Smooth transitions for dark mode */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Better focus states for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 2px;
+}
+
+.dark button:focus-visible,
+.dark a:focus-visible,
+.dark input:focus-visible,
+.dark select:focus-visible,
+.dark textarea:focus-visible {
+  outline: 2px solid rgb(96 165 250);
 }
