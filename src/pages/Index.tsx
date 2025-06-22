@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
@@ -37,6 +38,7 @@ const Index = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [currentFeaturedCategory, setCurrentFeaturedCategory] = useState<string>('');
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
@@ -63,6 +65,21 @@ const Index = () => {
     filterProducts();
   }, [selectedCategory, products, searchTerm, sortBy, sortOrder]);
 
+  // Auto-rotate featured products by category every 15 seconds
+  useEffect(() => {
+    if (categories.length > 0 && products.length > 0) {
+      const interval = setInterval(() => {
+        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+        setCurrentFeaturedCategory(randomCategory);
+        
+        const categoryProducts = products.filter(p => p.categoria === randomCategory);
+        setFeaturedProducts(categoryProducts.slice(0, 8));
+      }, 15000);
+
+      return () => clearInterval(interval);
+    }
+  }, [categories, products]);
+
   const fetchProducts = async () => {
     try {
       showLoading("Carregando produtos");
@@ -74,10 +91,18 @@ const Index = () => {
       if (error) throw error;
       
       setProducts(data || []);
-      setFeaturedProducts((data || []).slice(0, 8));
+      
+      // Set initial featured products (first 8)
+      const initialFeatured = (data || []).slice(0, 8);
+      setFeaturedProducts(initialFeatured);
 
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
       setCategories(uniqueCategories);
+      
+      // Set initial featured category
+      if (uniqueCategories.length > 0) {
+        setCurrentFeaturedCategory('Todos os Produtos');
+      }
       
       showSuccess("Produtos carregados com sucesso!");
     } catch (error) {
@@ -199,6 +224,10 @@ const Index = () => {
     return iconMap[category] || ShoppingCart;
   };
 
+  const getCategoryProducts = (category: string, limit: number = 6) => {
+    return products.filter(p => p.categoria === category).slice(0, limit);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
@@ -269,6 +298,59 @@ const Index = () => {
       {/* Hero Section */}
       <HeroSection productsCount={products.length} />
 
+      {/* Category Product Carousels - only show when not in AI mode */}
+      {!showingAI && categories.slice(0, 3).map((category, index) => {
+        const categoryProducts = getCategoryProducts(category);
+        const IconComponent = getCategoryIcon(category);
+        
+        if (categoryProducts.length === 0) return null;
+        
+        return (
+          <section key={category} className="px-4 md:px-6 py-6 animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <IconComponent className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{category}</h3>
+                    <p className="text-sm text-white/70">{categoryProducts.length} produtos</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)}
+                  className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+                >
+                  Ver Todos
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+              
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-3">
+                  {categoryProducts.map((product) => (
+                    <CarouselItem 
+                      key={product.id} 
+                      className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                    >
+                      <ProductCard 
+                        product={product} 
+                        compact={true}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
+                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
+              </Carousel>
+            </div>
+          </section>
+        );
+      })}
+
       {/* Featured Products Carousel with Toggle */}
       <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
         <div className="max-w-7xl mx-auto">
@@ -294,7 +376,9 @@ const Index = () => {
                   🔥 Mais Vendidos
                 </h2>
                 <p className="text-base text-white/80 animate-slide-in-right">
-                  Os produtos favoritos dos nossos clientes
+                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' 
+                    ? `Os favoritos em ${currentFeaturedCategory}` 
+                    : 'Os produtos favoritos dos nossos clientes'}
                 </p>
               </div>
             )}
@@ -372,10 +456,10 @@ const Index = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="text-center flex-1">
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  Todos os Produtos
+                  Explorar Produtos
                 </h2>
                 <p className="text-base text-white/80 mb-4 animate-slide-in-right">
-                  {searchTerm ? `Resultados para "${searchTerm}"` : 'Explore nossa coleção completa por categoria'}
+                  {searchTerm ? `Resultados para "${searchTerm}"` : 'Navegue por nossa coleção completa'}
                 </p>
               </div>
               
@@ -427,7 +511,7 @@ const Index = () => {
               </Select>
             </div>
 
-            <ProductGrid products={displayedProducts} compact={true} />
+            <ProductGrid products={displayedProducts.slice(0, 24)} compact={true} />
 
             {displayedProducts.length === 0 && (
               <div className="text-center py-16 animate-fade-in">
@@ -448,6 +532,18 @@ const Index = () => {
                     Ver Todos os Produtos
                   </Button>
                 )}
+              </div>
+            )}
+
+            {displayedProducts.length > 24 && (
+              <div className="text-center mt-8 animate-fade-in">
+                <Button 
+                  onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)}
+                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+                >
+                  Ver Todos os {displayedProducts.length} Produtos
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
             )}
           </div>
@@ -474,7 +570,7 @@ const Index = () => {
                 className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" 
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               >
-                Ver Todos os Produtos
+                Explorar Produtos
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
