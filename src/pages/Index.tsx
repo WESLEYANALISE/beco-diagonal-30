@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { ArrowRight, Play, ShoppingCart, Heart, Star, TrendingUp, Gift, Zap } from 'lucide-react';
+import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from '@/components/Header';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,16 +20,25 @@ interface Product {
   imagem4: string;
   imagem5: string;
   link: string;
+  categoria: string;
 }
 
 const Index = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('todas');
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    filterProducts();
+  }, [selectedCategory, products, showAll]);
 
   const fetchProducts = async () => {
     try {
@@ -40,13 +50,28 @@ const Index = () => {
       if (error) throw error;
 
       setProducts(data || []);
-      // Pega os primeiros 6 produtos como destaques
-      setFeaturedProducts((data || []).slice(0, 6));
+      // Pega os primeiros 8 produtos como destaques (mais vendidos)
+      setFeaturedProducts((data || []).slice(0, 8));
+      
+      // Extrai categorias únicas
+      const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
+      setCategories(uniqueCategories);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterProducts = () => {
+    let filtered = products;
+    
+    if (selectedCategory !== 'todas') {
+      filtered = products.filter(product => product.categoria === selectedCategory);
+    }
+    
+    // Mostra apenas 12 produtos inicialmente, ou todos se showAll for true
+    setDisplayedProducts(showAll ? filtered : filtered.slice(0, 12));
   };
 
   const getProductImages = (product: Product) => {
@@ -125,15 +150,15 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* Most Sold Products Carousel */}
       <section className="px-4 md:px-6 py-12 md:py-16 bg-white/10 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              🔥 Produtos em Destaque
+              🔥 Mais Vendidos
             </h2>
             <p className="text-lg text-white/80">
-              Selecionados especialmente para você
+              Os produtos favoritos dos nossos clientes
             </p>
           </div>
 
@@ -172,7 +197,7 @@ const Index = () => {
                         
                         <div className="absolute top-2 left-2">
                           <Badge className="bg-red-500 text-white font-bold">
-                            OFERTA
+                            MAIS VENDIDO
                           </Badge>
                         </div>
                       </div>
@@ -191,22 +216,13 @@ const Index = () => {
                           </div>
                         </div>
                         
-                        <div className="flex gap-2">
-                          <Button 
-                            className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                            onClick={() => window.open(product.link, '_blank')}
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            Comprar
-                          </Button>
-                          <Button 
-                            size="icon"
-                            variant="outline"
-                            className="border-red-500 text-red-500 hover:bg-red-50"
-                          >
-                            <Heart className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <Button 
+                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                          onClick={() => window.open(product.link, '_blank')}
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Comprar na Shopee
+                        </Button>
                       </CardContent>
                     </Card>
                   </div>
@@ -219,20 +235,37 @@ const Index = () => {
         </div>
       </section>
 
-      {/* All Products Grid */}
+      {/* Category Filter and Products Grid */}
       <section className="px-4 md:px-6 py-12 md:py-16">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Todos os Produtos
             </h2>
-            <p className="text-lg text-white/80">
-              Explore nossa coleção completa
+            <p className="text-lg text-white/80 mb-6">
+              Explore nossa coleção completa por categoria
             </p>
+            
+            {/* Category Filter */}
+            <div className="max-w-md mx-auto mb-8">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="bg-white/20 border-white/30 text-white backdrop-blur-sm">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas as Categorias</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            {displayedProducts.map((product) => (
               <Card key={product.id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
                 <div className="relative">
                   <Carousel className="w-full">
@@ -266,6 +299,14 @@ const Index = () => {
                       PROMO
                     </Badge>
                   </div>
+
+                  {product.categoria && (
+                    <div className="absolute bottom-2 left-2">
+                      <Badge variant="secondary" className="text-xs bg-white/90">
+                        {product.categoria}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
 
                 <CardContent className="p-4">
@@ -282,27 +323,32 @@ const Index = () => {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm"
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"
-                      onClick={() => window.open(product.link, '_blank')}
-                    >
-                      <ShoppingCart className="w-3 h-3 mr-1" />
-                      Comprar
-                    </Button>
-                    <Button 
-                      size="sm"
-                      variant="outline"
-                      className="border-red-500 text-red-500 hover:bg-red-50"
-                    >
-                      <Heart className="w-3 h-3" />
-                    </Button>
-                  </div>
+                  <Button 
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"
+                    onClick={() => window.open(product.link, '_blank')}
+                  >
+                    <ShoppingCart className="w-3 h-3 mr-1" />
+                    Comprar na Shopee
+                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
+
+          {/* Ver Mais Button */}
+          {!showAll && (selectedCategory === 'todas' ? products.length > 12 : products.filter(p => p.categoria === selectedCategory).length > 12) && (
+            <div className="text-center">
+              <Button 
+                onClick={() => setShowAll(true)}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm px-8 py-3"
+                variant="outline"
+              >
+                Ver Mais Produtos
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

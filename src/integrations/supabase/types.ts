@@ -5198,6 +5198,7 @@ export type Database = {
       }
       SHOPEE: {
         Row: {
+          categoria: string | null
           id: number
           imagem1: string | null
           imagem2: string | null
@@ -5210,6 +5211,7 @@ export type Database = {
           video: string | null
         }
         Insert: {
+          categoria?: string | null
           id?: number
           imagem1?: string | null
           imagem2?: string | null
@@ -5222,6 +5224,7 @@ export type Database = {
           video?: string | null
         }
         Update: {
+          categoria?: string | null
           id?: number
           imagem1?: string | null
           imagem2?: string | null
