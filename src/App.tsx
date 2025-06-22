@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Categorias from "./pages/Categorias";
 import Favoritos from "./pages/Favoritos";
 import Novos from "./pages/Novos";
+import CategoriaLista from "./pages/CategoriaLista";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/favoritos" element={<Favoritos />} />
           <Route path="/novos" element={<Novos />} />
+          <Route path="/categoria-lista" element={<CategoriaLista />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
