@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Heart, ShoppingCart, Play, Star, ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const Favoritos = () => {
   const { favorites, removeFavorite } = useFavorites();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedVideoProduct, setSelectedVideoProduct] = useState<Product | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -190,19 +192,12 @@ const Favoritos = () => {
                   </div>
                   
                   <div className="space-y-1">
-                    {product.video && (
-                      <ProductVideoModal 
-                        videoUrl={product.video} 
-                        productName={product.produto}
-                        productPrice={formatPrice(product.valor)}
-                        productLink={product.link}
-                      />
-                    )}
                     <ProductPhotosModal 
                       images={getProductImages(product)} 
                       productName={product.produto}
                       productPrice={formatPrice(product.valor)}
                       productLink={product.link}
+                      videoUrl={product.video}
                     />
                     <Button
                       size="sm"
@@ -219,6 +214,17 @@ const Favoritos = () => {
           </div>
         )}
       </div>
+
+      {selectedVideoProduct && (
+        <ProductVideoModal
+          isOpen={!!selectedVideoProduct}
+          onClose={() => setSelectedVideoProduct(null)}
+          videoUrl={selectedVideoProduct.video}
+          productName={selectedVideoProduct.produto}
+          productPrice={formatPrice(selectedVideoProduct.valor)}
+          productLink={selectedVideoProduct.link}
+        />
+      )}
     </div>
   );
 };
