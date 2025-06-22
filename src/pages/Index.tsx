@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign } from 'lucide-react';
@@ -433,7 +434,9 @@ const Index = () => {
                   </Button>
                 )}
               </div>
-            </section>
+            )}
+          </div>
+        </section>
       )}
 
       {/* CTA Section - only show when not in AI mode */}
