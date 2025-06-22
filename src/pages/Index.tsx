@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown, SortAsc, DollarSign } from 'lucide-react';
@@ -563,7 +562,7 @@ const Index = () => {
                 {showingAI ? (
                   <div className="prose prose-invert max-w-none">
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                      🤖 <strong>Me Ajuda Escolher</strong>
+                      🤖 Me Ajuda Escolher
                     </h2>
                     <div className="text-base text-white/90 animate-slide-in-right space-y-2">
                       <p><strong>Selecione até 5 produtos</strong> e nossa <strong>IA</strong> irá te ajudar a decidir qual é melhor</p>

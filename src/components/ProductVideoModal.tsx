@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Play, Maximize, ShoppingCart, X } from 'lucide-react';
+import { Play, Maximize, ShoppingCart, X, Expand } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
@@ -39,19 +39,33 @@ export const ProductVideoModal = ({ videoUrl, productName, productPrice, product
               controls
               autoPlay
               muted
+              loop
               className="w-full h-full object-contain"
               playsInline
             />
             
-            {/* Fullscreen Toggle Button */}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={toggleFullscreen}
-              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white border-0 p-2"
-            >
-              {isFullscreen ? <X className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-            </Button>
+            {/* Controls Container */}
+            <div className="absolute top-4 right-4 flex gap-2">
+              {/* Expand button for horizontal videos */}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={toggleFullscreen}
+                className="bg-black/50 hover:bg-black/70 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-110 rounded-full p-2"
+              >
+                <Expand className="w-4 h-4" />
+              </Button>
+              
+              {/* Close/Minimize Button */}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={isFullscreen ? toggleFullscreen : undefined}
+                className="bg-red-500/80 hover:bg-red-600 text-white border-2 border-red-400/50 hover:border-red-300 transition-all duration-300 hover:scale-110 rounded-full p-2"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Product Info - Hidden in fullscreen */}

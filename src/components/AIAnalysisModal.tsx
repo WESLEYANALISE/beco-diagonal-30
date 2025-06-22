@@ -83,7 +83,7 @@ export const AIAnalysisModal = ({ isOpen, onClose, selectedProducts, onAnalyze }
       <DialogContent className="max-w-4xl max-h-[90vh] bg-white border-0 p-0 overflow-hidden">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white relative">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 rounded-full p-2">
@@ -100,9 +100,9 @@ export const AIAnalysisModal = ({ isOpen, onClose, selectedProducts, onAnalyze }
                 variant="ghost"
                 size="sm"
                 onClick={handleClose}
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-110 rounded-full p-2 bg-white/10"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </Button>
             </div>
           </div>
