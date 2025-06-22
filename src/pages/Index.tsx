@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign } from 'lucide-react';
@@ -217,11 +216,10 @@ const Index = () => {
         />
       )}
 
-      {/* Category Carousel */}
+      {/* Novidades Carousel */}
       <CategoryCarousel 
-        categories={categories}
-        onCategorySelect={setSelectedCategory}
-        selectedCategory={selectedCategory}
+        products={products}
+        onProductClick={handleProductClick}
       />
       
       {/* Category Quick Access Buttons */}

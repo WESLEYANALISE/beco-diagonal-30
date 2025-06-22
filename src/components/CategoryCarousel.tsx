@@ -4,51 +4,63 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-interface CategoryCarouselProps {
-  categories: string[];
-  onCategorySelect: (category: string) => void;
-  selectedCategory: string;
+interface Product {
+  id: number;
+  produto: string;
+  valor: string;
+  imagem1: string;
+  categoria: string;
 }
 
-const categoryImages: Record<string, string> = {
-  'Beleza e Cuidados Pessoais': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=300&h=200&fit=crop',
-  'Casa e Decoração': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=200&fit=crop',
-  'Eletrônicos': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=200&fit=crop',
-  'Moda': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&h=200&fit=crop',
-  'Esportes': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop',
-  'Saúde': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=300&h=200&fit=crop',
-};
+interface CategoryCarouselProps {
+  products: Product[];
+  onProductClick: (productId: number) => void;
+}
 
-export const CategoryCarousel = ({ categories, onCategorySelect, selectedCategory }: CategoryCarouselProps) => {
+export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [visibleCategories, setVisibleCategories] = useState<string[]>([]);
+  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    // Show top 6 categories with fallback images
-    const topCategories = categories.slice(0, 6);
-    setVisibleCategories(topCategories);
-  }, [categories]);
+    // Pega os 8 produtos mais recentes
+    const newest = [...products]
+      .sort((a, b) => b.id - a.id)
+      .slice(0, 8);
+    setRecentProducts(newest);
+  }, [products]);
+
+  // Auto-scroll effect
+  useEffect(() => {
+    if (recentProducts.length === 0) return;
+    
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => {
+        const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
+        return prev >= maxIndex ? 0 : prev + 1;
+      });
+    }, 4000); // Move a cada 4 segundos
+
+    return () => clearInterval(interval);
+  }, [recentProducts.length]);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % Math.ceil(visibleCategories.length / 2));
+    const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + Math.ceil(visibleCategories.length / 2)) % Math.ceil(visibleCategories.length / 2));
+    const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
+    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
   };
 
-  const getImageForCategory = (category: string) => {
-    return categoryImages[category] || 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=300&h=200&fit=crop';
-  };
-
-  if (visibleCategories.length === 0) return null;
+  if (recentProducts.length === 0) return null;
 
   return (
     <section className="px-4 py-4 animate-fade-in">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-white">
-            📍 Categorias Populares
+            ✨ Novidades
           </h2>
           <div className="flex gap-2">
             <Button
@@ -72,33 +84,57 @@ export const CategoryCarousel = ({ categories, onCategorySelect, selectedCategor
 
         <div className="relative overflow-hidden">
           <div 
-            className="flex transition-transform duration-300 ease-in-out gap-3"
+            className="flex transition-transform duration-500 ease-in-out gap-3"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
-            {visibleCategories.map((category, index) => (
+            {recentProducts.map((product, index) => (
               <Card
-                key={category}
-                className={`flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/6 overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 ${
-                  selectedCategory === category ? 'ring-2 ring-white shadow-xl' : ''
-                }`}
-                onClick={() => onCategorySelect(category)}
+                key={product.id}
+                className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/6 overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                onClick={() => onProductClick(product.id)}
               >
                 <div className="relative aspect-[4/3]">
                   <img
-                    src={getImageForCategory(category)}
-                    alt={category}
-                    className="w-full h-full object-cover"
+                    src={product.imagem1}
+                    alt={product.produto}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  
+                  {/* Badge NOVO para os 3 primeiros */}
+                  {index < 3 && (
+                    <div className="absolute top-2 left-2">
+                      <div className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                        NOVO
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="absolute bottom-2 left-2 right-2">
-                    <h3 className="text-white text-sm font-semibold line-clamp-2">
-                      {category}
+                    <h3 className="text-white text-sm font-semibold line-clamp-2 mb-1">
+                      {product.produto}
                     </h3>
+                    <div className="text-white/90 text-xs font-medium">
+                      A partir de {product.valor}
+                    </div>
                   </div>
                 </div>
               </Card>
             ))}
           </div>
+        </div>
+
+        {/* Indicadores de slide */}
+        <div className="flex justify-center mt-4 gap-2">
+          {Array.from({ length: Math.ceil(recentProducts.length / 2) }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                currentIndex === index ? 'bg-white w-6' : 'bg-white/50'
+              }`}
+            />
+          ))}
         </div>
       </div>
     </section>
