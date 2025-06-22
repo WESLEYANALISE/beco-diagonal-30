@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown, SortAsc, DollarSign, Eye } from 'lucide-react';
@@ -13,6 +12,8 @@ import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { SearchPreview } from '@/components/SearchPreview';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
+import { ProductSelector } from '@/components/ProductSelector';
+import { AIAnalysisModal } from '@/components/AIAnalysisModal';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
 
@@ -45,6 +46,9 @@ const Index = () => {
   const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showingNewest, setShowingNewest] = useState(false);
+  const [showingAI, setShowingAI] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -125,6 +129,44 @@ const Index = () => {
     if (productElement) {
       productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setSearchTerm(''); // Clear search to hide preview
+    }
+  };
+
+  const handleProductToggle = (product: Product) => {
+    setSelectedProducts(prev => {
+      const isSelected = prev.some(p => p.id === product.id);
+      if (isSelected) {
+        return prev.filter(p => p.id !== product.id);
+      } else {
+        if (prev.length >= 5) {
+          return prev; // Don't add if already 5 selected
+        }
+        return [...prev, product];
+      }
+    });
+  };
+
+  const handleAnalyze = () => {
+    if (selectedProducts.length > 0) {
+      setShowAnalysisModal(true);
+    }
+  };
+
+  const analyzeProducts = async (products: Product[]): Promise<string> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-products', {
+        body: { products }
+      });
+
+      if (error) {
+        console.error('Error calling analyze-products function:', error);
+        throw new Error(error.message || 'Erro ao analisar produtos');
+      }
+
+      return data.analysis || 'Análise não disponível';
+    } catch (error) {
+      console.error('Error in analyzeProducts:', error);
+      throw error;
     }
   };
 
@@ -497,337 +539,388 @@ const Index = () => {
               <div className="text-center mb-8">
                 <div className="flex items-center justify-center gap-4 mb-4">
                   <Button
-                    variant={!showingNewest ? 'default' : 'outline'}
-                    onClick={() => setShowingNewest(false)}
-                    className={`${!showingNewest ? 'bg-white text-red-600' : 'bg-white/20 text-white border-white/30'}`}
+                    variant={!showingNewest && !showingAI ? 'default' : 'outline'}
+                    onClick={() => {
+                      setShowingNewest(false);
+                      setShowingAI(false);
+                    }}
+                    className={`${!showingNewest && !showingAI ? 'bg-white text-red-600' : 'bg-white/20 text-white border-white/30'}`}
                   >
                     🔥 Mais Vendidos
                   </Button>
                   <Button
-                    variant={showingNewest ? 'default' : 'outline'}
-                    onClick={() => setShowingNewest(true)}
-                    className={`${showingNewest ? 'bg-white text-red-600' : 'bg-white/20 text-white border-white/30'}`}
+                    variant={showingNewest && !showingAI ? 'default' : 'outline'}
+                    onClick={() => {
+                      setShowingNewest(true);
+                      setShowingAI(false);
+                    }}
+                    className={`${showingNewest && !showingAI ? 'bg-white text-red-600' : 'bg-white/20 text-white border-white/30'}`}
                   >
                     ✨ Novidades
                   </Button>
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  {showingNewest ? '✨ Novidades' : '🔥 Mais Vendidos'}
-                </h2>
-                <p className="text-base text-white/80 animate-slide-in-right">
-                  {showingNewest ? 'Os produtos mais recentes da nossa loja' : 'Os produtos favoritos dos nossos clientes'}
-                </p>
-              </div>
-
-              <Carousel className="w-full animate-scale-in">
-                <CarouselContent className="-ml-2 md:-ml-3">
-                  {(showingNewest ? newestProducts : featuredProducts).map((product, index) => (
-                    <CarouselItem 
-                      key={product.id} 
-                      className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <Card id={`product-${product.id}`} className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
-                        <div className="relative">
-                          <Carousel className="w-full">
-                            <CarouselContent>
-                              {getProductImages(product).map((image, index) => (
-                                <CarouselItem key={index}>
-                                  <div className="aspect-square overflow-hidden">
-                                    <img 
-                                      src={image} 
-                                      alt={`${product.produto} - ${index + 1}`} 
-                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                                    />
-                                  </div>
-                                </CarouselItem>
-                              ))}
-                            </CarouselContent>
-                            <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-6 h-6" />
-                            <CarouselNext className="right-1 bg-white/90 hover:bg-white w-6 h-6" />
-                          </Carousel>
-                          
-                          {product.video && (
-                            <div className="absolute top-2 right-2">
-                              <div className="bg-red-500 rounded-full p-1 animate-pulse">
-                                <Play className="w-3 h-3 text-white" />
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="absolute top-2 left-2">
-                            <Badge className="bg-red-500 text-white font-bold text-xs animate-bounce">
-                              {showingNewest ? 'NOVO' : 'MAIS VENDIDO'}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        <CardContent className="p-3">
-                          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm hover:text-red-600 transition-colors">
-                            {product.produto}
-                          </h3>
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="text-sm font-bold text-red-500">
-                              Menos de {formatPrice(product.valor)}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Star className="w-3 h-3 text-yellow-400 fill-current animate-spin-slow" />
-                              <span className="text-xs text-gray-600">4.8</span>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <FavoriteButton productId={product.id} />
-                            {product.video && (
-                              <ProductVideoModal 
-                                videoUrl={product.video} 
-                                productName={product.produto} 
-                                productPrice={formatPrice(product.valor)} 
-                                productLink={product.link} 
-                              />
-                            )}
-                            <ProductPhotosModal 
-                              images={getProductImages(product)} 
-                              productName={product.produto} 
-                              productPrice={formatPrice(product.valor)} 
-                              productLink={product.link} 
-                            />
-                            <Button 
-                              size="sm" 
-                              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs hover:scale-105 transition-all duration-300" 
-                              onClick={() => window.open(product.link, '_blank')}
-                            >
-                              <ShoppingCart className="w-3 h-3 mr-1" />
-                              Comprar na Shopee
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
-              </Carousel>
-            </div>
-          </section>
-
-          {/* Category Filter and Products Grid */}
-          <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <div className="text-center flex-1">
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                    Todos os Produtos
-                  </h2>
-                  <p className="text-base text-white/80 mb-4 animate-slide-in-right">
-                    {searchTerm ? `Resultados para "${searchTerm}"` : 'Explore nossa coleção completa por categoria'}
-                  </p>
-                </div>
-                
-                <div className="flex gap-2 animate-slide-in-right">
-                  <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
-                    <SelectTrigger className="bg-white text-gray-900 border-0 w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-300 z-50">
-                      <SelectItem value="nome">
-                        <div className="flex items-center gap-2">
-                          <SortAsc className="w-4 h-4" />
-                          Nome
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="preco">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4" />
-                          Preço
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
                   <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    className="bg-white text-gray-900 border-0 hover:bg-gray-100 transition-all duration-300 hover:scale-105"
+                    variant={showingAI ? 'default' : 'outline'}
+                    onClick={() => {
+                      setShowingAI(true);
+                      setShowingNewest(false);
+                    }}
+                    className={`${showingAI ? 'bg-white text-red-600' : 'bg-white/20 text-white border-white/30'}`}
                   >
-                    {sortOrder === 'asc' ? '↑' : '↓'}
+                    🤖 Me Ajuda Escolher
                   </Button>
                 </div>
-              </div>
-
-              {/* Category Filter */}
-              <div className="max-w-md mx-auto mb-6 animate-scale-in">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300 z-50">
-                    <SelectItem value="todas">Todas as Categorias</SelectItem>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {displayedProducts.length === 0 ? (
-                <div className="text-center py-16 animate-fade-in">
-                  <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
-                    <ShoppingCart className="w-16 h-16 text-white/50" />
+                
+                {showingAI ? (
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
+                      🤖 Me Ajuda Escolher
+                    </h2>
+                    <p className="text-base text-white/80 animate-slide-in-right">
+                      Selecione até 5 produtos e nossa IA irá te ajudar a decidir qual é melhor
+                    </p>
                   </div>
-                  <h2 className="text-2xl font-bold text-white mb-4">
-                    Nenhum produto encontrado
-                  </h2>
-                  <p className="text-white/80 mb-6">
-                    {searchTerm ? `Não encontramos produtos para "${searchTerm}"` : 'Não há produtos nesta categoria'}
-                  </p>
-                  {searchTerm && (
-                    <Button 
-                      onClick={() => setSearchTerm('')} 
-                      className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-                    >
-                      Ver Todos os Produtos
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3 mb-6">
-                    {displayedProducts.map((product, index) => (
-                      <Card 
-                        key={product.id}
-                        id={`product-${product.id}`}
-                        className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group animate-fade-in"
-                        style={{ animationDelay: `${index * 0.05}s` }}
-                      >
-                        <div className="relative">
-                          <Carousel className="w-full">
-                            <CarouselContent>
-                              {getProductImages(product).map((image, index) => (
-                                <CarouselItem key={index}>
-                                  <div className="aspect-square overflow-hidden">
-                                    <img 
-                                      src={image} 
-                                      alt={`${product.produto} - ${index + 1}`} 
-                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                                    />
-                                  </div>
-                                </CarouselItem>
-                              ))}
-                            </CarouselContent>
-                            <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-5 h-5" />
-                            <CarouselNext className="right-1 bg-white/90 hover:bg-white w-5 h-5" />
-                          </Carousel>
-                          
-                          {product.video && (
-                            <div className="absolute top-1 right-1">
-                              <div className="bg-red-500 rounded-full p-1 animate-pulse">
-                                <Play className="w-3 h-3 text-white" />
-                              </div>
-                            </div>
-                          )}
+                ) : (
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
+                      {showingNewest ? '✨ Novidades' : '🔥 Mais Vendidos'}
+                    </h2>
+                    <p className="text-base text-white/80 animate-slide-in-right">
+                      {showingNewest ? 'Os produtos mais recentes da nossa loja' : 'Os produtos favoritos dos nossos clientes'}
+                    </p>
+                  </div>
+                )}
+              </div>
 
-                          {product.categoria && (
-                            <div className="absolute bottom-1 left-1">
-                              <Badge variant="secondary" className="text-xs bg-white/90 px-1 py-0">
-                                {product.categoria}
+              {showingAI ? (
+                <ProductSelector
+                  products={products}
+                  selectedProducts={selectedProducts}
+                  onProductToggle={handleProductToggle}
+                  onAnalyze={handleAnalyze}
+                />
+              ) : (
+                <Carousel className="w-full animate-scale-in">
+                  <CarouselContent className="-ml-2 md:-ml-3">
+                    {(showingNewest ? newestProducts : featuredProducts).map((product, index) => (
+                      <CarouselItem 
+                        key={product.id} 
+                        className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        <Card id={`product-${product.id}`} className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
+                          <div className="relative">
+                            <Carousel className="w-full">
+                              <CarouselContent>
+                                {getProductImages(product).map((image, index) => (
+                                  <CarouselItem key={index}>
+                                    <div className="aspect-square overflow-hidden">
+                                      <img 
+                                        src={image} 
+                                        alt={`${product.produto} - ${index + 1}`} 
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                      />
+                                    </div>
+                                  </CarouselItem>
+                                ))}
+                              </CarouselContent>
+                              <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-6 h-6" />
+                              <CarouselNext className="right-1 bg-white/90 hover:bg-white w-6 h-6" />
+                            </Carousel>
+                            
+                            {product.video && (
+                              <div className="absolute top-2 right-2">
+                                <div className="bg-red-500 rounded-full p-1 animate-pulse">
+                                  <Play className="w-3 h-3 text-white" />
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="absolute top-2 left-2">
+                              <Badge className="bg-red-500 text-white font-bold text-xs animate-bounce">
+                                {showingNewest ? 'NOVO' : 'MAIS VENDIDO'}
                               </Badge>
                             </div>
-                          )}
-                        </div>
-
-                        <CardContent className="p-2">
-                          <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 text-xs leading-tight hover:text-red-600 transition-colors">
-                            {product.produto}
-                          </h3>
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="text-xs font-bold text-red-500">
-                              Menos de {formatPrice(product.valor)}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                              <span className="text-xs text-gray-600">4.8</span>
-                            </div>
                           </div>
-                          
-                          <div className="space-y-1">
-                            <FavoriteButton productId={product.id} />
-                            {product.video && (
-                              <ProductVideoModal 
-                                videoUrl={product.video} 
+
+                          <CardContent className="p-3">
+                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm hover:text-red-600 transition-colors">
+                              {product.produto}
+                            </h3>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="text-sm font-bold text-red-500">
+                                Menos de {formatPrice(product.valor)}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3 h-3 text-yellow-400 fill-current animate-spin-slow" />
+                                <span className="text-xs text-gray-600">4.8</span>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <FavoriteButton productId={product.id} />
+                              {product.video && (
+                                <ProductVideoModal 
+                                  videoUrl={product.video} 
+                                  productName={product.produto} 
+                                  productPrice={formatPrice(product.valor)} 
+                                  productLink={product.link} 
+                                />
+                              )}
+                              <ProductPhotosModal 
+                                images={getProductImages(product)} 
                                 productName={product.produto} 
                                 productPrice={formatPrice(product.valor)} 
                                 productLink={product.link} 
                               />
-                            )}
-                            <ProductPhotosModal 
-                              images={getProductImages(product)} 
-                              productName={product.produto} 
-                              productPrice={formatPrice(product.valor)} 
-                              productLink={product.link} 
-                            />
-                            <Button 
-                              size="sm" 
-                              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1 hover:scale-105 transition-all duration-300" 
-                              onClick={() => window.open(product.link, '_blank')}
-                            >
-                              <ShoppingCart className="w-3 h-3 mr-1" />
-                              Comprar na Shopee
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
+                              <Button 
+                                size="sm" 
+                                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs hover:scale-105 transition-all duration-300" 
+                                onClick={() => window.open(product.link, '_blank')}
+                              >
+                                <ShoppingCart className="w-3 h-3 mr-1" />
+                                Comprar na Shopee
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </CarouselItem>
                     ))}
-                  </div>
-
-                  {/* Ver Mais Button */}
-                  {!showAll && (selectedCategory === 'todas' ? products.filter(p => searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true).length > 20 : products.filter(p => p.categoria === selectedCategory && (searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true)).length > 20) && (
-                    <div className="text-center animate-fade-in">
-                      <Button 
-                        onClick={() => setShowAll(true)} 
-                        className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm px-8 py-3 transition-all duration-300 hover:scale-105" 
-                        variant="outline"
-                      >
-                        Ver Mais Produtos
-                        <ChevronDown className="w-4 h-4 ml-2 animate-bounce" />
-                      </Button>
-                    </div>
-                  )}
-                </>
+                  </CarouselContent>
+                  <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
+                  <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
+                </Carousel>
               )}
             </div>
           </section>
+
+          {/* Category Filter and Products Grid - only show when not in AI mode */}
+          {!showingAI && (
+            <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
+              <div className="max-w-7xl mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-center flex-1">
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
+                      Todos os Produtos
+                    </h2>
+                    <p className="text-base text-white/80 mb-4 animate-slide-in-right">
+                      {searchTerm ? `Resultados para "${searchTerm}"` : 'Explore nossa coleção completa por categoria'}
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2 animate-slide-in-right">
+                    <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
+                      <SelectTrigger className="bg-white text-gray-900 border-0 w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 z-50">
+                        <SelectItem value="nome">
+                          <div className="flex items-center gap-2">
+                            <SortAsc className="w-4 h-4" />
+                            Nome
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="preco">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4" />
+                            Preço
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="bg-white text-gray-900 border-0 hover:bg-gray-100 transition-all duration-300 hover:scale-105"
+                    >
+                      {sortOrder === 'asc' ? '↑' : '↓'}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div className="max-w-md mx-auto mb-6 animate-scale-in">
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-300 z-50">
+                      <SelectItem value="todas">Todas as Categorias</SelectItem>
+                      {categories.map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {displayedProducts.length === 0 ? (
+                  <div className="text-center py-16 animate-fade-in">
+                    <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
+                      <ShoppingCart className="w-16 h-16 text-white/50" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-4">
+                      Nenhum produto encontrado
+                    </h2>
+                    <p className="text-white/80 mb-6">
+                      {searchTerm ? `Não encontramos produtos para "${searchTerm}"` : 'Não há produtos nesta categoria'}
+                    </p>
+                    {searchTerm && (
+                      <Button 
+                        onClick={() => setSearchTerm('')} 
+                        className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+                      >
+                        Ver Todos os Produtos
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3 mb-6">
+                      {displayedProducts.map((product, index) => (
+                        <Card 
+                          key={product.id}
+                          id={`product-${product.id}`}
+                          className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group animate-fade-in"
+                          style={{ animationDelay: `${index * 0.05}s` }}
+                        >
+                          <div className="relative">
+                            <Carousel className="w-full">
+                              <CarouselContent>
+                                {getProductImages(product).map((image, index) => (
+                                  <CarouselItem key={index}>
+                                    <div className="aspect-square overflow-hidden">
+                                      <img 
+                                        src={image} 
+                                        alt={`${product.produto} - ${index + 1}`} 
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                      />
+                                    </div>
+                                  </CarouselItem>
+                                ))}
+                              </CarouselContent>
+                              <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-5 h-5" />
+                              <CarouselNext className="right-1 bg-white/90 hover:bg-white w-5 h-5" />
+                            </Carousel>
+                            
+                            {product.video && (
+                              <div className="absolute top-1 right-1">
+                                <div className="bg-red-500 rounded-full p-1 animate-pulse">
+                                  <Play className="w-3 h-3 text-white" />
+                                </div>
+                              </div>
+                            )}
+
+                            {product.categoria && (
+                              <div className="absolute bottom-1 left-1">
+                                <Badge variant="secondary" className="text-xs bg-white/90 px-1 py-0">
+                                  {product.categoria}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+
+                          <CardContent className="p-2">
+                            <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 text-xs leading-tight hover:text-red-600 transition-colors">
+                              {product.produto}
+                            </h3>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-xs font-bold text-red-500">
+                                Menos de {formatPrice(product.valor)}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                                <span className="text-xs text-gray-600">4.8</span>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <FavoriteButton productId={product.id} />
+                              {product.video && (
+                                <ProductVideoModal 
+                                  videoUrl={product.video} 
+                                  productName={product.produto} 
+                                  productPrice={formatPrice(product.valor)} 
+                                  productLink={product.link} 
+                                />
+                              )}
+                              <ProductPhotosModal 
+                                images={getProductImages(product)} 
+                                productName={product.produto} 
+                                productPrice={formatPrice(product.valor)} 
+                                productLink={product.link} 
+                              />
+                              <Button 
+                                size="sm" 
+                                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1 hover:scale-105 transition-all duration-300" 
+                                onClick={() => window.open(product.link, '_blank')}
+                              >
+                                <ShoppingCart className="w-3 h-3 mr-1" />
+                                Comprar na Shopee
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Ver Mais Button */}
+                    {!showAll && (selectedCategory === 'todas' ? products.filter(p => searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true).length > 20 : products.filter(p => p.categoria === selectedCategory && (searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true)).length > 20) && (
+                      <div className="text-center animate-fade-in">
+                        <Button 
+                          onClick={() => setShowAll(true)} 
+                          className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm px-8 py-3 transition-all duration-300 hover:scale-105" 
+                          variant="outline"
+                        >
+                          Ver Mais Produtos
+                          <ChevronDown className="w-4 h-4 ml-2 animate-bounce" />
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </section>
+          )}
         </>
       )}
 
-      {/* CTA Section */}
-      <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden animate-fade-in">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="space-y-6">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
-              <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-white animate-pulse" />
+      {/* CTA Section - only show when not in AI mode */}
+      {!showingAI && (
+        <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden animate-fade-in">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="max-w-4xl mx-auto text-center relative z-10">
+            <div className="space-y-6">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
+                <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-white animate-pulse" />
+              </div>
+              <h2 className="text-2xl md:text-4xl font-bold mb-4 text-white animate-slide-in-left">
+                Não Perca Nenhuma Oferta!
+              </h2>
+              <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right">
+                Descubra os melhores produtos com preços incríveis na Shopee
+              </p>
+              <Button 
+                size="lg" 
+                className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              >
+                Ver Todos os Produtos
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
             </div>
-            <h2 className="text-2xl md:text-4xl font-bold mb-4 text-white animate-slide-in-left">
-              Não Perca Nenhuma Oferta!
-            </h2>
-            <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right">
-              Descubra os melhores produtos com preços incríveis na Shopee
-            </p>
-            <Button 
-              size="lg" 
-              className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" 
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              Ver Todos os Produtos
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* AI Analysis Modal */}
+      <AIAnalysisModal
+        isOpen={showAnalysisModal}
+        onClose={() => setShowAnalysisModal(false)}
+        selectedProducts={selectedProducts}
+        onAnalyze={analyzeProducts}
+      />
     </div>
   );
 };
