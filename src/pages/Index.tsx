@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from '@/components/Header';
+import { ProductVideoModal } from '@/components/ProductVideoModal';
+import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -24,17 +27,26 @@ interface Product {
 }
 
 const Index = () => {
+  const [searchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get('categoria');
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('todas');
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [categoryFromUrl]);
 
   useEffect(() => {
     filterProducts();
@@ -163,59 +175,63 @@ const Index = () => {
           </div>
 
           <Carousel className="w-full">
-            <CarouselContent>
+            <CarouselContent className="-ml-2 md:-ml-4">
               {featuredProducts.map((product) => (
-                <CarouselItem key={product.id} className="basis-full md:basis-1/2 lg:basis-1/3">
-                  <div className="p-3">
-                    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
-                      <div className="relative">
-                        <Carousel className="w-full">
-                          <CarouselContent>
-                            {getProductImages(product).map((image, index) => (
-                              <CarouselItem key={index}>
-                                <div className="aspect-square overflow-hidden">
-                                  <img 
-                                    src={image} 
-                                    alt={`${product.produto} - ${index + 1}`}
-                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                  />
-                                </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          <CarouselPrevious className="left-2 bg-white/90 hover:bg-white" />
-                          <CarouselNext className="right-2 bg-white/90 hover:bg-white" />
-                        </Carousel>
-                        
-                        {product.video && (
-                          <div className="absolute top-2 right-2">
-                            <div className="bg-red-500 rounded-full p-2">
-                              <Play className="w-4 h-4 text-white" />
-                            </div>
+                <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-4/5 md:basis-1/2 lg:basis-1/3">
+                  <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
+                    <div className="relative">
+                      <Carousel className="w-full">
+                        <CarouselContent>
+                          {getProductImages(product).map((image, index) => (
+                            <CarouselItem key={index}>
+                              <div className="aspect-square overflow-hidden">
+                                <img 
+                                  src={image} 
+                                  alt={`${product.produto} - ${index + 1}`}
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                />
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="left-2 bg-white/90 hover:bg-white" />
+                        <CarouselNext className="right-2 bg-white/90 hover:bg-white" />
+                      </Carousel>
+                      
+                      {product.video && (
+                        <div className="absolute top-2 right-2">
+                          <div className="bg-red-500 rounded-full p-2">
+                            <Play className="w-4 h-4 text-white" />
                           </div>
-                        )}
-                        
-                        <div className="absolute top-2 left-2">
-                          <Badge className="bg-red-500 text-white font-bold">
-                            MAIS VENDIDO
-                          </Badge>
+                        </div>
+                      )}
+                      
+                      <div className="absolute top-2 left-2">
+                        <Badge className="bg-red-500 text-white font-bold">
+                          MAIS VENDIDO
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <CardContent className="p-4">
+                      <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
+                        {product.produto}
+                      </h3>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-2xl font-bold text-red-500">
+                          {product.valor}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                          <span className="text-sm text-gray-600">4.8</span>
                         </div>
                       </div>
-
-                      <CardContent className="p-4">
-                        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
-                          {product.produto}
-                        </h3>
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="text-2xl font-bold text-red-500">
-                            {product.valor}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                            <span className="text-sm text-gray-600">4.8</span>
-                          </div>
-                        </div>
-                        
+                      
+                      <div className="space-y-2">
+                        {product.video && (
+                          <ProductVideoModal videoUrl={product.video} productName={product.produto} />
+                        )}
+                        <ProductPhotosModal images={getProductImages(product)} productName={product.produto} />
                         <Button 
                           className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                           onClick={() => window.open(product.link, '_blank')}
@@ -223,9 +239,9 @@ const Index = () => {
                           <ShoppingCart className="w-4 h-4 mr-2" />
                           Comprar na Shopee
                         </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -264,7 +280,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
             {displayedProducts.map((product) => (
               <Card key={product.id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
                 <div className="relative">
@@ -282,14 +298,14 @@ const Index = () => {
                         </CarouselItem>
                       ))}
                     </CarouselContent>
-                    <CarouselPrevious className="left-2 bg-white/90 hover:bg-white" />
-                    <CarouselNext className="right-2 bg-white/90 hover:bg-white" />
+                    <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-6 h-6" />
+                    <CarouselNext className="right-1 bg-white/90 hover:bg-white w-6 h-6" />
                   </Carousel>
                   
                   {product.video && (
                     <div className="absolute top-2 right-2">
-                      <div className="bg-red-500 rounded-full p-2">
-                        <Play className="w-4 h-4 text-white" />
+                      <div className="bg-red-500 rounded-full p-1">
+                        <Play className="w-3 h-3 text-white" />
                       </div>
                     </div>
                   )}
@@ -309,12 +325,12 @@ const Index = () => {
                   )}
                 </div>
 
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm">
                     {product.produto}
                   </h3>
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-lg font-bold text-red-500">
+                    <div className="text-base md:text-lg font-bold text-red-500">
                       {product.valor}
                     </div>
                     <div className="flex items-center gap-1">
@@ -323,14 +339,20 @@ const Index = () => {
                     </div>
                   </div>
                   
-                  <Button 
-                    size="sm"
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"
-                    onClick={() => window.open(product.link, '_blank')}
-                  >
-                    <ShoppingCart className="w-3 h-3 mr-1" />
-                    Comprar na Shopee
-                  </Button>
+                  <div className="space-y-1">
+                    {product.video && (
+                      <ProductVideoModal videoUrl={product.video} productName={product.produto} />
+                    )}
+                    <ProductPhotosModal images={getProductImages(product)} productName={product.produto} />
+                    <Button 
+                      size="sm"
+                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"
+                      onClick={() => window.open(product.link, '_blank')}
+                    >
+                      <ShoppingCart className="w-3 h-3 mr-1" />
+                      Comprar na Shopee
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

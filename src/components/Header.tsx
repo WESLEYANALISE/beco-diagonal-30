@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingCart, Heart, Home, Search, User, Grid3X3 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navItems = [
     { path: '/', label: 'Início', icon: Home },
@@ -15,13 +17,18 @@ const Header = () => {
     { path: '/perfil', label: 'Perfil', icon: User },
   ];
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
+  };
+
   return (
     <>
       {/* Desktop/Mobile Header */}
       <header className="bg-gradient-to-r from-red-500 via-orange-500 to-red-600 text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
               <div className="bg-white/20 rounded-2xl p-2 backdrop-blur-sm">
                 <ShoppingCart className="w-6 h-6 text-white" />
               </div>
@@ -51,6 +58,7 @@ const Header = () => {
                     variant="ghost"
                     size="sm"
                     className="text-white hover:bg-white/20 rounded-xl"
+                    onClick={() => handleNavigation(item.path)}
                   >
                     <item.icon className="w-4 h-4 mr-2" />
                     {item.label}
@@ -92,7 +100,7 @@ const Header = () => {
                       {navItems.map((item) => (
                         <button
                           key={item.path}
-                          onClick={() => setIsOpen(false)}
+                          onClick={() => handleNavigation(item.path)}
                           className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20"
                         >
                           <item.icon className="w-5 h-5" />
@@ -114,6 +122,7 @@ const Header = () => {
           {navItems.map((item) => (
             <button
               key={item.path}
+              onClick={() => handleNavigation(item.path)}
               className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 text-white hover:bg-white/20"
             >
               <item.icon className="w-5 h-5 mb-1" />
