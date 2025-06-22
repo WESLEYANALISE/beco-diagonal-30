@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
@@ -55,14 +55,14 @@ const Categorias = () => {
   };
 
   const getCategoryIcon = (category: string) => {
-    const iconMap: Record<string, string> = {
-      'Beleza e Cuidados Pessoais': '💄',
-      'Casa e Decoração': '🏠',
-      'Diversão e Familia': '🎮',
-      'Estilo e Moda': '👗',
-      'Tecnologia e Acessórios': '📱'
+    const iconMap: Record<string, React.ComponentType<any>> = {
+      'Beleza e Cuidados Pessoais': Sparkles,
+      'Casa e Decoração': Home,
+      'Diversão e Familia': Gamepad2,
+      'Estilo e Moda': Shirt,
+      'Tecnologia e Acessórios': Smartphone
     };
-    return iconMap[category] || '🛍️';
+    return iconMap[category] || ShoppingBag;
   };
 
   const getCategoryGradient = (index: number) => {
@@ -119,31 +119,36 @@ const Categorias = () => {
       <section className="px-4 md:px-6 py-12">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category, index) => (
-              <Card 
-                key={category.categoria} 
-                className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group cursor-pointer"
-                onClick={() => handleCategoryClick(category.categoria)}
-              >
-                <div className={`bg-gradient-to-br ${getCategoryGradient(index)} p-6 text-white relative overflow-hidden`}>
-                  <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/20 rounded-full"></div>
-                  <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-white/10 rounded-full"></div>
-                  <div className="relative z-10">
-                    <div className="text-4xl mb-4">{getCategoryIcon(category.categoria)}</div>
-                    <h3 className="text-xl font-bold mb-2">{category.categoria}</h3>
-                    <p className="text-white/80 text-sm">{category.count} produtos disponíveis</p>
+            {categories.map((category, index) => {
+              const IconComponent = getCategoryIcon(category.categoria);
+              return (
+                <Card 
+                  key={category.categoria} 
+                  className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group cursor-pointer"
+                  onClick={() => handleCategoryClick(category.categoria)}
+                >
+                  <div className={`bg-gradient-to-br ${getCategoryGradient(index)} p-6 text-white relative overflow-hidden`}>
+                    <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/20 rounded-full"></div>
+                    <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-white/10 rounded-full"></div>
+                    <div className="relative z-10">
+                      <div className="mb-4">
+                        <IconComponent className="w-12 h-12 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">{category.categoria}</h3>
+                      <p className="text-white/80 text-sm">{category.count} produtos disponíveis</p>
+                    </div>
                   </div>
-                </div>
-                <CardContent className="p-6">
-                  <Button 
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
-                  >
-                    Ver Produtos
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                  <CardContent className="p-6">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
+                    >
+                      Ver Produtos
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
