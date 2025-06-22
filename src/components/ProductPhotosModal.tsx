@@ -1,15 +1,17 @@
 
 import { useState } from 'react';
-import { Image, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Image, X, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 
 interface ProductPhotosModalProps {
   images: string[];
   productName: string;
+  productPrice: string;
+  productLink: string;
 }
 
-export const ProductPhotosModal = ({ images, productName }: ProductPhotosModalProps) => {
+export const ProductPhotosModal = ({ images, productName, productPrice, productLink }: ProductPhotosModalProps) => {
   const [open, setOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -19,6 +21,10 @@ export const ProductPhotosModal = ({ images, productName }: ProductPhotosModalPr
 
   const prevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const handleBuyNow = () => {
+    window.open(productLink, '_blank');
   };
 
   return (
@@ -43,7 +49,7 @@ export const ProductPhotosModal = ({ images, productName }: ProductPhotosModalPr
             <X className="w-4 h-4" />
           </button>
           
-          <div className="aspect-square relative overflow-hidden rounded-lg bg-white">
+          <div className="aspect-square relative overflow-hidden rounded-lg bg-white mb-4">
             <img
               src={images[currentImageIndex]}
               alt={`${productName} - Foto ${currentImageIndex + 1}`}
@@ -69,7 +75,7 @@ export const ProductPhotosModal = ({ images, productName }: ProductPhotosModalPr
           </div>
           
           {images.length > 1 && (
-            <div className="flex justify-center mt-4 space-x-2">
+            <div className="flex justify-center mb-4 space-x-2">
               {images.map((image, index) => (
                 <button
                   key={index}
@@ -87,6 +93,23 @@ export const ProductPhotosModal = ({ images, productName }: ProductPhotosModalPr
               ))}
             </div>
           )}
+
+          {/* Informações do produto e botão de compra */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="font-bold text-lg mb-2 line-clamp-2">{productName}</h3>
+            <div className="flex items-center justify-between">
+              <div className="text-xl font-bold text-red-500">
+                A partir de {productPrice}
+              </div>
+              <Button 
+                onClick={handleBuyNow}
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Comprar Agora
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

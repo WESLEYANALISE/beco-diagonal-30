@@ -1,15 +1,17 @@
 
 import { useState } from 'react';
-import { Play, X, ExternalLink } from 'lucide-react';
+import { Play, X, ExternalLink, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 
 interface ProductVideoModalProps {
   videoUrl: string;
   productName: string;
+  productPrice: string;
+  productLink: string;
 }
 
-export const ProductVideoModal = ({ videoUrl, productName }: ProductVideoModalProps) => {
+export const ProductVideoModal = ({ videoUrl, productName, productPrice, productLink }: ProductVideoModalProps) => {
   const [open, setOpen] = useState(false);
   const [videoError, setVideoError] = useState(false);
 
@@ -73,6 +75,10 @@ export const ProductVideoModal = ({ videoUrl, productName }: ProductVideoModalPr
     setVideoError(true);
   };
 
+  const handleBuyNow = () => {
+    window.open(productLink, '_blank');
+  };
+
   const renderVideoContent = () => {
     if (videoType === 'youtube' && youtubeId) {
       return (
@@ -109,7 +115,6 @@ export const ProductVideoModal = ({ videoUrl, productName }: ProductVideoModalPr
           className="w-full h-full rounded-lg"
           controls
           autoPlay
-          muted
           onError={handleVideoError}
           poster="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=250&fit=crop"
         >
@@ -152,7 +157,7 @@ export const ProductVideoModal = ({ videoUrl, productName }: ProductVideoModalPr
           Ver Vídeo
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl w-full p-0">
+      <DialogContent className="max-w-4xl w-full p-4">
         <DialogTitle className="sr-only">Vídeo do produto {productName}</DialogTitle>
         <div className="relative">
           <button
@@ -161,8 +166,25 @@ export const ProductVideoModal = ({ videoUrl, productName }: ProductVideoModalPr
           >
             <X className="w-4 h-4" />
           </button>
-          <div className="aspect-video">
+          <div className="aspect-video mb-4">
             {renderVideoContent()}
+          </div>
+          
+          {/* Informações do produto e botão de compra */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="font-bold text-lg mb-2 line-clamp-2">{productName}</h3>
+            <div className="flex items-center justify-between">
+              <div className="text-xl font-bold text-red-500">
+                A partir de {productPrice}
+              </div>
+              <Button 
+                onClick={handleBuyNow}
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Comprar Agora
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
