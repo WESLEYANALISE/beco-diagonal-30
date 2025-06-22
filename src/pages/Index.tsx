@@ -1,4 +1,3 @@
-
 import { ArrowRight, Users, Trophy, Play, Book, Package, Star, Zap, CheckCircle, Target, Award } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -89,7 +88,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-purple-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
       <Header />
       
       {/* Hero Section - Redesigned for Engagement */}
@@ -146,7 +145,7 @@ const Index = () => {
             {benefits.map((benefit, index) => (
               <div 
                 key={index} 
-                className="flex flex-col items-center text-center p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 hover:shadow-lg transition-all duration-300 hover:scale-105"
+                className="flex flex-col items-center text-center p-4 bg-white/70 backdrop-blur-sm rounded-xl border border-blue-100 hover:shadow-lg transition-all duration-300 hover:scale-105"
                 style={{animationDelay: `${index * 0.1}s`}}
               >
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-2">
@@ -160,7 +159,7 @@ const Index = () => {
       </section>
 
       {/* Evolution Carousel */}
-      <section className="px-4 md:px-6 py-12 md:py-16 bg-white/60 backdrop-blur-sm">
+      <section className="px-4 md:px-6 py-12 md:py-16 bg-white/70 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12 text-gray-900 animate-slide-in-up">
             Sua Jornada de Transformação
@@ -196,7 +195,7 @@ const Index = () => {
       </section>
 
       {/* Products Section - Enhanced */}
-      <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
+      <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-blue-50/50 to-purple-50/30">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12 text-gray-900 animate-slide-in-up">
             Produtos Originais Certificados
@@ -217,10 +216,10 @@ const Index = () => {
                       <CardContent className="p-4 md:p-6 text-center space-y-3">
                         <h3 className="font-bold text-lg text-gray-900">{product.name}</h3>
                         <p className="text-sm text-gray-600">{product.description}</p>
-                        <p className="text-blue-600 font-bold text-xl">{product.price}</p>
+                        <p className="text-green-600 font-bold text-xl">{product.price}</p>
                         <Button 
                           size="sm" 
-                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300" 
+                          className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300" 
                           asChild
                         >
                           <Link to="/loja">Comprar Agora</Link>
@@ -238,7 +237,7 @@ const Index = () => {
       </section>
 
       {/* Videos Section */}
-      <section className="px-4 md:px-6 py-12 md:py-16 bg-white/60 backdrop-blur-sm">
+      <section className="px-4 md:px-6 py-12 md:py-16 bg-white/70 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 animate-slide-in-up">
@@ -265,7 +264,7 @@ const Index = () => {
       </section>
 
       {/* Features Grid - Redesigned */}
-      <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-br from-slate-50 to-blue-50/30">
+      <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-br from-gray-50 to-blue-50/30">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12 text-gray-900 animate-slide-in-up">
             Tudo para Sua Transformação

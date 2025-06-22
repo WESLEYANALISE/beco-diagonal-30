@@ -1,167 +1,266 @@
 
-import { Clock, Youtube, Star, Filter } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { VideoPlayer } from "@/components/VideoPlayer";
-import Header from '@/components/Header';
 import { useState, useEffect } from 'react';
+import { Play, Calendar, Clock, Search, Filter, Grid, List } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { VideoPlayer } from '@/components/VideoPlayer';
 import { useMinoxidilVideos } from '@/hooks/useMinoxidilVideos';
+import Header from '@/components/Header';
 
 const Videos = () => {
-  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const { data: videos, isLoading } = useMinoxidilVideos();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('recent');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
-    const hasSeenMessage = localStorage.getItem('videos-welcome-seen');
-    if (!hasSeenMessage) {
-      setShowWelcomeMessage(true);
+    const hasVisited = localStorage.getItem('videos-visited');
+    if (!hasVisited) {
+      setShowWelcome(true);
+      localStorage.setItem('videos-visited', 'true');
     }
   }, []);
 
-  const dismissWelcomeMessage = () => {
-    setShowWelcomeMessage(false);
-    localStorage.setItem('videos-welcome-seen', 'true');
-  };
+  const filteredVideos = videos?.filter(video =>
+    video.titulo.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 pb-20 md:pb-0">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-3xl flex items-center justify-center shadow-2xl">
-              <Youtube className="w-8 h-8 text-white" />
+  const sortedVideos = [...filteredVideos].sort((a, b) => {
+    switch (sortBy) {
+      case 'recent':
+        return new Date(b.data || 0).getTime() - new Date(a.data || 0).getTime();
+      case 'oldest':
+        return new Date(a.data || 0).getTime() - new Date(b.data || 0).getTime();
+      case 'title':
+        return a.titulo.localeCompare(b.titulo);
+      default:
+        return 0;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-300 rounded w-1/3"></div>
+            <div className="grid gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex gap-4">
+                  <div className="w-64 h-36 bg-gray-300 rounded-lg"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-6 bg-gray-300 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Transformações Documentadas</h1>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
+      <Header />
+      
+      <div className="container mx-auto px-4 py-8">
+        {/* Welcome Message */}
+        {showWelcome && (
+          <div className="mb-8 bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-2xl shadow-xl animate-fade-in-scale">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Play className="w-8 h-8" />
+                <h2 className="text-2xl font-bold">Bem-vindo aos Vídeos!</h2>
+              </div>
+              <p className="text-lg mb-2">
+                Estes vídeos são do canal <span className="font-bold">@TheDicas</span>
+              </p>
+              <p className="text-red-100">
+                Aqui você verá evoluções reais de pessoas usando minoxidil para barba
+              </p>
+              <Button 
+                variant="secondary" 
+                onClick={() => setShowWelcome(false)}
+                className="mt-4 bg-white text-red-600 hover:bg-gray-100"
+              >
+                Entendi, vamos começar!
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Vídeos de Transformação
+          </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Histórias reais de evolução com minoxidil do canal <span className="font-bold text-red-600">@TheDicas</span>
+            Acompanhe evoluções reais do canal <span className="font-semibold text-red-600">@TheDicas</span>
           </p>
         </div>
 
-        {/* Welcome Message */}
-        {showWelcomeMessage && (
-          <Alert className="mb-8 border-red-200 bg-red-50/80 backdrop-blur-sm max-w-4xl mx-auto shadow-lg">
-            <Youtube className="h-5 w-5 text-red-600" />
-            <AlertDescription className="text-red-800">
-              <div className="flex items-center justify-between">
-                <div>
-                  <strong>Bem-vindo aos vídeos de transformação!</strong>
-                  <br />
-                  Todos os vídeos são do canal <strong>@TheDicas</strong>, onde você pode acompanhar a evolução real de pessoas usando minoxidil para barba. Inspire-se com resultados reais!
-                </div>
+        {/* Controls */}
+        <div className="mb-8 bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex-1 w-full md:max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  placeholder="Buscar vídeos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-white/80"
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-48 bg-white/80">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Mais Recentes</SelectItem>
+                  <SelectItem value="oldest">Mais Antigos</SelectItem>
+                  <SelectItem value="title">Por Título</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="flex bg-gray-100 rounded-lg p-1">
                 <Button
-                  variant="ghost"
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={dismissWelcomeMessage}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-100 ml-4 rounded-xl"
+                  onClick={() => setViewMode('list')}
+                  className="rounded-md"
                 >
-                  Entendi
+                  <List className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="rounded-md"
+                >
+                  <Grid className="w-4 h-4" />
                 </Button>
               </div>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="overflow-hidden animate-pulse bg-white/60 backdrop-blur-sm">
-                <div className="aspect-video bg-gray-300"></div>
-                <CardContent className="p-4">
-                  <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-300 rounded w-2/3 mb-3"></div>
-                  <div className="flex space-x-2">
-                    <div className="h-3 bg-gray-300 rounded w-16"></div>
-                    <div className="h-3 bg-gray-300 rounded w-12"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            </div>
           </div>
-        )}
+        </div>
 
-        {/* Videos Grid */}
-        {!isLoading && videos && videos.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {videos.map((video) => (
-              <Card 
-                key={video.id} 
-                className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group border-0 bg-white/80 backdrop-blur-sm shadow-lg"
-              >
-                <div className="relative">
-                  <VideoPlayer
-                    videoUrl={video.video}
-                    thumbnail={video.thumbnail}
-                    title={video.titulo}
-                  />
-                  <div className="absolute top-3 left-3">
-                    <Badge className="bg-red-600 hover:bg-red-700 text-white font-semibold">
-                      @TheDicas
-                    </Badge>
-                  </div>
-                  {video.duracao && (
-                    <div className="absolute bottom-3 right-3 bg-black/80 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {video.duracao}
-                    </div>
-                  )}
-                </div>
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-red-600 transition-colors text-lg leading-tight">
-                    {video.titulo}
-                  </h3>
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {video.duracao || 'N/A'}
-                    </div>
-                    {video.data && (
-                      <div className="text-xs">
-                        {new Date(video.data).toLocaleDateString('pt-BR')}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!isLoading && (!videos || videos.length === 0) && (
-          <Card className="max-w-2xl mx-auto text-center p-12 bg-white/80 backdrop-blur-sm shadow-lg">
-            <CardContent>
-              <Youtube className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        {/* Video List/Grid */}
+        <div className="space-y-6">
+          {sortedVideos.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Play className="w-12 h-12 text-gray-400" />
+              </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Nenhum vídeo encontrado
+                {searchTerm ? 'Nenhum vídeo encontrado' : 'Nenhum vídeo disponível'}
               </h3>
               <p className="text-gray-600">
-                Os vídeos de transformação serão carregados em breve.
+                {searchTerm ? 'Tente buscar por outros termos' : 'Novos vídeos serão adicionados em breve'}
               </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* CTA Section */}
-        <Card className="mt-16 bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-2xl">
-          <CardContent className="p-8 md:p-12 text-center">
-            <div className="flex items-center justify-center mb-6">
-              <Star className="w-8 h-8 text-yellow-300" />
             </div>
-            <h3 className="text-2xl md:text-3xl font-bold mb-4">Inspire Outros com Sua História</h3>
-            <p className="mb-6 opacity-90 text-lg max-w-2xl mx-auto">
-              Teve resultados incríveis com minoxidil? Compartilhe sua transformação e inspire milhares de homens!
-            </p>
-            <Button className="bg-white text-red-600 hover:bg-gray-100 font-bold text-lg px-8 py-3 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-              Enviar Minha Transformação
-            </Button>
-          </CardContent>
-        </Card>
+          ) : (
+            <>
+              {viewMode === 'list' ? (
+                <div className="space-y-6">
+                  {sortedVideos.map((video) => (
+                    <Card key={video.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                      <div className="flex flex-col md:flex-row">
+                        <div className="w-full md:w-80 flex-shrink-0">
+                          <VideoPlayer
+                            videoUrl={video.video}
+                            thumbnail={video.thumbnail}
+                            title={video.titulo}
+                          />
+                        </div>
+                        <CardContent className="p-6 flex-1">
+                          <div className="mb-4">
+                            <Badge className="bg-red-600 hover:bg-red-700 text-white font-semibold mb-3">
+                              @TheDicas
+                            </Badge>
+                            <h3 className="font-bold text-xl text-gray-900 mb-3 leading-tight">
+                              {video.titulo}
+                            </h3>
+                            <div className="flex flex-wrap items-center text-sm text-gray-500 gap-4">
+                              {video.data && (
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  {new Date(video.data).toLocaleDateString('pt-BR')}
+                                </div>
+                              )}
+                              {video.duracao && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  {video.duracao}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedVideos.map((video) => (
+                    <Card key={video.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                      <VideoPlayer
+                        videoUrl={video.video}
+                        thumbnail={video.thumbnail}
+                        title={video.titulo}
+                      />
+                      <CardContent className="p-4">
+                        <div className="mb-2">
+                          <Badge className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs">
+                            @TheDicas
+                          </Badge>
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
+                          {video.titulo}
+                        </h3>
+                        <div className="flex items-center text-xs text-gray-500 space-x-3">
+                          {video.data && (
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(video.data).toLocaleDateString('pt-BR')}
+                            </div>
+                          )}
+                          {video.duracao && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {video.duracao}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Channel Info */}
+        <div className="mt-16 bg-gradient-to-r from-red-600 to-red-700 text-white p-8 rounded-2xl text-center shadow-xl">
+          <h3 className="text-2xl font-bold mb-4">Conheça o Canal @TheDicas</h3>
+          <p className="text-red-100 max-w-2xl mx-auto leading-relaxed">
+            Acompanhe transformações reais e dicas valiosas sobre o crescimento da barba. 
+            Todos os vídeos mostram evoluções autênticas de pessoas usando minoxidil.
+          </p>
+        </div>
       </div>
     </div>
   );

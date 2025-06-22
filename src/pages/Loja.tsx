@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { ShoppingCart, Star, Shield, Truck, CreditCard, Package, Award, Users } from 'lucide-react';
+import { ShoppingCart, Star, Shield, Truck, CreditCard, Package, Award, Users, Tag } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,17 +72,41 @@ const Loja = () => {
     }
   ];
 
+  const handlePurchase = () => {
+    window.open('https://lista.mercadolivre.com.br/minoxidil-kirkland', '_blank');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
+        {/* Cupom Banner */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-2xl text-center shadow-xl animate-bounce-gentle">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Tag className="w-6 h-6" />
+              <span className="text-2xl font-bold">BARBA10</span>
+            </div>
+            <p className="text-lg">Use este cupom e ganhe 10% de desconto!</p>
+            <p className="text-sm opacity-90">Válido apenas no Mercado Livre</p>
+          </div>
+        </div>
+
         {/* Header Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Minoxidil Kirkland Original</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             O minoxidil mais confiável do mercado, direto do fornecedor oficial
           </p>
+          <div className="flex items-center justify-center gap-2 mt-4 bg-yellow-100 px-4 py-2 rounded-full inline-flex">
+            <img 
+              src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.6.92/mercadolibre/logo_large_25years@2x.png" 
+              alt="Mercado Livre" 
+              className="h-6"
+            />
+            <span className="text-sm font-medium text-gray-700">Vendido via Mercado Livre</span>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
@@ -137,7 +160,7 @@ const Loja = () => {
                     key={pkg.id}
                     className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${
                       selectedPackage === pkg.id 
-                        ? 'border-blue-500 bg-blue-50' 
+                        ? 'border-green-500 bg-green-50' 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                     onClick={() => setSelectedPackage(pkg.id)}
@@ -158,7 +181,7 @@ const Loja = () => {
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-600">
+                        <div className="text-2xl font-bold text-green-600">
                           R$ {pkg.price.toFixed(2)}
                         </div>
                         <div className="text-sm text-gray-500 line-through">
@@ -172,11 +195,11 @@ const Loja = () => {
             </div>
 
             {/* Purchase Section */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border-2 border-green-200">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-lg font-semibold">Total:</span>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-blue-600">
+                  <div className="text-3xl font-bold text-green-600">
                     R$ {selectedPkg?.price.toFixed(2)}
                   </div>
                   <div className="text-sm text-gray-500">
@@ -185,12 +208,15 @@ const Loja = () => {
                 </div>
               </div>
               
-              <Button className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-3 mb-4">
+              <Button 
+                onClick={handlePurchase}
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-lg py-4 mb-4 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+              >
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                Comprar Agora
+                Comprar no Mercado Livre
               </Button>
               
-              <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center justify-center gap-4 text-sm text-gray-600 mb-4">
                 <div className="flex items-center gap-1">
                   <Shield className="w-4 h-4" />
                   Compra Segura
@@ -202,6 +228,13 @@ const Loja = () => {
                 <div className="flex items-center gap-1">
                   <CreditCard className="w-4 h-4" />
                   12x sem juros
+                </div>
+              </div>
+
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-2">Lembre-se de usar o cupom:</p>
+                <div className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold inline-block">
+                  BARBA10
                 </div>
               </div>
             </div>
@@ -394,8 +427,8 @@ const Loja = () => {
                         a: "Raramente causa efeitos colaterais. Pode ocorrer ressecamento ou irritação leve no início."
                       },
                       {
-                        q: "Como faço o pedido?",
-                        a: "Clique em 'Comprar Agora' e siga as instruções. Aceitamos cartão e PIX."
+                        q: "Como uso o cupom BARBA10?",
+                        a: "No Mercado Livre, adicione o produto ao carrinho e digite 'BARBA10' no campo de cupom para ganhar 10% de desconto."
                       }
                     ].map((faq, index) => (
                       <div key={index} className="border-b pb-4 last:border-b-0">
