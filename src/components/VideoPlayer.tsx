@@ -11,7 +11,7 @@ interface VideoPlayerProps {
 
 export const VideoPlayer = ({ videoUrl, thumbnail, title }: VideoPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false); // Mudado para false - áudio ligado por padrão
 
   const handlePlay = () => {
     setIsPlaying(true);
@@ -77,7 +77,7 @@ export const VideoPlayer = ({ videoUrl, thumbnail, title }: VideoPlayerProps) =>
         <Button
           size="sm"
           variant="secondary"
-          className="bg-black/50 hover:bg-black/70 text-white border-0"
+          className="bg-black/70 hover:bg-black/90 text-white border-0"
           onClick={toggleMute}
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -85,7 +85,7 @@ export const VideoPlayer = ({ videoUrl, thumbnail, title }: VideoPlayerProps) =>
         <Button
           size="sm"
           variant="secondary"
-          className="bg-black/50 hover:bg-black/70 text-white border-0"
+          className="bg-black/70 hover:bg-black/90 text-white border-0"
           onClick={openFullscreen}
         >
           <Maximize className="w-4 h-4" />

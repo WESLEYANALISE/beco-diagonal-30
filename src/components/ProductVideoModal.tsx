@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Maximize, ShoppingCart, X, Expand } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -13,6 +13,7 @@ interface ProductVideoModalProps {
 
 export const ProductVideoModal = ({ videoUrl, productName, productPrice, productLink }: ProductVideoModalProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -22,8 +23,29 @@ export const ProductVideoModal = ({ videoUrl, productName, productPrice, product
     window.open(productLink, '_blank');
   };
 
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isOpen]);
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="w-full text-xs bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300">
           <Play className="w-3 h-3 mr-1" />
@@ -38,34 +60,43 @@ export const ProductVideoModal = ({ videoUrl, productName, productPrice, product
               src={videoUrl}
               controls
               autoPlay
-              muted
+              muted={false} // Áudio ligado por padrão
               loop
               className="w-full h-full object-contain"
               playsInline
             />
             
-            {/* Controls Container */}
+            {/* Controls Container - mais visível */}
             <div className="absolute top-4 right-4 flex gap-2">
               {/* Expand button for horizontal videos */}
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={toggleFullscreen}
-                className="bg-black/50 hover:bg-black/70 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-110 rounded-full p-2"
+                className="bg-black/70 hover:bg-black/90 text-white border-2 border-white/50 hover:border-white/70 transition-all duration-300 hover:scale-110 rounded-lg p-2"
+                title={isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
               >
-                <Expand className="w-4 h-4" />
+                <Expand className="w-5 h-5" />
               </Button>
               
-              {/* Close/Minimize Button */}
+              {/* Close/Minimize Button - mais visível */}
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={isFullscreen ? toggleFullscreen : undefined}
-                className="bg-red-500/80 hover:bg-red-600 text-white border-2 border-red-400/50 hover:border-red-300 transition-all duration-300 hover:scale-110 rounded-full p-2"
+                onClick={handleClose}
+                className="bg-red-600/90 hover:bg-red-700 text-white border-2 border-red-400/50 hover:border-red-300 transition-all duration-300 hover:scale-110 rounded-lg p-2"
+                title="Fechar vídeo"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </Button>
             </div>
+
+            {/* ESC hint - only show when not fullscreen */}
+            {!isFullscreen && (
+              <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-xs">
+                Pressione ESC para fechar
+              </div>
+            )}
           </div>
 
           {/* Product Info - Hidden in fullscreen */}
