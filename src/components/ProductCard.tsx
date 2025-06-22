@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Star, Play, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -32,6 +31,7 @@ interface ProductCardProps {
   selectable?: boolean;
   selected?: boolean;
   onToggle?: (product: Product) => void;
+  style?: React.CSSProperties;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ 
@@ -41,7 +41,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   compact = false,
   selectable = false,
   selected = false,
-  onToggle
+  onToggle,
+  style
 }) => {
   const getProductImages = (product: Product) => {
     return [product.imagem1, product.imagem2, product.imagem3, product.imagem4, product.imagem5].filter(Boolean);
@@ -57,6 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <Card 
       id={`product-${product.id}`}
+      style={style}
       className={`overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group animate-fade-in ${
         selectable ? 'cursor-pointer' : ''
       } ${selected ? 'ring-2 ring-blue-500' : ''}`}

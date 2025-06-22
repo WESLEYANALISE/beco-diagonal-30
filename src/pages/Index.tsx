@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign } from 'lucide-react';
@@ -48,7 +47,7 @@ const Index = () => {
   const [showingAI, setShowingAI] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
-  const { showSuccess, showError, showLoading } = useToastNotifications();
+  const { showSuccess, showError, showLoading, showInfo } = useToastNotifications();
 
   useEffect(() => {
     fetchProducts();
