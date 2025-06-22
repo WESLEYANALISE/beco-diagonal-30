@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign } from 'lucide-react';
@@ -36,17 +37,16 @@ const Index = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [newestProducts, setNewestProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [showingNewest, setShowingNewest] = useState(false);
   const [showingAI, setShowingAI] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
   const { showSuccess, showError, showLoading, showInfo } = useToastNotifications();
 
   useEffect(() => {
@@ -75,7 +75,6 @@ const Index = () => {
       
       setProducts(data || []);
       setFeaturedProducts((data || []).slice(0, 8));
-      setNewestProducts((data || []).slice(-8).reverse());
 
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
       setCategories(uniqueCategories);
@@ -135,8 +134,7 @@ const Index = () => {
     }
   };
 
-  const handleTabChange = (tab: 'featured' | 'newest' | 'ai') => {
-    setShowingNewest(tab === 'newest');
+  const handleTabChange = (tab: 'featured' | 'ai') => {
     setShowingAI(tab === 'ai');
   };
 
@@ -170,7 +168,10 @@ const Index = () => {
     try {
       showLoading("Analisando produtos com IA");
       const { data, error } = await supabase.functions.invoke('analyze-products', {
-        body: { products }
+        body: { 
+          products,
+          userPreferences: questionnaireAnswers
+        }
       });
 
       if (error) {
@@ -344,7 +345,6 @@ const Index = () => {
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-8">
                 <TabNavigation 
-                  showingNewest={showingNewest}
                   showingAI={showingAI}
                   onTabChange={handleTabChange}
                 />
@@ -362,10 +362,10 @@ const Index = () => {
                 ) : (
                   <div>
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                      {showingNewest ? '✨ Novidades' : '🔥 Mais Vendidos'}
+                      🔥 Mais Vendidos
                     </h2>
                     <p className="text-base text-white/80 animate-slide-in-right">
-                      {showingNewest ? 'Os produtos mais recentes da nossa loja' : 'Os produtos favoritos dos nossos clientes'}
+                      Os produtos favoritos dos nossos clientes
                     </p>
                   </div>
                 )}
@@ -395,12 +395,13 @@ const Index = () => {
                     selectedProducts={selectedProducts}
                     onProductToggle={handleProductToggle}
                     onAnalyze={handleAnalyze}
+                    onQuestionnaireChange={setQuestionnaireAnswers}
                   />
                 </>
               ) : (
                 <Carousel className="w-full animate-scale-in">
                   <CarouselContent className="-ml-2 md:-ml-3">
-                    {(showingNewest ? newestProducts : featuredProducts).map((product, index) => (
+                    {featuredProducts.map((product, index) => (
                       <CarouselItem 
                         key={product.id} 
                         className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
@@ -409,7 +410,7 @@ const Index = () => {
                         <ProductCard 
                           product={product} 
                           showBadge={true}
-                          badgeText={showingNewest ? 'NOVO' : 'MAIS VENDIDO'}
+                          badgeText="MAIS VENDIDO"
                           compact={false}
                         />
                       </CarouselItem>
