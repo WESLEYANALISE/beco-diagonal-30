@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign } from 'lucide-react';
@@ -10,7 +11,7 @@ import { CategoryCarousel } from '@/components/CategoryCarousel';
 import { ProductSelector } from '@/components/ProductSelector';
 import { AIAnalysisModal } from '@/components/AIAnalysisModal';
 import { HeroSection } from '@/components/HeroSection';
-import { TabNavigation } from '@/components/TabNavigation';
+import { AIAssistantSection } from '@/components/AIAssistantSection';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
@@ -100,7 +101,6 @@ const Index = () => {
       );
     }
 
-    // Aplicar ordenação
     filtered.sort((a, b) => {
       if (sortBy === 'nome') {
         const comparison = a.produto.localeCompare(b.produto);
@@ -129,12 +129,8 @@ const Index = () => {
     const productElement = document.getElementById(`product-${productId}`);
     if (productElement) {
       productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setSearchTerm(''); // Clear search to hide preview
+      setSearchTerm('');
     }
-  };
-
-  const handleTabChange = (tab: 'featured' | 'ai') => {
-    setShowingAI(tab === 'ai');
   };
 
   const handleProductToggle = (product: Product) => {
@@ -221,11 +217,14 @@ const Index = () => {
         products={products}
         onProductClick={handleProductClick}
       />
-      
-      {/* Category Quick Access Buttons */}
-      <section className="px-4 py-2 animate-fade-in">
+
+      {/* NOVA ESTRUTURA: Categorias movidas para cima */}
+      <section className="px-4 py-4 animate-fade-in">
         <div className="max-w-7xl mx-auto">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-4 text-center animate-slide-in-left">
+            🏷️ Categorias Populares
+          </h2>
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide justify-center">
             <Button
               size="sm"
               variant={selectedCategory === 'todas' ? 'default' : 'outline'}
@@ -338,90 +337,79 @@ const Index = () => {
         </section>
       ) : (
         <>
-          {/* Featured Products Carousel with Toggle */}
+          {/* Featured Products Carousel - MAIS VENDIDOS */}
           <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-8">
-                <TabNavigation 
-                  showingAI={showingAI}
-                  onTabChange={handleTabChange}
-                />
-                
-                {showingAI ? (
-                  <div className="prose prose-invert max-w-none">
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                      🤖 Me Ajuda Escolher
-                    </h2>
-                    <div className="text-base text-white/90 animate-slide-in-right space-y-2">
-                      <p><strong>Selecione até 5 produtos</strong> e nossa <strong>IA</strong> irá te ajudar a decidir qual é melhor</p>
-                      <p className="text-sm">✨ <em>Análise personalizada baseada em suas necessidades</em></p>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                      🔥 Mais Vendidos
-                    </h2>
-                    <p className="text-base text-white/80 animate-slide-in-right">
-                      Os produtos favoritos dos nossos clientes
-                    </p>
-                  </div>
-                )}
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
+                  🔥 Mais Vendidos
+                </h2>
+                <p className="text-base text-white/80 animate-slide-in-right">
+                  Os produtos favoritos dos nossos clientes
+                </p>
               </div>
 
-              {showingAI ? (
-                <>
-                  {/* Categories during AI mode */}
-                  <div className="max-w-md mx-auto mb-6 animate-scale-in">
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300 z-50">
-                        <SelectItem value="todas">Todas as Categorias</SelectItem>
-                        {categories.map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <ProductSelector
-                    products={displayedProducts}
-                    selectedProducts={selectedProducts}
-                    onProductToggle={handleProductToggle}
-                    onAnalyze={handleAnalyze}
-                    onQuestionnaireChange={setQuestionnaireAnswers}
-                  />
-                </>
-              ) : (
-                <Carousel className="w-full animate-scale-in">
-                  <CarouselContent className="-ml-2 md:-ml-3">
-                    {featuredProducts.map((product, index) => (
-                      <CarouselItem 
-                        key={product.id} 
-                        className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                      >
-                        <ProductCard 
-                          product={product} 
-                          showBadge={true}
-                          badgeText="MAIS VENDIDO"
-                          compact={false}
-                        />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-                  <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
-                </Carousel>
-              )}
+              <Carousel className="w-full animate-scale-in">
+                <CarouselContent className="-ml-2 md:-ml-3">
+                  {featuredProducts.map((product, index) => (
+                    <CarouselItem 
+                      key={product.id} 
+                      className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <ProductCard 
+                        product={product} 
+                        showBadge={true}
+                        badgeText="MAIS VENDIDO"
+                        compact={false}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
+                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
+              </Carousel>
             </div>
           </section>
 
-          {/* Category Filter and Products Grid - only show when not in AI mode */}
+          {/* SEÇÃO IA ISOLADA E ESTRATÉGICA */}
+          <AIAssistantSection 
+            onActivate={() => setShowingAI(!showingAI)}
+            isActive={showingAI}
+          />
+
+          {/* Produtos para seleção da IA - só aparece quando ativado */}
+          {showingAI && (
+            <section className="px-4 md:px-6 py-8 md:py-12 bg-black/10 backdrop-blur-sm animate-fade-in">
+              <div className="max-w-7xl mx-auto">
+                <div className="max-w-md mx-auto mb-6 animate-scale-in">
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-300 z-50">
+                      <SelectItem value="todas">Todas as Categorias</SelectItem>
+                      {categories.map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <ProductSelector
+                  products={displayedProducts}
+                  selectedProducts={selectedProducts}
+                  onProductToggle={handleProductToggle}
+                  onAnalyze={handleAnalyze}
+                  onQuestionnaireChange={setQuestionnaireAnswers}
+                />
+              </div>
+            </section>
+          )}
+
+          {/* Category Filter and Products Grid - sempre visível */}
           {!showingAI && (
             <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
               <div className="max-w-7xl mx-auto">
@@ -466,23 +454,6 @@ const Index = () => {
                   </div>
                 </div>
 
-                {/* Category Filter */}
-                <div className="max-w-md mx-auto mb-6 animate-scale-in">
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-300 z-50">
-                      <SelectItem value="todas">Todas as Categorias</SelectItem>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 <ProductGrid products={displayedProducts} compact={true} />
 
                 {displayedProducts.length === 0 && (
@@ -512,7 +483,7 @@ const Index = () => {
         </>
       )}
 
-      {/* CTA Section - only show when not in AI mode */}
+      {/* CTA Section - só aparece quando não está no modo IA */}
       {!showingAI && (
         <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden animate-fade-in">
           <div className="absolute inset-0 bg-black/10"></div>
