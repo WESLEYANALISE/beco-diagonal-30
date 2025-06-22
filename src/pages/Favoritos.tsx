@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Heart, ShoppingCart, Play, Star, ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -74,7 +73,7 @@ const Favoritos = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
+      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
@@ -91,7 +90,7 @@ const Favoritos = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20 md:pb-0">
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
