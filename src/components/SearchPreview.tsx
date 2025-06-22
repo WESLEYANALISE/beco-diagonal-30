@@ -13,9 +13,10 @@ interface Product {
 interface SearchPreviewProps {
   searchTerm: string;
   products: Product[];
+  onProductClick: (productId: number) => void;
 }
 
-export const SearchPreview = ({ searchTerm, products }: SearchPreviewProps) => {
+export const SearchPreview = ({ searchTerm, products, onProductClick }: SearchPreviewProps) => {
   if (!searchTerm || products.length === 0) return null;
 
   const formatPrice = (price: string) => {
@@ -39,6 +40,7 @@ export const SearchPreview = ({ searchTerm, products }: SearchPreviewProps) => {
                   key={product.id} 
                   className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer animate-slide-in-right"
                   style={{ animationDelay: `${products.indexOf(product) * 0.1}s` }}
+                  onClick={() => onProductClick(product.id)}
                 >
                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                     <img

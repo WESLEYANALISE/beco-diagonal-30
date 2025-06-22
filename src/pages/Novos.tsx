@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Star, ShoppingCart, Play, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -188,7 +187,7 @@ const Novos = () => {
                           </Badge>
                         )}
                         
-                        <div className="text-2xl font-bold text-red-500 mb-4 animate-pulse">
+                        <div className="text-xl font-bold text-red-500 mb-4">
                           A partir de {formatPrice(product.valor)}
                         </div>
                       </div>
@@ -212,7 +211,7 @@ const Novos = () => {
                           />
                         </div>
                         <Button 
-                          className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold animate-pulse hover:animate-bounce transition-all duration-300 sm:w-auto w-full" 
+                          className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold hover:scale-105 transition-all duration-300 sm:w-auto w-full" 
                           onClick={() => window.open(product.link, '_blank')}
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />

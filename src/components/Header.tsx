@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart, Heart, Home, Search, User, Grid3X3, Filter, DollarSign } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Filter, DollarSign, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
     { path: '/', label: 'Início', icon: Home },
     { path: '/categorias', label: 'Categorias', icon: Grid3X3 },
     { path: '/favoritos', label: 'Favoritos', icon: Heart },
-    { path: '/perfil', label: 'Perfil', icon: User },
+    { path: '/novos', label: 'Novidades', icon: Sparkles },
   ];
 
   const handleNavigation = (path: string) => {

@@ -113,6 +113,14 @@ const Index = () => {
     console.log('Price filter:', min, max);
   };
 
+  const handleProductClick = (productId: number) => {
+    const productElement = document.getElementById(`product-${productId}`);
+    if (productElement) {
+      productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setSearchTerm(''); // Clear search to hide preview
+    }
+  };
+
   const getProductImages = (product: Product) => {
     return [product.imagem1, product.imagem2, product.imagem3, product.imagem4, product.imagem5].filter(Boolean);
   };
@@ -153,6 +161,7 @@ const Index = () => {
           products={products.filter(p => 
             p.produto.toLowerCase().includes(searchTerm.toLowerCase())
           ).slice(0, 5)} 
+          onProductClick={handleProductClick}
         />
       )}
       
@@ -253,7 +262,7 @@ const Index = () => {
               <CarouselContent className="-ml-2 md:-ml-3">
                 {displayedProducts.slice(0, 5).map(product => (
                   <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-4/5 md:basis-1/2 lg:basis-1/3 xl:basis-1/5">
-                    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group animate-fade-in">
+                    <Card id={`product-${product.id}`} className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group animate-fade-in">
                       <div className="relative">
                         <Carousel className="w-full">
                           <CarouselContent>
@@ -293,7 +302,7 @@ const Index = () => {
                           {product.produto}
                         </h3>
                         <div className="flex items-center justify-between mb-3">
-                          <div className="text-lg font-bold text-red-500 animate-pulse">
+                          <div className="text-base font-bold text-red-500">
                             A partir de {formatPrice(product.valor)}
                           </div>
                           <div className="flex items-center gap-1">
@@ -320,7 +329,7 @@ const Index = () => {
                           />
                           <Button 
                             size="sm" 
-                            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs animate-pulse hover:animate-bounce transition-all duration-300" 
+                            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs hover:scale-105 transition-all duration-300" 
                             onClick={() => window.open(product.link, '_blank')}
                           >
                             <ShoppingCart className="w-3 h-3 mr-1" />
@@ -376,7 +385,8 @@ const Index = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3 mb-6">
                 {displayedProducts.slice(5).map((product, index) => (
                   <Card 
-                    key={product.id} 
+                    key={product.id}
+                    id={`product-${product.id}`}
                     className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group animate-fade-in"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
@@ -413,7 +423,7 @@ const Index = () => {
                         {product.produto}
                       </h3>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-lg font-bold text-red-500">
+                        <div className="text-base font-bold text-red-500">
                           A partir de {formatPrice(product.valor)}
                         </div>
                         <div className="flex items-center gap-1">
@@ -440,7 +450,7 @@ const Index = () => {
                         />
                         <Button 
                           size="sm" 
-                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1 animate-pulse hover:animate-bounce transition-all duration-300" 
+                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1 hover:scale-105 transition-all duration-300" 
                           onClick={() => window.open(product.link, '_blank')}
                         >
                           <ShoppingCart className="w-3 h-3 mr-1" />
@@ -476,7 +486,7 @@ const Index = () => {
                       className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
+                      <Card id={`product-${product.id}`} className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
                         <div className="relative">
                           <Carousel className="w-full">
                             <CarouselContent>
@@ -516,7 +526,7 @@ const Index = () => {
                             {product.produto}
                           </h3>
                           <div className="flex items-center justify-between mb-3">
-                            <div className="text-lg font-bold text-red-500 animate-pulse">
+                            <div className="text-base font-bold text-red-500">
                               A partir de {formatPrice(product.valor)}
                             </div>
                             <div className="flex items-center gap-1">
@@ -543,7 +553,7 @@ const Index = () => {
                             />
                             <Button 
                               size="sm" 
-                              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs animate-pulse hover:animate-bounce transition-all duration-300" 
+                              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs hover:scale-105 transition-all duration-300" 
                               onClick={() => window.open(product.link, '_blank')}
                             >
                               <ShoppingCart className="w-3 h-3 mr-1" />
@@ -647,7 +657,8 @@ const Index = () => {
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3 mb-6">
                     {displayedProducts.map((product, index) => (
                       <Card 
-                        key={product.id} 
+                        key={product.id}
+                        id={`product-${product.id}`}
                         className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group animate-fade-in"
                         style={{ animationDelay: `${index * 0.05}s` }}
                       >
@@ -692,7 +703,7 @@ const Index = () => {
                             {product.produto}
                           </h3>
                           <div className="flex items-center justify-between mb-2">
-                            <div className="text-lg font-bold text-red-500">
+                            <div className="text-base font-bold text-red-500">
                               A partir de {formatPrice(product.valor)}
                             </div>
                             <div className="flex items-center gap-1">
@@ -719,7 +730,7 @@ const Index = () => {
                             />
                             <Button 
                               size="sm" 
-                              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1 animate-pulse hover:animate-bounce transition-all duration-300" 
+                              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1 hover:scale-105 transition-all duration-300" 
                               onClick={() => window.open(product.link, '_blank')}
                             >
                               <ShoppingCart className="w-3 h-3 mr-1" />
@@ -767,7 +778,7 @@ const Index = () => {
             </p>
             <Button 
               size="lg" 
-              className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 animate-pulse" 
+              className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" 
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               Ver Todos os Produtos
