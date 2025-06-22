@@ -25,7 +25,7 @@ export const ProductVideoModal = ({ videoUrl, productName, productPrice, product
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="w-full text-xs">
+        <Button size="sm" variant="outline" className="w-full text-xs bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300">
           <Play className="w-3 h-3 mr-1" />
           Ver Vídeo
         </Button>

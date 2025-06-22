@@ -29,7 +29,7 @@ export const ProductPhotosModal = ({ images, productName, productPrice, productL
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="w-full text-xs">
+        <Button size="sm" variant="outline" className="w-full text-xs bg-green-50 text-green-600 border-green-200 hover:bg-green-100 hover:text-green-700 hover:border-green-300">
           <Images className="w-3 h-3 mr-1" />
           Ver Fotos
         </Button>
