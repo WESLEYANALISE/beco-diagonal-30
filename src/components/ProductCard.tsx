@@ -141,14 +141,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               videoUrl={product.video} 
               productName={product.produto} 
               productPrice={formatPrice(product.valor)} 
-              productLink={product.link} 
+              productLink={product.link}
+              productId={product.id}
+              productImages={getProductImages(product)}
             />
           )}
           <ProductPhotosModal 
             images={getProductImages(product)} 
             productName={product.produto} 
             productPrice={formatPrice(product.valor)} 
-            productLink={product.link} 
+            productLink={product.link}
+            productId={product.id}
           />
           <Button 
             size="sm" 

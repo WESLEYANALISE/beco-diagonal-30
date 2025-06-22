@@ -196,6 +196,8 @@ const Favoritos = () => {
                         productName={product.produto}
                         productPrice={formatPrice(product.valor)}
                         productLink={product.link}
+                        productId={product.id}
+                        productImages={getProductImages(product)}
                       />
                     )}
                     <ProductPhotosModal 
@@ -203,6 +205,7 @@ const Favoritos = () => {
                       productName={product.produto}
                       productPrice={formatPrice(product.valor)}
                       productLink={product.link}
+                      productId={product.id}
                     />
                     <Button
                       size="sm"
