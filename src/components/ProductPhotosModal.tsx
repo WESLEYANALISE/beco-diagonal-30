@@ -2,45 +2,25 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Images, ExternalLink, Expand, GitCompare } from 'lucide-react';
+import { Images, ExternalLink, Expand } from 'lucide-react';
 import { ImageZoomModal } from '@/components/ImageZoomModal';
-import { ProductComparisonModal } from '@/components/ProductComparisonModal';
-
-interface Product {
-  id: number;
-  produto: string;
-  valor: string;
-  video: string;
-  imagem1: string;
-  imagem2: string;
-  imagem3: string;
-  imagem4: string;
-  imagem5: string;
-  link: string;
-  categoria: string;
-}
 
 interface ProductPhotosModalProps {
   images: string[];
   productName: string;
   productPrice: string;
   productLink: string;
-  currentProduct: Product;
-  availableProducts: Product[];
 }
 
 export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
   images,
   productName,
   productPrice,
-  productLink,
-  currentProduct,
-  availableProducts
+  productLink
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
   const handleImageClick = (index: number) => {
     setSelectedImageIndex(index);
@@ -67,22 +47,13 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
                 <h3 className="text-lg font-semibold line-clamp-2">{productName}</h3>
                 <p className="text-xl font-bold text-red-500">{productPrice}</p>
               </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => setIsComparisonOpen(true)}
-                  className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
-                >
-                  <GitCompare className="w-4 h-4 mr-2" />
-                  Comparar com outro
-                </Button>
-                <Button 
-                  onClick={() => window.open(productLink, '_blank')}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Comprar
-                </Button>
-              </div>
+              <Button 
+                onClick={() => window.open(productLink, '_blank')}
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Comprar
+              </Button>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
@@ -109,13 +80,6 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
         images={images}
         currentIndex={selectedImageIndex}
         productName={productName}
-      />
-
-      <ProductComparisonModal
-        isOpen={isComparisonOpen}
-        onClose={() => setIsComparisonOpen(false)}
-        currentProduct={currentProduct}
-        availableProducts={availableProducts}
       />
     </>
   );

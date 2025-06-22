@@ -55,13 +55,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     return `R$ ${price}`;
   };
 
-  // Mock data for available products - in real app, this would come from props or context
-  const mockAvailableProducts = [
-    { ...product, id: product.id + 1 },
-    { ...product, id: product.id + 2 },
-    { ...product, id: product.id + 3 }
-  ];
-
   return (
     <Card 
       id={`product-${product.id}`}
@@ -148,18 +141,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               videoUrl={product.video} 
               productName={product.produto} 
               productPrice={formatPrice(product.valor)} 
-              productLink={product.link}
-              currentProduct={product}
-              availableProducts={mockAvailableProducts}
+              productLink={product.link} 
             />
           )}
           <ProductPhotosModal 
             images={getProductImages(product)} 
             productName={product.produto} 
             productPrice={formatPrice(product.valor)} 
-            productLink={product.link}
-            currentProduct={product}
-            availableProducts={mockAvailableProducts}
+            productLink={product.link} 
           />
           <Button 
             size="sm" 
