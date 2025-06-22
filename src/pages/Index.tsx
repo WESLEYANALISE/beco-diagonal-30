@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown, SortAsc, DollarSign } from 'lucide-react';
+import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown, SortAsc, DollarSign, Eye } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,9 @@ import { ProductVideoModal } from '@/components/ProductVideoModal';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { SearchPreview } from '@/components/SearchPreview';
+import { CategoryCarousel } from '@/components/CategoryCarousel';
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from 'react-router-dom';
 
 interface Product {
   id: number;
@@ -33,6 +36,7 @@ const Index = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [newestProducts, setNewestProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
@@ -40,6 +44,8 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [showingNewest, setShowingNewest] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
@@ -65,6 +71,7 @@ const Index = () => {
       if (error) throw error;
       setProducts(data || []);
       setFeaturedProducts((data || []).slice(0, 8));
+      setNewestProducts((data || []).slice(-8).reverse());
 
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
       setCategories(uniqueCategories);
@@ -164,38 +171,56 @@ const Index = () => {
           onProductClick={handleProductClick}
         />
       )}
+
+      {/* Category Carousel */}
+      <CategoryCarousel 
+        categories={categories}
+        onCategorySelect={setSelectedCategory}
+        selectedCategory={selectedCategory}
+      />
       
       {/* Category Quick Access Buttons */}
-      <section className="px-4 py-4 animate-fade-in">
+      <section className="px-4 py-2 animate-fade-in">
         <div className="max-w-7xl mx-auto">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <Button
-              size="sm"
-              variant={selectedCategory === 'todas' ? 'default' : 'outline'}
-              onClick={() => setSelectedCategory('todas')}
-              className={`whitespace-nowrap transition-all duration-300 hover:scale-105 ${
-                selectedCategory === 'todas' 
-                  ? 'bg-white text-red-600 hover:bg-gray-100 shadow-lg' 
-                  : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
-              }`}
-            >
-              Todas
-            </Button>
-            {categories.slice(0, 8).map(category => (
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide flex-1">
               <Button
-                key={category}
                 size="sm"
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                onClick={() => setSelectedCategory(category)}
+                variant={selectedCategory === 'todas' ? 'default' : 'outline'}
+                onClick={() => setSelectedCategory('todas')}
                 className={`whitespace-nowrap transition-all duration-300 hover:scale-105 ${
-                  selectedCategory === category 
+                  selectedCategory === 'todas' 
                     ? 'bg-white text-red-600 hover:bg-gray-100 shadow-lg' 
                     : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
                 }`}
               >
-                {category}
+                Todas
               </Button>
-            ))}
+              {categories.slice(0, 8).map(category => (
+                <Button
+                  key={category}
+                  size="sm"
+                  variant={selectedCategory === category ? 'default' : 'outline'}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`whitespace-nowrap transition-all duration-300 hover:scale-105 ${
+                    selectedCategory === category 
+                      ? 'bg-white text-red-600 hover:bg-gray-100 shadow-lg' 
+                      : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
+                  }`}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/categorias')}
+              className="ml-2 bg-white/20 text-white border-white/30 hover:bg-white/30 whitespace-nowrap"
+            >
+              <Eye className="w-4 h-4 mr-1" />
+              Ver Todos
+            </Button>
           </div>
         </div>
       </section>
@@ -466,21 +491,37 @@ const Index = () => {
         </section>
       ) : (
         <>
-          {/* Most Sold Products Carousel */}
+          {/* Featured Products Carousel with Toggle */}
           <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-8">
+                <div className="flex items-center justify-center gap-4 mb-4">
+                  <Button
+                    variant={!showingNewest ? 'default' : 'outline'}
+                    onClick={() => setShowingNewest(false)}
+                    className={`${!showingNewest ? 'bg-white text-red-600' : 'bg-white/20 text-white border-white/30'}`}
+                  >
+                    🔥 Mais Vendidos
+                  </Button>
+                  <Button
+                    variant={showingNewest ? 'default' : 'outline'}
+                    onClick={() => setShowingNewest(true)}
+                    className={`${showingNewest ? 'bg-white text-red-600' : 'bg-white/20 text-white border-white/30'}`}
+                  >
+                    ✨ Novidades
+                  </Button>
+                </div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  🔥 Mais Vendidos
+                  {showingNewest ? '✨ Novidades' : '🔥 Mais Vendidos'}
                 </h2>
                 <p className="text-base text-white/80 animate-slide-in-right">
-                  Os produtos favoritos dos nossos clientes
+                  {showingNewest ? 'Os produtos mais recentes da nossa loja' : 'Os produtos favoritos dos nossos clientes'}
                 </p>
               </div>
 
               <Carousel className="w-full animate-scale-in">
                 <CarouselContent className="-ml-2 md:-ml-3">
-                  {featuredProducts.map((product, index) => (
+                  {(showingNewest ? newestProducts : featuredProducts).map((product, index) => (
                     <CarouselItem 
                       key={product.id} 
                       className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
@@ -516,7 +557,7 @@ const Index = () => {
                           
                           <div className="absolute top-2 left-2">
                             <Badge className="bg-red-500 text-white font-bold text-xs animate-bounce">
-                              MAIS VENDIDO
+                              {showingNewest ? 'NOVO' : 'MAIS VENDIDO'}
                             </Badge>
                           </div>
                         </div>

@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Categorias from "./pages/Categorias";
 import Favoritos from "./pages/Favoritos";
-import Perfil from "./pages/Perfil";
+import Novos from "./pages/Novos";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/favoritos" element={<Favoritos />} />
-          <Route path="/perfil" element={<Perfil />} />
+          <Route path="/novos" element={<Novos />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
