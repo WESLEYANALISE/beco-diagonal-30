@@ -2,24 +2,28 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Images, ExternalLink, Expand, ShoppingCart } from 'lucide-react';
+import { Images, ShoppingCart, Expand, Play } from 'lucide-react';
 import { ImageZoomModal } from '@/components/ImageZoomModal';
+import { ProductVideoModal } from '@/components/ProductVideoModal';
 
 interface ProductPhotosModalProps {
   images: string[];
   productName: string;
   productPrice: string;
   productLink: string;
+  videoUrl?: string;
 }
 
 export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
   images,
   productName,
   productPrice,
-  productLink
+  productLink,
+  videoUrl
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const handleImageClick = (index: number) => {
@@ -29,7 +33,11 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
 
   const handleBuyClick = () => {
     window.open(productLink, '_blank');
-    setIsOpen(false); // Fecha o modal após clicar em comprar
+    setIsOpen(false);
+  };
+
+  const handleVideoClick = () => {
+    setIsVideoOpen(true);
   };
 
   return (
@@ -60,6 +68,16 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
                 </p>
               </div>
               <div className="flex gap-2 flex-shrink-0">
+                {videoUrl && (
+                  <Button 
+                    onClick={handleVideoClick}
+                    variant="outline"
+                    className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Ver Vídeo
+                  </Button>
+                )}
                 <Button 
                   onClick={handleBuyClick}
                   className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold transition-all duration-300 hover:scale-105"
@@ -96,18 +114,6 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
                 </div>
               ))}
             </div>
-            
-            {/* Botão fixo para comprar (versão mobile-friendly) */}
-            <div className="mt-6 sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent pt-4">
-              <Button 
-                onClick={handleBuyClick}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 text-base transition-all duration-300 hover:scale-[1.02] shadow-lg"
-                size="lg"
-              >
-                <ShoppingCart className="w-5 h-5 mr-2" />
-                Comprar na Shopee por {productPrice}
-              </Button>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -119,6 +125,17 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
         currentIndex={selectedImageIndex}
         productName={productName}
       />
+
+      {videoUrl && (
+        <ProductVideoModal
+          isOpen={isVideoOpen}
+          onClose={() => setIsVideoOpen(false)}
+          videoUrl={videoUrl}
+          productName={productName}
+          productPrice={productPrice}
+          productLink={productLink}
+        />
+      )}
     </>
   );
 };

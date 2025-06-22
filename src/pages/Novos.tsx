@@ -195,19 +195,12 @@ const Novos = () => {
                       <div className="flex flex-col sm:flex-row gap-2">
                         <div className="flex gap-2 flex-1">
                           <FavoriteButton productId={product.id} />
-                          {product.video && (
-                            <ProductVideoModal 
-                              videoUrl={product.video} 
-                              productName={product.produto} 
-                              productPrice={formatPrice(product.valor)} 
-                              productLink={product.link} 
-                            />
-                          )}
                           <ProductPhotosModal 
                             images={getProductImages(product)} 
                             productName={product.produto} 
                             productPrice={formatPrice(product.valor)} 
-                            productLink={product.link} 
+                            productLink={product.link}
+                            videoUrl={product.video}
                           />
                         </div>
                         <Button 

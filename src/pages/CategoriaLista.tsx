@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid, List } from 'lucide-react';
@@ -262,22 +261,13 @@ const CategoriaLista = () => {
                       
                       {/* Botões de ação para grid */}
                       <div className="space-y-2">
-                        <div className="flex gap-1">
-                          {product.video && (
-                            <ProductVideoModal 
-                              videoUrl={product.video} 
-                              productName={product.produto} 
-                              productPrice={formatPrice(product.valor)} 
-                              productLink={product.link} 
-                            />
-                          )}
-                          <ProductPhotosModal 
-                            images={getProductImages(product)} 
-                            productName={product.produto} 
-                            productPrice={formatPrice(product.valor)} 
-                            productLink={product.link} 
-                          />
-                        </div>
+                        <ProductPhotosModal 
+                          images={getProductImages(product)} 
+                          productName={product.produto} 
+                          productPrice={formatPrice(product.valor)} 
+                          productLink={product.link}
+                          videoUrl={product.video}
+                        />
                         <Button 
                           size="sm" 
                           className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs" 
@@ -332,19 +322,12 @@ const CategoriaLista = () => {
                         
                         {/* Botões de ação */}
                         <div className="flex gap-1 sm:gap-2">
-                          {product.video && (
-                            <ProductVideoModal 
-                              videoUrl={product.video} 
-                              productName={product.produto} 
-                              productPrice={formatPrice(product.valor)} 
-                              productLink={product.link} 
-                            />
-                          )}
                           <ProductPhotosModal 
                             images={getProductImages(product)} 
                             productName={product.produto} 
                             productPrice={formatPrice(product.valor)} 
-                            productLink={product.link} 
+                            productLink={product.link}
+                            videoUrl={product.video}
                           />
                           <Button 
                             size="sm" 

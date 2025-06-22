@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { Star, Play, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { ProductVideoModal } from '@/components/ProductVideoModal';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { LazyImage } from '@/components/LazyImage';
@@ -136,19 +136,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         
         <div className="space-y-1">
           <FavoriteButton productId={product.id} />
-          {product.video && (
-            <ProductVideoModal 
-              videoUrl={product.video} 
-              productName={product.produto} 
-              productPrice={formatPrice(product.valor)} 
-              productLink={product.link} 
-            />
-          )}
           <ProductPhotosModal 
             images={getProductImages(product)} 
             productName={product.produto} 
             productPrice={formatPrice(product.valor)} 
-            productLink={product.link} 
+            productLink={product.link}
+            videoUrl={product.video}
           />
           <Button 
             size="sm" 
