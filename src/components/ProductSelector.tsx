@@ -20,10 +20,11 @@ interface ProductSelectorProps {
   products: Product[];
   selectedProducts: Product[];
   onProductToggle: (product: Product) => void;
-  onAnalyze: (answers?: QuestionnaireAnswers) => void;
+  onAnalyze: () => void;
+  onQuestionnaireChange: (answers: Record<string, string>) => void;
 }
 
-export const ProductSelector = ({ products, selectedProducts, onProductToggle, onAnalyze }: ProductSelectorProps) => {
+export const ProductSelector = ({ products, selectedProducts, onProductToggle, onAnalyze, onQuestionnaireChange }: ProductSelectorProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<QuestionnaireAnswers | undefined>();
   const [activeTab, setActiveTab] = useState('questions');
@@ -43,8 +44,18 @@ export const ProductSelector = ({ products, selectedProducts, onProductToggle, o
     product.produto.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAnalyze = () => {
-    onAnalyze(questionnaireAnswers);
+  const handleQuestionnaireChange = (answers: QuestionnaireAnswers) => {
+    setQuestionnaireAnswers(answers);
+    // Convert QuestionnaireAnswers to Record<string, string> format
+    const answersRecord: Record<string, string> = {
+      budget: answers.budget,
+      category: answers.category,
+      purpose: answers.purpose,
+      priority: answers.priority,
+      timeline: answers.timeline,
+      customNeed: answers.customNeed
+    };
+    onQuestionnaireChange(answersRecord);
   };
 
   return (
@@ -70,7 +81,7 @@ export const ProductSelector = ({ products, selectedProducts, onProductToggle, o
             <span className="ml-2 font-bold text-lg">{selectedProducts.length}/5</span>
           </div>
           <Button
-            onClick={handleAnalyze}
+            onClick={onAnalyze}
             disabled={selectedProducts.length === 0}
             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold"
           >
@@ -98,7 +109,7 @@ export const ProductSelector = ({ products, selectedProducts, onProductToggle, o
         </TabsList>
 
         <TabsContent value="questions" className="space-y-4">
-          <AIQuestionnaire onAnswersChange={setQuestionnaireAnswers} />
+          <AIQuestionnaire onAnswersChange={handleQuestionnaireChange} />
           <div className="text-center">
             <Button
               onClick={() => setActiveTab('products')}
