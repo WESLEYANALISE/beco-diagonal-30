@@ -1667,6 +1667,109 @@ export type Database = {
         }
         Relationships: []
       }
+      desafio_90_dias: {
+        Row: {
+          concluido: boolean | null
+          created_at: string | null
+          data_inicio: string
+          dia_atual: number | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          concluido?: boolean | null
+          created_at?: string | null
+          data_inicio?: string
+          dia_atual?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          concluido?: boolean | null
+          created_at?: string | null
+          data_inicio?: string
+          dia_atual?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      desafio_aplicacoes: {
+        Row: {
+          aplicado_manha: boolean | null
+          aplicado_noite: boolean | null
+          created_at: string | null
+          data_aplicacao: string
+          desafio_id: string
+          dia: number
+          id: string
+        }
+        Insert: {
+          aplicado_manha?: boolean | null
+          aplicado_noite?: boolean | null
+          created_at?: string | null
+          data_aplicacao?: string
+          desafio_id: string
+          dia: number
+          id?: string
+        }
+        Update: {
+          aplicado_manha?: boolean | null
+          aplicado_noite?: boolean | null
+          created_at?: string | null
+          data_aplicacao?: string
+          desafio_id?: string
+          dia?: number
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "desafio_aplicacoes_desafio_id_fkey"
+            columns: ["desafio_id"]
+            isOneToOne: false
+            referencedRelation: "desafio_90_dias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      desafio_fotos: {
+        Row: {
+          created_at: string | null
+          desafio_id: string
+          dia: number
+          foto_url: string
+          id: string
+          observacoes: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          desafio_id: string
+          dia: number
+          foto_url: string
+          id?: string
+          observacoes?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          desafio_id?: string
+          dia?: number
+          foto_url?: string
+          id?: string
+          observacoes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "desafio_fotos_desafio_id_fkey"
+            columns: ["desafio_id"]
+            isOneToOne: false
+            referencedRelation: "desafio_90_dias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dicionario_juridico: {
         Row: {
           area_direito: string | null
