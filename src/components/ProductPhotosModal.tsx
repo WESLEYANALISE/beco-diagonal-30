@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Image, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 
 interface ProductPhotosModalProps {
   images: string[];
@@ -34,6 +34,7 @@ export const ProductPhotosModal = ({ images, productName }: ProductPhotosModalPr
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl w-full p-4">
+        <DialogTitle className="sr-only">Fotos do produto {productName}</DialogTitle>
         <div className="relative">
           <button
             onClick={() => setOpen(false)}
