@@ -1,10 +1,9 @@
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Sparkles, Clock, CheckCircle, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Product {
   id: number;
@@ -25,6 +24,7 @@ export const AIAnalysisModal = ({ isOpen, onClose, selectedProducts, onAnalyze }
   const [loading, setLoading] = useState(false);
   const [analyzed, setAnalyzed] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const handleAnalyze = async () => {
     if (selectedProducts.length === 0) return;
@@ -50,93 +50,115 @@ export const AIAnalysisModal = ({ isOpen, onClose, selectedProducts, onAnalyze }
   };
 
   const formatAnalysis = (text: string) => {
-    return text.split('\n').map((line, index) => {
-      if (line.trim() === '') return <br key={index} />;
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => {
+      const trimmedLine = line.trim();
       
-      // Headers com ** (exemplo: **Análise Detalhada**)
-      if (line.match(/^\*\*.*\*\*$/)) {
-        const cleanLine = line.replace(/\*\*/g, '');
+      // Linha vazia
+      if (trimmedLine === '') {
+        return <br key={index} />;
+      }
+      
+      // Títulos principais com **TEXTO** isolado
+      if (trimmedLine.match(/^\*\*[^*]+\*\*$/)) {
+        const cleanTitle = trimmedLine.replace(/^\*\*|\*\*$/g, '');
         return (
           <h2 key={index} className="font-bold text-gray-800 mt-6 mb-3 text-lg border-b border-gray-200 pb-2">
-            {cleanLine}
+            {cleanTitle}
           </h2>
         );
       }
       
-      // Headers numerados (exemplo: **1. Produto A**)
-      if (line.match(/^\d+\.\s*\*\*.*\*\*$/)) {
-        const cleanLine = line.replace(/\*\*/g, '');
+      // Títulos com números como "1. **PRODUTO A**"
+      if (trimmedLine.match(/^\d+\.\s*\*\*[^*]+\*\*$/)) {
+        const cleanTitle = trimmedLine.replace(/\*\*/g, '');
         return (
           <h3 key={index} className="font-bold text-gray-800 mt-4 mb-2 text-base bg-gray-50 p-2 rounded">
-            {cleanLine}
+            {cleanTitle}
           </h3>
         );
       }
       
-      // Sub-items com - 
-      if (line.trim().startsWith('- ')) {
-        const cleanLine = line.replace(/^- /, '');
+      // Seções especiais como "RESUMO:", "PRODUTO 1:", etc
+      if (trimmedLine.match(/^(RESUMO|PRODUTO \d+|ANÁLISE|CONCLUSÃO|RECOMENDAÇÃO).*:$/i)) {
+        return (
+          <h3 key={index} className="font-bold text-purple-700 mt-4 mb-2 text-base bg-purple-50 p-2 rounded border-l-4 border-purple-500">
+            {trimmedLine}
+          </h3>
+        );
+      }
+      
+      // Itens com hífen (lista)
+      if (trimmedLine.startsWith('- ')) {
+        const cleanItem = trimmedLine.substring(2);
         return (
           <div key={index} className="flex items-start gap-2 ml-4 mb-2">
             <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-            <p className="text-gray-700 text-sm leading-relaxed">{cleanLine}</p>
+            <p className="text-gray-700 text-sm leading-relaxed">{processInlineFormatting(cleanItem)}</p>
           </div>
         );
       }
       
-      // Headers simples começando com **
-      if (line.match(/^\*\*[^*]+\*\*/)) {
-        const cleanLine = line.replace(/\*\*/g, '');
-        return (
-          <h4 key={index} className="font-semibold text-gray-800 mt-3 mb-2 text-sm">
-            {cleanLine}
-          </h4>
-        );
-      }
-      
-      // Texto normal (pode conter ** no meio para negrito)
-      if (line.includes('**')) {
-        const parts = line.split(/(\*\*[^*]+\*\*)/);
-        return (
-          <p key={index} className="text-gray-600 mb-2 text-sm leading-relaxed">
-            {parts.map((part, partIndex) => {
-              if (part.startsWith('**') && part.endsWith('**')) {
-                return <strong key={partIndex}>{part.replace(/\*\*/g, '')}</strong>;
-              }
-              return part;
-            })}
-          </p>
-        );
-      }
-      
-      // Texto normal
+      // Texto com formatação inline (negrito no meio do texto)
       return (
         <p key={index} className="text-gray-600 mb-2 text-sm leading-relaxed">
-          {line}
+          {processInlineFormatting(trimmedLine)}
         </p>
       );
     });
   };
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const element = e.currentTarget;
-    const scrollPercentage = (element.scrollTop / (element.scrollHeight - element.clientHeight)) * 100;
-    setScrollPosition(scrollPercentage);
+  const processInlineFormatting = (text: string) => {
+    // Remove asteriscos isolados ou mal formados
+    let cleanText = text.replace(/\*(?!\*)/g, ''); // Remove * isolados
+    cleanText = cleanText.replace(/\*{3,}/g, '**'); // Converte *** ou mais em **
+    
+    // Processa negrito **texto**
+    const parts = cleanText.split(/(\*\*[^*]+\*\*)/);
+    
+    return parts.map((part, partIndex) => {
+      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+        const boldText = part.slice(2, -2);
+        return <strong key={partIndex} className="font-semibold text-gray-800">{boldText}</strong>;
+      }
+      return part;
+    });
+  };
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+      const scrollPercentage = scrollHeight > clientHeight 
+        ? (scrollTop / (scrollHeight - clientHeight)) * 100 
+        : 0;
+      setScrollPosition(Math.min(scrollPercentage, 100));
+    }
   };
 
   const scrollToTop = () => {
-    const scrollElement = document.querySelector('[data-radix-scroll-area-viewport]');
-    if (scrollElement) {
-      scrollElement.scrollTo({ top: 0, behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const scrollToBottom = () => {
-    const scrollElement = document.querySelector('[data-radix-scroll-area-viewport]');
-    if (scrollElement) {
-      scrollElement.scrollTo({ top: scrollElement.scrollHeight, behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      const { scrollHeight } = scrollContainerRef.current;
+      scrollContainerRef.current.scrollTo({ top: scrollHeight, behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.addEventListener('scroll', handleScroll);
+      return () => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.removeEventListener('scroll', handleScroll);
+        }
+      };
+    }
+  }, [analyzed]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -148,7 +170,7 @@ export const AIAnalysisModal = ({ isOpen, onClose, selectedProducts, onAnalyze }
           Análise inteligente dos produtos selecionados para ajudar na sua decisão de compra
         </DialogDescription>
         
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full max-h-[90vh]">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white relative flex-shrink-0">
             <div className="flex items-center justify-between">
@@ -283,11 +305,15 @@ export const AIAnalysisModal = ({ isOpen, onClose, selectedProducts, onAnalyze }
                   />
                 </div>
                 
-                <ScrollArea className="flex-1 p-4" onScrollCapture={handleScroll}>
+                <div 
+                  ref={scrollContainerRef}
+                  className="flex-1 p-4 overflow-y-auto"
+                  style={{ maxHeight: 'calc(90vh - 200px)' }}
+                >
                   <div className="prose prose-sm max-w-none">
                     {formatAnalysis(analysis)}
                   </div>
-                </ScrollArea>
+                </div>
 
                 <div className="p-4 pt-2 border-t flex-shrink-0 bg-gray-50">
                   <div className="flex gap-3">
