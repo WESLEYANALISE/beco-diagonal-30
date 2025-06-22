@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -75,6 +74,16 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
         </DialogHeader>
 
         <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ height: 'calc(95vh - 160px)', minHeight: '300px' }}>
+          {/* Close Button - Top Right Corner */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-2 right-2 z-20 bg-white/90 hover:bg-white shadow-lg p-2 h-auto rounded-full"
+            onClick={onClose}
+          >
+            <X className="w-5 h-5 text-gray-700" />
+          </Button>
+
           {/* Navigation Buttons */}
           {images.length > 1 && (
             <>

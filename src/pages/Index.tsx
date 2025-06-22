@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingCart, SortAsc, DollarSign } from 'lucide-react';
+import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -189,6 +188,17 @@ const Index = () => {
     }
   };
 
+  const getCategoryIcon = (category: string) => {
+    const iconMap: Record<string, React.ComponentType<any>> = {
+      'Beleza e Cuidados Pessoais': Sparkles,
+      'Casa e Decoração': Home,
+      'Diversão e Familia': Gamepad2,
+      'Estilo e Moda': Shirt,
+      'Tecnologia e Acessórios': Smartphone
+    };
+    return iconMap[category] || ShoppingCart;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
@@ -232,21 +242,26 @@ const Index = () => {
               size="sm"
               variant="outline"
               onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')}
-              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30"
+              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
             >
+              <ShoppingCart className="w-4 h-4" />
               Todas
             </Button>
-            {categories.slice(0, 8).map(category => (
-              <Button
-                key={category}
-                size="sm"
-                variant="outline"
-                onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)}
-                className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30"
-              >
-                {category}
-              </Button>
-            ))}
+            {categories.slice(0, 8).map(category => {
+              const IconComponent = getCategoryIcon(category);
+              return (
+                <Button
+                  key={category}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)}
+                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
+                >
+                  <IconComponent className="w-4 h-4" />
+                  {category}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </section>
