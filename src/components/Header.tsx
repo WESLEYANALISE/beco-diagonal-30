@@ -1,14 +1,23 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, Heart, Home, Search, User, Grid3X3 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { useFavorites } from '@/hooks/useFavorites';
 
-const Header = () => {
+interface HeaderProps {
+  onSearch?: (searchTerm: string) => void;
+}
+
+const Header = ({ onSearch }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const { favoritesCount } = useFavorites();
 
   const navItems = [
     { path: '/', label: 'Início', icon: Home },
@@ -20,6 +29,11 @@ const Header = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
     setIsOpen(false);
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    onSearch?.(value);
   };
 
   return (
@@ -39,15 +53,19 @@ const Header = () => {
             </div>
 
             {/* Search Bar - Hidden on mobile */}
-            <div className="hidden md:flex flex-1 max-w-md mx-8">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  placeholder="Buscar produtos..."
-                  className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30"
-                />
+            {location.pathname === '/' && (
+              <div className="hidden md:flex flex-1 max-w-md mx-8">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Input
+                    placeholder="Buscar produtos..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex items-center space-x-2">
               {/* Desktop Navigation */}
@@ -57,11 +75,16 @@ const Header = () => {
                     key={item.path}
                     variant="ghost"
                     size="sm"
-                    className="text-white hover:bg-white/20 rounded-xl"
+                    className="text-white hover:bg-white/20 rounded-xl relative"
                     onClick={() => handleNavigation(item.path)}
                   >
                     <item.icon className="w-4 h-4 mr-2" />
                     {item.label}
+                    {item.path === '/favoritos' && favoritesCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs min-w-[20px] h-5 flex items-center justify-center p-0">
+                        {favoritesCount}
+                      </Badge>
+                    )}
                   </Button>
                 ))}
               </div>
@@ -86,25 +109,34 @@ const Header = () => {
                     </div>
                     
                     {/* Mobile Search */}
-                    <div className="mb-6 px-2">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5" />
-                        <Input
-                          placeholder="Buscar produtos..."
-                          className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
-                        />
+                    {location.pathname === '/' && (
+                      <div className="mb-6 px-2">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5" />
+                          <Input
+                            placeholder="Buscar produtos..."
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70"
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
                     
                     <nav className="space-y-2">
                       {navItems.map((item) => (
                         <button
                           key={item.path}
                           onClick={() => handleNavigation(item.path)}
-                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20 relative"
                         >
                           <item.icon className="w-5 h-5" />
                           <span className="font-medium">{item.label}</span>
+                          {item.path === '/favoritos' && favoritesCount > 0 && (
+                            <Badge className="ml-auto bg-yellow-500 text-black text-xs">
+                              {favoritesCount}
+                            </Badge>
+                          )}
                         </button>
                       ))}
                     </nav>
@@ -123,12 +155,17 @@ const Header = () => {
             <button
               key={item.path}
               onClick={() => handleNavigation(item.path)}
-              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 text-white hover:bg-white/20"
+              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 text-white hover:bg-white/20 relative"
             >
               <item.icon className="w-5 h-5 mb-1" />
               <span className="text-xs font-medium truncate max-w-full">
                 {item.label}
               </span>
+              {item.path === '/favoritos' && favoritesCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs min-w-[16px] h-4 flex items-center justify-center p-0">
+                  {favoritesCount > 9 ? '9+' : favoritesCount}
+                </Badge>
+              )}
             </button>
           ))}
         </div>

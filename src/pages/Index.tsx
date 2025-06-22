@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Header from '@/components/Header';
 import { ProductVideoModal } from '@/components/ProductVideoModal';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
+import { FavoriteButton } from '@/components/FavoriteButton';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -37,6 +38,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [showAll, setShowAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -50,7 +52,7 @@ const Index = () => {
 
   useEffect(() => {
     filterProducts();
-  }, [selectedCategory, products, showAll]);
+  }, [selectedCategory, products, showAll, searchTerm]);
 
   const fetchProducts = async () => {
     try {
@@ -78,12 +80,25 @@ const Index = () => {
   const filterProducts = () => {
     let filtered = products;
     
+    // Filtro por categoria
     if (selectedCategory !== 'todas') {
-      filtered = products.filter(product => product.categoria === selectedCategory);
+      filtered = filtered.filter(product => product.categoria === selectedCategory);
+    }
+    
+    // Filtro por busca
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(product => 
+        product.produto.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     
     // Mostra apenas 12 produtos inicialmente, ou todos se showAll for true
     setDisplayedProducts(showAll ? filtered : filtered.slice(0, 12));
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setShowAll(false); // Reset show all when searching
   };
 
   const getProductImages = (product: Product) => {
@@ -99,7 +114,7 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
-        <Header />
+        <Header onSearch={handleSearch} />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-32 bg-white/20 rounded-2xl"></div>
@@ -116,7 +131,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
-      <Header />
+      <Header onSearch={handleSearch} />
       
       {/* Hero Section */}
       <section className="px-4 md:px-6 py-8 md:py-16">
@@ -228,6 +243,7 @@ const Index = () => {
                       </div>
                       
                       <div className="space-y-2">
+                        <FavoriteButton productId={product.id} />
                         {product.video && (
                           <ProductVideoModal videoUrl={product.video} productName={product.produto} />
                         )}
@@ -259,7 +275,7 @@ const Index = () => {
               Todos os Produtos
             </h2>
             <p className="text-lg text-white/80 mb-6">
-              Explore nossa coleção completa por categoria
+              {searchTerm ? `Resultados para "${searchTerm}"` : 'Explore nossa coleção completa por categoria'}
             </p>
             
             {/* Category Filter */}
@@ -280,96 +296,124 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
-            {displayedProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
-                <div className="relative">
-                  <Carousel className="w-full">
-                    <CarouselContent>
-                      {getProductImages(product).map((image, index) => (
-                        <CarouselItem key={index}>
-                          <div className="aspect-square overflow-hidden">
-                            <img 
-                              src={image} 
-                              alt={`${product.produto} - ${index + 1}`}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                            />
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-6 h-6" />
-                    <CarouselNext className="right-1 bg-white/90 hover:bg-white w-6 h-6" />
-                  </Carousel>
-                  
-                  {product.video && (
-                    <div className="absolute top-2 right-2">
-                      <div className="bg-red-500 rounded-full p-1">
-                        <Play className="w-3 h-3 text-white" />
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="absolute top-2 left-2">
-                    <Badge className="bg-red-500 text-white font-bold text-xs">
-                      PROMO
-                    </Badge>
-                  </div>
-
-                  {product.categoria && (
-                    <div className="absolute bottom-2 left-2">
-                      <Badge variant="secondary" className="text-xs bg-white/90">
-                        {product.categoria}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                <CardContent className="p-3">
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm">
-                    {product.produto}
-                  </h3>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-base md:text-lg font-bold text-red-500">
-                      {product.valor}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                      <span className="text-xs text-gray-600">4.8</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    {product.video && (
-                      <ProductVideoModal videoUrl={product.video} productName={product.produto} />
-                    )}
-                    <ProductPhotosModal images={getProductImages(product)} productName={product.produto} />
-                    <Button 
-                      size="sm"
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"
-                      onClick={() => window.open(product.link, '_blank')}
-                    >
-                      <ShoppingCart className="w-3 h-3 mr-1" />
-                      Comprar na Shopee
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Ver Mais Button */}
-          {!showAll && (selectedCategory === 'todas' ? products.length > 12 : products.filter(p => p.categoria === selectedCategory).length > 12) && (
-            <div className="text-center">
-              <Button 
-                onClick={() => setShowAll(true)}
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm px-8 py-3"
-                variant="outline"
-              >
-                Ver Mais Produtos
-                <ChevronDown className="w-4 h-4 ml-2" />
-              </Button>
+          {displayedProducts.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
+                <ShoppingCart className="w-16 h-16 text-white/50" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-4">
+                Nenhum produto encontrado
+              </h2>
+              <p className="text-white/80 mb-6">
+                {searchTerm 
+                  ? `Não encontramos produtos para "${searchTerm}"`
+                  : 'Não há produtos nesta categoria'
+                }
+              </p>
+              {searchTerm && (
+                <Button 
+                  onClick={() => setSearchTerm('')}
+                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold"
+                >
+                  Ver Todos os Produtos
+                </Button>
+              )}
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
+                {displayedProducts.map((product) => (
+                  <Card key={product.id} className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
+                    <div className="relative">
+                      <Carousel className="w-full">
+                        <CarouselContent>
+                          {getProductImages(product).map((image, index) => (
+                            <CarouselItem key={index}>
+                              <div className="aspect-square overflow-hidden">
+                                <img 
+                                  src={image} 
+                                  alt={`${product.produto} - ${index + 1}`}
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                />
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-6 h-6" />
+                        <CarouselNext className="right-1 bg-white/90 hover:bg-white w-6 h-6" />
+                      </Carousel>
+                      
+                      {product.video && (
+                        <div className="absolute top-2 right-2">
+                          <div className="bg-red-500 rounded-full p-1">
+                            <Play className="w-3 h-3 text-white" />
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="absolute top-2 left-2">
+                        <Badge className="bg-red-500 text-white font-bold text-xs">
+                          PROMO
+                        </Badge>
+                      </div>
+
+                      {product.categoria && (
+                        <div className="absolute bottom-2 left-2">
+                          <Badge variant="secondary" className="text-xs bg-white/90">
+                            {product.categoria}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+
+                    <CardContent className="p-3">
+                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm">
+                        {product.produto}
+                      </h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-base md:text-lg font-bold text-red-500">
+                          {product.valor}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                          <span className="text-xs text-gray-600">4.8</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <FavoriteButton productId={product.id} />
+                        {product.video && (
+                          <ProductVideoModal videoUrl={product.video} productName={product.produto} />
+                        )}
+                        <ProductPhotosModal images={getProductImages(product)} productName={product.produto} />
+                        <Button 
+                          size="sm"
+                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"
+                          onClick={() => window.open(product.link, '_blank')}
+                        >
+                          <ShoppingCart className="w-3 h-3 mr-1" />
+                          Comprar na Shopee
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Ver Mais Button */}
+              {!showAll && (selectedCategory === 'todas' ? products.filter(p => searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true).length > 12 : products.filter(p => p.categoria === selectedCategory && (searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true)).length > 12) && (
+                <div className="text-center">
+                  <Button 
+                    onClick={() => setShowAll(true)}
+                    className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm px-8 py-3"
+                    variant="outline"
+                  >
+                    Ver Mais Produtos
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
