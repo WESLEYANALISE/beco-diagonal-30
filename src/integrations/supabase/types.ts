@@ -4027,6 +4027,33 @@ export type Database = {
           },
         ]
       }
+      "MINOXIDIL VIDEOS": {
+        Row: {
+          data: string | null
+          duracao: string | null
+          id: number
+          thumbnail: string | null
+          titulo: string | null
+          video: string | null
+        }
+        Insert: {
+          data?: string | null
+          duracao?: string | null
+          id?: number
+          thumbnail?: string | null
+          titulo?: string | null
+          video?: string | null
+        }
+        Update: {
+          data?: string | null
+          duracao?: string | null
+          id?: number
+          thumbnail?: string | null
+          titulo?: string | null
+          video?: string | null
+        }
+        Relationships: []
+      }
       modelos_peticoes: {
         Row: {
           area: string | null
