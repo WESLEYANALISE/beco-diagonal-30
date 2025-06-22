@@ -1,13 +1,14 @@
 
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Filter, DollarSign, Sparkles } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Filter, DollarSign, Sparkles, Info, Star } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useFavorites } from '@/hooks/useFavorites';
 
 interface HeaderProps {
@@ -42,6 +43,11 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
 
   const handlePriceFilter = () => {
     onPriceFilter?.(priceRange[0], priceRange[1]);
+  };
+
+  const handleEvaluateApp = () => {
+    window.open('https://play.google.com/store/apps/details?id=br.com.app.gpu3121847.gpu5864a3ed792bc282cc5655927ef358d2', '_blank');
+    setIsOpen(false);
   };
 
   return (
@@ -154,6 +160,52 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
                           )}
                         </button>
                       ))}
+                      
+                      {/* Separator */}
+                      <div className="border-t border-white/20 my-4 mx-4"></div>
+                      
+                      {/* About App */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20">
+                            <Info className="w-5 h-5" />
+                            <span className="font-medium">Sobre o app</span>
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md mx-4">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                              <ShoppingCart className="w-5 h-5 text-red-500" />
+                              Sobre o Achadinhos Shopee
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 text-gray-700">
+                            <p className="text-sm leading-relaxed">
+                              O <span className="font-semibold text-red-600">Achadinhos Shopee</span> é o seu companheiro perfeito para encontrar os melhores produtos com os menores preços!
+                            </p>
+                            <p className="text-sm leading-relaxed">
+                              Nosso app reúne cuidadosamente os <span className="font-semibold">melhores achadinhos da Shopee</span>, oferecendo a você acesso aos produtos mais essenciais para o seu dia a dia com preços imbatíveis.
+                            </p>
+                            <p className="text-sm leading-relaxed">
+                              Aqui você encontra desde itens de beleza, casa e decoração até gadgets e acessórios, tudo selecionado para garantir qualidade e economia em suas compras.
+                            </p>
+                            <div className="bg-gradient-to-r from-red-50 to-orange-50 p-3 rounded-lg border-l-4 border-red-500">
+                              <p className="text-xs text-red-700 font-medium">
+                                💰 Economize tempo e dinheiro encontrando as melhores ofertas em um só lugar!
+                              </p>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      
+                      {/* Rate App */}
+                      <button
+                        onClick={handleEvaluateApp}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20"
+                      >
+                        <Star className="w-5 h-5" />
+                        <span className="font-medium">Avaliar App</span>
+                      </button>
                     </nav>
                   </div>
                 </SheetContent>
