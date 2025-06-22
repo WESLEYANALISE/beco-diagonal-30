@@ -47,6 +47,7 @@ const Index = () => {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
+  const [currentFeaturedCategory, setCurrentFeaturedCategory] = useState<string>('');
   const { showSuccess, showError, showLoading, showInfo } = useToastNotifications();
 
   useEffect(() => {
@@ -63,6 +64,24 @@ const Index = () => {
     filterProducts();
   }, [selectedCategory, products, searchTerm, sortBy, sortOrder]);
 
+  // Rotação automática dos produtos em destaque por categoria
+  useEffect(() => {
+    if (categories.length > 0 && !showingAI) {
+      const interval = setInterval(() => {
+        const currentIndex = categories.indexOf(currentFeaturedCategory);
+        const nextIndex = (currentIndex + 1) % categories.length;
+        const nextCategory = categories[nextIndex];
+        setCurrentFeaturedCategory(nextCategory);
+        
+        // Atualizar produtos em destaque da nova categoria
+        const categoryProducts = products.filter(p => p.categoria === nextCategory);
+        setFeaturedProducts(categoryProducts.slice(0, 8));
+      }, 15000); // Muda a cada 15 segundos
+
+      return () => clearInterval(interval);
+    }
+  }, [categories, currentFeaturedCategory, products, showingAI]);
+
   const fetchProducts = async () => {
     try {
       showLoading("Carregando produtos");
@@ -74,10 +93,17 @@ const Index = () => {
       if (error) throw error;
       
       setProducts(data || []);
-      setFeaturedProducts((data || []).slice(0, 8));
-
+      
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
       setCategories(uniqueCategories);
+      
+      // Definir categoria inicial e produtos em destaque
+      if (uniqueCategories.length > 0) {
+        const initialCategory = uniqueCategories[0];
+        setCurrentFeaturedCategory(initialCategory);
+        const initialFeatured = (data || []).filter(p => p.categoria === initialCategory).slice(0, 8);
+        setFeaturedProducts(initialFeatured);
+      }
       
       showSuccess("Produtos carregados com sucesso!");
     } catch (error) {
@@ -199,6 +225,10 @@ const Index = () => {
     return iconMap[category] || ShoppingCart;
   };
 
+  const getCategoryProducts = (category: string) => {
+    return products.filter(p => p.categoria === category).slice(0, 6);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
@@ -266,6 +296,57 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Carrosséis por Categoria */}
+      {!showingAI && categories.slice(0, 3).map((category, index) => {
+        const categoryProducts = getCategoryProducts(category);
+        if (categoryProducts.length === 0) return null;
+        
+        const IconComponent = getCategoryIcon(category);
+        
+        return (
+          <section key={category} className="px-4 py-4 animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <IconComponent className="w-5 h-5 text-white" />
+                  <h3 className="text-lg font-bold text-white">
+                    {category}
+                  </h3>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)}
+                  className="text-white hover:bg-white/20 text-xs"
+                >
+                  Ver Todos
+                  <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+              </div>
+              
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2">
+                  {categoryProducts.map((product, productIndex) => (
+                    <CarouselItem 
+                      key={product.id} 
+                      className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 animate-fade-in"
+                      style={{ animationDelay: `${productIndex * 0.1}s` }}
+                    >
+                      <ProductCard 
+                        product={product} 
+                        compact={true}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-1 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
+                <CarouselNext className="right-1 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
+              </Carousel>
+            </div>
+          </section>
+        );
+      })}
+
       {/* Hero Section */}
       <HeroSection productsCount={products.length} />
 
@@ -291,10 +372,10 @@ const Index = () => {
             ) : (
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  🔥 Mais Vendidos
+                  🔥 Mais Vendidos - {currentFeaturedCategory}
                 </h2>
                 <p className="text-base text-white/80 animate-slide-in-right">
-                  Os produtos favoritos dos nossos clientes
+                  Os produtos favoritos dos nossos clientes em {currentFeaturedCategory}
                 </p>
               </div>
             )}
@@ -353,10 +434,10 @@ const Index = () => {
               {/* Ver Mais button for Mais Vendidos */}
               <div className="text-center animate-fade-in">
                 <Button 
-                  onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')}
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(currentFeaturedCategory)}&tipo=categoria`)}
                   className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
                 >
-                  Ver Mais Produtos
+                  Ver Mais de {currentFeaturedCategory}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
