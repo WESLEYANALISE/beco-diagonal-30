@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown, SortAsc, DollarSign } from 'lucide-react';
@@ -562,11 +563,11 @@ const Index = () => {
                 {showingAI ? (
                   <div className="prose prose-invert max-w-none">
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                      🤖 **Me Ajuda Escolher**
+                      🤖 <strong>Me Ajuda Escolher</strong>
                     </h2>
                     <div className="text-base text-white/90 animate-slide-in-right space-y-2">
-                      <p>**Selecione até 5 produtos** e nossa **IA** irá te ajudar a decidir qual é melhor</p>
-                      <p className="text-sm">✨ *Análise personalizada baseada em suas necessidades*</p>
+                      <p><strong>Selecione até 5 produtos</strong> e nossa <strong>IA</strong> irá te ajudar a decidir qual é melhor</p>
+                      <p className="text-sm">✨ <em>Análise personalizada baseada em suas necessidades</em></p>
                     </div>
                   </div>
                 ) : (
@@ -582,12 +583,31 @@ const Index = () => {
               </div>
 
               {showingAI ? (
-                <ProductSelector
-                  products={products}
-                  selectedProducts={selectedProducts}
-                  onProductToggle={handleProductToggle}
-                  onAnalyze={handleAnalyze}
-                />
+                <>
+                  {/* Categories during AI mode */}
+                  <div className="max-w-md mx-auto mb-6 animate-scale-in">
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 z-50">
+                        <SelectItem value="todas">Todas as Categorias</SelectItem>
+                        {categories.map(category => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <ProductSelector
+                    products={displayedProducts}
+                    selectedProducts={selectedProducts}
+                    onProductToggle={handleProductToggle}
+                    onAnalyze={handleAnalyze}
+                  />
+                </>
               ) : (
                 <Carousel className="w-full animate-scale-in">
                   <CarouselContent className="-ml-2 md:-ml-3">
@@ -855,19 +875,7 @@ const Index = () => {
                       ))}
                     </div>
 
-                    {/* Ver Mais Button */}
-                    {!showAll && (selectedCategory === 'todas' ? products.filter(p => searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true).length > 20 : products.filter(p => p.categoria === selectedCategory && (searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true)).length > 20) && (
-                      <div className="text-center animate-fade-in">
-                        <Button 
-                          onClick={() => setShowAll(true)} 
-                          className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm px-8 py-3 transition-all duration-300 hover:scale-105" 
-                          variant="outline"
-                        >
-                          Ver Mais Produtos
-                          <ChevronDown className="w-4 h-4 ml-2 animate-bounce" />
-                        </Button>
-                      </div>
-                    )}
+                    {/* Ver Mais Button - removed as requested */}
                   </>
                 )}
               </div>
