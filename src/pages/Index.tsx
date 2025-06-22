@@ -302,8 +302,8 @@ const Index = () => {
                           {product.produto}
                         </h3>
                         <div className="flex items-center justify-between mb-3">
-                          <div className="text-base font-bold text-red-500">
-                            A partir de {formatPrice(product.valor)}
+                          <div className="text-sm font-bold text-red-500">
+                            Menos de {formatPrice(product.valor)}
                           </div>
                           <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 text-yellow-400 fill-current animate-spin-slow" />
@@ -423,8 +423,8 @@ const Index = () => {
                         {product.produto}
                       </h3>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-base font-bold text-red-500">
-                          A partir de {formatPrice(product.valor)}
+                        <div className="text-xs font-bold text-red-500">
+                          Menos de {formatPrice(product.valor)}
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3 text-yellow-400 fill-current" />
@@ -526,8 +526,8 @@ const Index = () => {
                             {product.produto}
                           </h3>
                           <div className="flex items-center justify-between mb-3">
-                            <div className="text-base font-bold text-red-500">
-                              A partir de {formatPrice(product.valor)}
+                            <div className="text-sm font-bold text-red-500">
+                              Menos de {formatPrice(product.valor)}
                             </div>
                             <div className="flex items-center gap-1">
                               <Star className="w-3 h-3 text-yellow-400 fill-current animate-spin-slow" />
@@ -703,8 +703,8 @@ const Index = () => {
                             {product.produto}
                           </h3>
                           <div className="flex items-center justify-between mb-2">
-                            <div className="text-base font-bold text-red-500">
-                              A partir de {formatPrice(product.valor)}
+                            <div className="text-xs font-bold text-red-500">
+                              Menos de {formatPrice(product.valor)}
                             </div>
                             <div className="flex items-center gap-1">
                               <Star className="w-3 h-3 text-yellow-400 fill-current" />

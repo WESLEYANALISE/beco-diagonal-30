@@ -172,27 +172,54 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
                             <span className="font-medium">Sobre o app</span>
                           </button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-md mx-4">
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <ShoppingCart className="w-5 h-5 text-red-500" />
-                              Sobre o Achadinhos Shopee
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4 text-gray-700">
-                            <p className="text-sm leading-relaxed">
-                              O <span className="font-semibold text-red-600">Achadinhos Shopee</span> é o seu companheiro perfeito para encontrar os melhores produtos com os menores preços!
-                            </p>
-                            <p className="text-sm leading-relaxed">
-                              Nosso app reúne cuidadosamente os <span className="font-semibold">melhores achadinhos da Shopee</span>, oferecendo a você acesso aos produtos mais essenciais para o seu dia a dia com preços imbatíveis.
-                            </p>
-                            <p className="text-sm leading-relaxed">
-                              Aqui você encontra desde itens de beleza, casa e decoração até gadgets e acessórios, tudo selecionado para garantir qualidade e economia em suas compras.
-                            </p>
-                            <div className="bg-gradient-to-r from-red-50 to-orange-50 p-3 rounded-lg border-l-4 border-red-500">
-                              <p className="text-xs text-red-700 font-medium">
-                                💰 Economize tempo e dinheiro encontrando as melhores ofertas em um só lugar!
-                              </p>
+                        <DialogContent className="max-w-md mx-4 bg-white/95 backdrop-blur-xl border-0 shadow-2xl">
+                          <div className="absolute inset-0 bg-gradient-to-br from-red-50/90 via-orange-50/90 to-white/90 rounded-lg backdrop-blur-xl"></div>
+                          <div className="relative z-10">
+                            <DialogHeader className="space-y-4 text-center pb-6">
+                              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                <ShoppingCart className="w-8 h-8 text-white" />
+                              </div>
+                              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                                Achadinhos Shopee
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-6 text-gray-700">
+                              <div className="text-center">
+                                <p className="text-lg font-semibold text-gray-800 mb-2">
+                                  Seu companheiro perfeito para economizar!
+                                </p>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                  Encontre os melhores produtos com os menores preços
+                                </p>
+                              </div>
+                              
+                              <div className="space-y-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <p className="text-sm leading-relaxed">
+                                    Nosso app reúne cuidadosamente os <span className="font-semibold text-red-600">melhores achadinhos da Shopee</span>, oferecendo acesso aos produtos mais essenciais para o seu dia a dia.
+                                  </p>
+                                </div>
+                                
+                                <div className="flex items-start gap-3">
+                                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                                  <p className="text-sm leading-relaxed">
+                                    Desde itens de beleza, casa e decoração até gadgets e acessórios, tudo selecionado para garantir <span className="font-semibold text-orange-600">qualidade e economia</span>.
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-gradient-to-r from-red-100 via-orange-100 to-red-100 p-4 rounded-xl border border-red-200/50 backdrop-blur-sm">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-lg">💰</span>
+                                  <p className="text-sm font-semibold text-red-700">
+                                    Economize tempo e dinheiro
+                                  </p>
+                                </div>
+                                <p className="text-xs text-red-600">
+                                  Encontre as melhores ofertas em um só lugar!
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </DialogContent>
