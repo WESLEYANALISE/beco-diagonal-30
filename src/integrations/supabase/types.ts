@@ -5196,6 +5196,45 @@ export type Database = {
         }
         Relationships: []
       }
+      SHOPEE: {
+        Row: {
+          id: number
+          imagem1: string | null
+          imagem2: string | null
+          imagem3: string | null
+          imagem4: string | null
+          imagem5: string | null
+          link: string | null
+          produto: string | null
+          valor: string | null
+          video: string | null
+        }
+        Insert: {
+          id?: number
+          imagem1?: string | null
+          imagem2?: string | null
+          imagem3?: string | null
+          imagem4?: string | null
+          imagem5?: string | null
+          link?: string | null
+          produto?: string | null
+          valor?: string | null
+          video?: string | null
+        }
+        Update: {
+          id?: number
+          imagem1?: string | null
+          imagem2?: string | null
+          imagem3?: string | null
+          imagem4?: string | null
+          imagem5?: string | null
+          link?: string | null
+          produto?: string | null
+          valor?: string | null
+          video?: string | null
+        }
+        Relationships: []
+      }
       simulado_edicoes: {
         Row: {
           ano: number
