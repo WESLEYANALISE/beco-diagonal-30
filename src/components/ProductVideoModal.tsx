@@ -2,18 +2,19 @@
 import { useState, useEffect } from 'react';
 import { Play, Maximize, ShoppingCart, X, Expand } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface ProductVideoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
   videoUrl: string;
   productName: string;
   productPrice: string;
   productLink: string;
 }
 
-export const ProductVideoModal = ({ videoUrl, productName, productPrice, productLink }: ProductVideoModalProps) => {
+export const ProductVideoModal = ({ isOpen, onClose, videoUrl, productName, productPrice, productLink }: ProductVideoModalProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -23,15 +24,11 @@ export const ProductVideoModal = ({ videoUrl, productName, productPrice, product
     window.open(productLink, '_blank');
   };
 
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
-        handleClose();
+        onClose();
       }
     };
 
@@ -42,16 +39,10 @@ export const ProductVideoModal = ({ videoUrl, productName, productPrice, product
     return () => {
       document.removeEventListener('keydown', handleEscKey);
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="w-full text-xs bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300">
-          <Play className="w-3 h-3 mr-1" />
-          Ver Vídeo
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`${isFullscreen ? 'max-w-full h-full p-0' : 'max-w-4xl'} bg-black border-0`}>
         <div className="relative w-full h-full flex flex-col">
           {/* Video Container */}
@@ -60,15 +51,14 @@ export const ProductVideoModal = ({ videoUrl, productName, productPrice, product
               src={videoUrl}
               controls
               autoPlay
-              muted={false} // Áudio ligado por padrão
+              muted={false}
               loop
               className="w-full h-full object-contain"
               playsInline
             />
             
-            {/* Controls Container - mais visível */}
+            {/* Controls Container */}
             <div className="absolute top-4 right-4 flex gap-2">
-              {/* Expand button for horizontal videos */}
               <Button
                 size="sm"
                 variant="ghost"
@@ -79,11 +69,10 @@ export const ProductVideoModal = ({ videoUrl, productName, productPrice, product
                 <Expand className="w-5 h-5" />
               </Button>
               
-              {/* Close/Minimize Button - mais visível */}
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={handleClose}
+                onClick={onClose}
                 className="bg-red-600/90 hover:bg-red-700 text-white border-2 border-red-400/50 hover:border-red-300 transition-all duration-300 hover:scale-110 rounded-lg p-2"
                 title="Fechar vídeo"
               >
@@ -91,7 +80,7 @@ export const ProductVideoModal = ({ videoUrl, productName, productPrice, product
               </Button>
             </div>
 
-            {/* ESC hint - only show when not fullscreen */}
+            {/* ESC hint */}
             {!isFullscreen && (
               <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-xs">
                 Pressione ESC para fechar
