@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown, SortAsc, DollarSign, Eye } from 'lucide-react';
+import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown, SortAsc, DollarSign } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -224,45 +224,34 @@ const Index = () => {
       {/* Category Quick Access Buttons */}
       <section className="px-4 py-2 animate-fade-in">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide flex-1">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <Button
+              size="sm"
+              variant={selectedCategory === 'todas' ? 'default' : 'outline'}
+              onClick={() => setSelectedCategory('todas')}
+              className={`whitespace-nowrap transition-all duration-300 hover:scale-105 ${
+                selectedCategory === 'todas' 
+                  ? 'bg-white text-red-600 hover:bg-gray-100 shadow-lg' 
+                  : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
+              }`}
+            >
+              Todas
+            </Button>
+            {categories.slice(0, 8).map(category => (
               <Button
+                key={category}
                 size="sm"
-                variant={selectedCategory === 'todas' ? 'default' : 'outline'}
-                onClick={() => setSelectedCategory('todas')}
+                variant={selectedCategory === category ? 'default' : 'outline'}
+                onClick={() => setSelectedCategory(category)}
                 className={`whitespace-nowrap transition-all duration-300 hover:scale-105 ${
-                  selectedCategory === 'todas' 
+                  selectedCategory === category 
                     ? 'bg-white text-red-600 hover:bg-gray-100 shadow-lg' 
                     : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
                 }`}
               >
-                Todas
+                {category}
               </Button>
-              {categories.slice(0, 8).map(category => (
-                <Button
-                  key={category}
-                  size="sm"
-                  variant={selectedCategory === category ? 'default' : 'outline'}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`whitespace-nowrap transition-all duration-300 hover:scale-105 ${
-                    selectedCategory === category 
-                      ? 'bg-white text-red-600 hover:bg-gray-100 shadow-lg' 
-                      : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
-                  }`}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate('/categorias')}
-              className="ml-2 bg-white/20 text-white border-white/30 hover:bg-white/30 whitespace-nowrap"
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              Ver Todos
-            </Button>
+            ))}
           </div>
         </div>
       </section>
@@ -455,7 +444,7 @@ const Index = () => {
                     key={product.id}
                     id={`product-${product.id}`}
                     className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group animate-fade-in"
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <div className="relative">
                       <Carousel className="w-full">
@@ -571,13 +560,14 @@ const Index = () => {
                 </div>
                 
                 {showingAI ? (
-                  <div>
+                  <div className="prose prose-invert max-w-none">
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                      🤖 Me Ajuda Escolher
+                      🤖 **Me Ajuda Escolher**
                     </h2>
-                    <p className="text-base text-white/80 animate-slide-in-right">
-                      Selecione até 5 produtos e nossa IA irá te ajudar a decidir qual é melhor
-                    </p>
+                    <div className="text-base text-white/90 animate-slide-in-right space-y-2">
+                      <p>**Selecione até 5 produtos** e nossa **IA** irá te ajudar a decidir qual é melhor</p>
+                      <p className="text-sm">✨ *Análise personalizada baseada em suas necessidades*</p>
+                    </div>
                   </div>
                 ) : (
                   <div>
@@ -674,7 +664,7 @@ const Index = () => {
                               />
                               <Button 
                                 size="sm" 
-                                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs hover:scale-105 transition-all duration-300" 
+                                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1 hover:scale-105 transition-all duration-300" 
                                 onClick={() => window.open(product.link, '_blank')}
                               >
                                 <ShoppingCart className="w-3 h-3 mr-1" />
