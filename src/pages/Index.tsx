@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, Play, ShoppingCart, Star, TrendingUp, Gift, Zap, ChevronDown } from 'lucide-react';
@@ -12,7 +11,6 @@ import { ProductVideoModal } from '@/components/ProductVideoModal';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { supabase } from "@/integrations/supabase/client";
-
 interface Product {
   id: number;
   produto: string;
@@ -26,11 +24,9 @@ interface Product {
   link: string;
   categoria: string;
 }
-
 const Index = () => {
   const [searchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get('categoria');
-  
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -39,34 +35,28 @@ const Index = () => {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
   useEffect(() => {
     fetchProducts();
   }, []);
-
   useEffect(() => {
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
     }
   }, [categoryFromUrl]);
-
   useEffect(() => {
     filterProducts();
   }, [selectedCategory, products, showAll, searchTerm]);
-
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('SHOPEE')
-        .select('*')
-        .order('id');
-
+      const {
+        data,
+        error
+      } = await supabase.from('SHOPEE').select('*').order('id');
       if (error) throw error;
-
       setProducts(data || []);
       // Pega os primeiros 8 produtos como destaques (mais vendidos)
       setFeaturedProducts((data || []).slice(0, 8));
-      
+
       // Extrai categorias únicas
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
       setCategories(uniqueCategories);
@@ -76,41 +66,29 @@ const Index = () => {
       setLoading(false);
     }
   };
-
   const filterProducts = () => {
     let filtered = products;
-    
+
     // Filtro por categoria
     if (selectedCategory !== 'todas') {
       filtered = filtered.filter(product => product.categoria === selectedCategory);
     }
-    
+
     // Filtro por busca
     if (searchTerm.trim()) {
-      filtered = filtered.filter(product => 
-        product.produto.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(product => product.produto.toLowerCase().includes(searchTerm.toLowerCase()));
     }
-    
+
     // Mostra apenas 20 produtos inicialmente, ou todos se showAll for true
     setDisplayedProducts(showAll ? filtered : filtered.slice(0, 20));
   };
-
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setShowAll(false); // Reset show all when searching
   };
-
   const getProductImages = (product: Product) => {
-    return [
-      product.imagem1,
-      product.imagem2,
-      product.imagem3,
-      product.imagem4,
-      product.imagem5
-    ].filter(Boolean);
+    return [product.imagem1, product.imagem2, product.imagem3, product.imagem4, product.imagem5].filter(Boolean);
   };
-
   const formatPrice = (price: string) => {
     // Se já tem R$, retorna como está, senão adiciona
     if (price.includes('R$')) {
@@ -118,27 +96,20 @@ const Index = () => {
     }
     return `R$ ${price}`;
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
+    return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
         <Header onSearch={handleSearch} />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-32 bg-white/20 rounded-2xl"></div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
-                <div key={i} className="h-64 bg-white/20 rounded-2xl"></div>
-              ))}
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => <div key={i} className="h-64 bg-white/20 rounded-2xl"></div>)}
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
+  return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
       <Header onSearch={handleSearch} />
       
       {/* Hero Section */}
@@ -199,35 +170,26 @@ const Index = () => {
 
           <Carousel className="w-full">
             <CarouselContent className="-ml-2 md:-ml-3">
-              {featuredProducts.map((product) => (
-                <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+              {featuredProducts.map(product => <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                   <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
                     <div className="relative">
                       <Carousel className="w-full">
                         <CarouselContent>
-                          {getProductImages(product).map((image, index) => (
-                            <CarouselItem key={index}>
+                          {getProductImages(product).map((image, index) => <CarouselItem key={index}>
                               <div className="aspect-square overflow-hidden">
-                                <img 
-                                  src={image} 
-                                  alt={`${product.produto} - ${index + 1}`}
-                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                />
+                                <img src={image} alt={`${product.produto} - ${index + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                               </div>
-                            </CarouselItem>
-                          ))}
+                            </CarouselItem>)}
                         </CarouselContent>
                         <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-6 h-6" />
                         <CarouselNext className="right-1 bg-white/90 hover:bg-white w-6 h-6" />
                       </Carousel>
                       
-                      {product.video && (
-                        <div className="absolute top-2 right-2">
+                      {product.video && <div className="absolute top-2 right-2">
                           <div className="bg-red-500 rounded-full p-1">
                             <Play className="w-3 h-3 text-white" />
                           </div>
-                        </div>
-                      )}
+                        </div>}
                       
                       <div className="absolute top-2 left-2">
                         <Badge className="bg-red-500 text-white font-bold text-xs">
@@ -252,33 +214,16 @@ const Index = () => {
                       
                       <div className="space-y-1">
                         <FavoriteButton productId={product.id} />
-                        {product.video && (
-                          <ProductVideoModal 
-                            videoUrl={product.video} 
-                            productName={product.produto}
-                            productPrice={formatPrice(product.valor)}
-                            productLink={product.link}
-                          />
-                        )}
-                        <ProductPhotosModal 
-                          images={getProductImages(product)} 
-                          productName={product.produto}
-                          productPrice={formatPrice(product.valor)}
-                          productLink={product.link}
-                        />
-                        <Button 
-                          size="sm"
-                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"
-                          onClick={() => window.open(product.link, '_blank')}
-                        >
+                        {product.video && <ProductVideoModal videoUrl={product.video} productName={product.produto} productPrice={formatPrice(product.valor)} productLink={product.link} />}
+                        <ProductPhotosModal images={getProductImages(product)} productName={product.produto} productPrice={formatPrice(product.valor)} productLink={product.link} />
+                        <Button size="sm" className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs" onClick={() => window.open(product.link, '_blank')}>
                           <ShoppingCart className="w-3 h-3 mr-1" />
                           Comprar na Shopee
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
-                </CarouselItem>
-              ))}
+                </CarouselItem>)}
             </CarouselContent>
             <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
             <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
@@ -305,18 +250,15 @@ const Index = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todas">Todas as Categorias</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
+                  {categories.map(category => <SelectItem key={category} value={category}>
                       {category}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {displayedProducts.length === 0 ? (
-            <div className="text-center py-16">
+          {displayedProducts.length === 0 ? <div className="text-center py-16">
               <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
                 <ShoppingCart className="w-16 h-16 text-white/50" />
               </div>
@@ -324,65 +266,42 @@ const Index = () => {
                 Nenhum produto encontrado
               </h2>
               <p className="text-white/80 mb-6">
-                {searchTerm 
-                  ? `Não encontramos produtos para "${searchTerm}"`
-                  : 'Não há produtos nesta categoria'
-                }
+                {searchTerm ? `Não encontramos produtos para "${searchTerm}"` : 'Não há produtos nesta categoria'}
               </p>
-              {searchTerm && (
-                <Button 
-                  onClick={() => setSearchTerm('')}
-                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold"
-                >
+              {searchTerm && <Button onClick={() => setSearchTerm('')} className="bg-white text-red-600 hover:bg-gray-100 font-semibold">
                   Ver Todos os Produtos
-                </Button>
-              )}
-            </div>
-          ) : (
-            <>
+                </Button>}
+            </div> : <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3 mb-6">
-                {displayedProducts.map((product) => (
-                  <Card key={product.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
+                {displayedProducts.map(product => <Card key={product.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group">
                     <div className="relative">
                       <Carousel className="w-full">
                         <CarouselContent>
-                          {getProductImages(product).map((image, index) => (
-                            <CarouselItem key={index}>
+                          {getProductImages(product).map((image, index) => <CarouselItem key={index}>
                               <div className="aspect-square overflow-hidden">
-                                <img 
-                                  src={image} 
-                                  alt={`${product.produto} - ${index + 1}`}
-                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                />
+                                <img src={image} alt={`${product.produto} - ${index + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                               </div>
-                            </CarouselItem>
-                          ))}
+                            </CarouselItem>)}
                         </CarouselContent>
                         <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-5 h-5" />
                         <CarouselNext className="right-1 bg-white/90 hover:bg-white w-5 h-5" />
                       </Carousel>
                       
-                      {product.video && (
-                        <div className="absolute top-1 right-1">
+                      {product.video && <div className="absolute top-1 right-1">
                           <div className="bg-red-500 rounded-full p-1">
-                            <Play className="w-2 h-2 text-white" />
+                            
                           </div>
-                        </div>
-                      )}
+                        </div>}
                       
                       <div className="absolute top-1 left-1">
-                        <Badge className="bg-red-500 text-white font-bold text-xs px-1 py-0">
-                          PROMO
-                        </Badge>
+                        
                       </div>
 
-                      {product.categoria && (
-                        <div className="absolute bottom-1 left-1">
+                      {product.categoria && <div className="absolute bottom-1 left-1">
                           <Badge variant="secondary" className="text-xs bg-white/90 px-1 py-0">
                             {product.categoria}
                           </Badge>
-                        </div>
-                      )}
+                        </div>}
                     </div>
 
                     <CardContent className="p-2">
@@ -401,49 +320,25 @@ const Index = () => {
                       
                       <div className="space-y-1">
                         <FavoriteButton productId={product.id} />
-                        {product.video && (
-                          <ProductVideoModal 
-                            videoUrl={product.video} 
-                            productName={product.produto}
-                            productPrice={formatPrice(product.valor)}
-                            productLink={product.link}
-                          />
-                        )}
-                        <ProductPhotosModal 
-                          images={getProductImages(product)} 
-                          productName={product.produto}
-                          productPrice={formatPrice(product.valor)}
-                          productLink={product.link}
-                        />
-                        <Button 
-                          size="sm"
-                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1"
-                          onClick={() => window.open(product.link, '_blank')}
-                        >
+                        {product.video && <ProductVideoModal videoUrl={product.video} productName={product.produto} productPrice={formatPrice(product.valor)} productLink={product.link} />}
+                        <ProductPhotosModal images={getProductImages(product)} productName={product.produto} productPrice={formatPrice(product.valor)} productLink={product.link} />
+                        <Button size="sm" className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1" onClick={() => window.open(product.link, '_blank')}>
                           <ShoppingCart className="w-3 h-3 mr-1" />
                           Comprar na Shopee
                         </Button>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
 
               {/* Ver Mais Button */}
-              {!showAll && (selectedCategory === 'todas' ? products.filter(p => searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true).length > 20 : products.filter(p => p.categoria === selectedCategory && (searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true)).length > 20) && (
-                <div className="text-center">
-                  <Button 
-                    onClick={() => setShowAll(true)}
-                    className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm px-8 py-3"
-                    variant="outline"
-                  >
+              {!showAll && (selectedCategory === 'todas' ? products.filter(p => searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true).length > 20 : products.filter(p => p.categoria === selectedCategory && (searchTerm ? p.produto.toLowerCase().includes(searchTerm.toLowerCase()) : true)).length > 20) && <div className="text-center">
+                  <Button onClick={() => setShowAll(true)} className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm px-8 py-3" variant="outline">
                     Ver Mais Produtos
                     <ChevronDown className="w-4 h-4 ml-2" />
                   </Button>
-                </div>
-              )}
-            </>
-          )}
+                </div>}
+            </>}
         </div>
       </section>
 
@@ -461,19 +356,16 @@ const Index = () => {
             <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
               Descubra os melhores produtos com preços incríveis na Shopee
             </p>
-            <Button 
-              size="lg" 
-              className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" 
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
+            <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" onClick={() => window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          })}>
               Ver Todos os Produtos
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
