@@ -1,183 +1,284 @@
 
-import React, { useState } from 'react';
-import { Search, ShoppingCart, Menu, X } from 'lucide-react';
-import { Input } from "@/components/ui/input";
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Filter, DollarSign, Sparkles, Info, Star } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useFavorites } from '@/hooks/useFavorites';
 
 interface HeaderProps {
-  onSearch?: (query: string) => void;
-  onPriceFilter?: (min: number, max: number) => void;
+  onSearch?: (searchTerm: string) => void;
+  onPriceFilter?: (minPrice: number, maxPrice: number) => void;
 }
 
-const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [priceRange, setPriceRange] = useState([0, 500]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { favoritesCount } = useFavorites();
 
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const navItems = [
+    { path: '/', label: 'Início', icon: Home },
+    { path: '/categorias', label: 'Categorias', icon: Grid3X3 },
+    { path: '/favoritos', label: 'Favoritos', icon: Heart },
+    { path: '/novos', label: 'Novidades', icon: Sparkles },
+  ];
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSearch) {
-      onSearch(searchQuery);
-    }
-    setIsSearchModalOpen(false);
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    onSearch(value);
+  };
+
+  const handlePriceFilter = () => {
+    onPriceFilter(priceRange[0], priceRange[1]);
+  };
+
+  const handleEvaluateApp = () => {
+    window.open('https://play.google.com/store/apps/details?id=br.com.app.gpu3121847.gpu5864a3ed792bc282cc5655927ef358d2', '_blank');
+    setIsOpen(false);
   };
 
   return (
     <>
-      <header className="bg-white border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          {/* Mobile Menu Button */}
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="md:hidden">
-                <Menu className="w-5 h-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64">
-              <div className="py-4">
-                <Button variant="ghost" className="w-full justify-start">
-                  Início
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  Categorias
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  Favoritos
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => setIsAboutModalOpen(true)}>
-                  Sobre o App
-                </Button>
+      {/* Desktop/Mobile Header */}
+      <header className="bg-gradient-to-r from-red-500 via-orange-500 to-red-600 text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+              <div className="bg-white/20 rounded-2xl p-2 backdrop-blur-sm">
+                <ShoppingCart className="w-6 h-6 text-white" />
               </div>
-            </SheetContent>
-          </Sheet>
+              <div>
+                <h1 className="text-lg font-bold">Achadinhos Shopee</h1>
+                <p className="text-xs text-orange-100">Ofertas Imperdíveis</p>
+              </div>
+            </div>
 
-          {/* Logo */}
-          <span className="font-bold text-xl">Shopee Produtos</span>
+            <div className="flex items-center space-x-2">
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center space-x-2">
+                {navItems.slice(1).map((item) => (
+                  <Button
+                    key={item.path}
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/20 rounded-xl relative"
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <item.icon className="w-4 h-4 mr-2" />
+                    {item.label}
+                    {item.path === '/favoritos' && favoritesCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs min-w-[20px] h-5 flex items-center justify-center p-0">
+                        {favoritesCount}
+                      </Badge>
+                    )}
+                  </Button>
+                ))}
+              </div>
 
-          {/* Search Bar (Hidden on small screens) */}
-          <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center gap-2 flex-1 max-w-md">
-            <Input
-              type="search"
-              placeholder="Buscar produtos..."
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-              className="h-9"
-            />
-            <Button type="submit" size="sm">
-              <Search className="w-4 h-4 mr-2" />
-              Buscar
-            </Button>
-          </form>
-
-          {/* Mobile Search Button */}
-          <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setIsSearchModalOpen(true)}>
-            <Search className="w-5 h-5" />
-          </Button>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm">
-              <ShoppingCart className="w-5 h-5" />
-            </Button>
+              {/* Mobile Menu */}
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="md:hidden text-white hover:bg-white/20 p-2 rounded-xl">
+                    <Menu className="w-6 h-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80 bg-gradient-to-b from-red-500 to-orange-500 text-white border-0">
+                  <div className="py-6">
+                    <div className="flex items-center space-x-3 mb-8 px-2">
+                      <div className="bg-white/20 rounded-2xl p-3">
+                        <ShoppingCart className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold">Achadinhos Shopee</h2>
+                        <p className="text-sm text-orange-100">Ofertas Imperdíveis</p>
+                      </div>
+                    </div>
+                    
+                    {/* Advanced Price Filter */}
+                    {location.pathname === '/' && (
+                      <Card className="mb-6 mx-2 bg-white/10 border-white/20">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-white text-sm flex items-center gap-2">
+                            <Filter className="w-4 h-4" />
+                            Filtro por Preço
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs text-white/80">
+                              <span>R$ {priceRange[0]}</span>
+                              <span>R$ {priceRange[1]}</span>
+                            </div>
+                            <Slider
+                              value={priceRange}
+                              onValueChange={setPriceRange}
+                              max={1000}
+                              min={0}
+                              step={10}
+                              className="w-full"
+                            />
+                          </div>
+                          <Button
+                            onClick={handlePriceFilter}
+                            size="sm"
+                            className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
+                            variant="outline"
+                          >
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Aplicar Filtro
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
+                    
+                    <nav className="space-y-2">
+                      {navItems.map((item) => (
+                        <button
+                          key={item.path}
+                          onClick={() => handleNavigation(item.path)}
+                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20 relative"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="font-medium">{item.label}</span>
+                          {item.path === '/favoritos' && favoritesCount > 0 && (
+                            <Badge className="ml-auto bg-yellow-500 text-black text-xs">
+                              {favoritesCount}
+                            </Badge>
+                          )}
+                        </button>
+                      ))}
+                      
+                      {/* Separator */}
+                      <div className="border-t border-white/20 my-4 mx-4"></div>
+                      
+                      {/* About App */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20">
+                            <Info className="w-5 h-5" />
+                            <span className="font-medium">Sobre o app</span>
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-sm mx-4 bg-white/95 backdrop-blur-xl border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
+                          <div className="absolute inset-0 bg-gradient-to-br from-red-50/90 via-orange-50/90 to-white/90 rounded-lg backdrop-blur-xl"></div>
+                          <div className="relative z-10">
+                            <DialogHeader className="space-y-3 text-center pb-4">
+                              <div className="mx-auto w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                                <ShoppingCart className="w-6 h-6 text-white" />
+                              </div>
+                              <DialogTitle className="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                                Achadinhos Shopee
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 text-gray-700 text-sm">
+                              <div className="text-center">
+                                <p className="font-semibold text-gray-800 mb-2">
+                                  Seu companheiro perfeito para economizar!
+                                </p>
+                                <p className="text-xs text-gray-600 leading-relaxed">
+                                  Encontre os melhores produtos com os menores preços
+                                </p>
+                              </div>
+                              
+                              <div className="space-y-3">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                                  <p className="text-xs leading-relaxed">
+                                    Nosso app reúne cuidadosamente os <span className="font-semibold text-red-600">melhores achadinhos da Shopee</span>, oferecendo acesso aos produtos mais essenciais para o seu dia a dia.
+                                  </p>
+                                </div>
+                                
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                                  <p className="text-xs leading-relaxed">
+                                    Desde itens de beleza, casa e decoração até gadgets e acessórios, tudo selecionado para garantir <span className="font-semibold text-orange-600">qualidade e economia</span>.
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-gradient-to-r from-red-100 via-orange-100 to-red-100 p-3 rounded-lg border border-red-200/50 backdrop-blur-sm">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-base">💰</span>
+                                  <p className="text-xs font-semibold text-red-700">
+                                    Economize tempo e dinheiro
+                                  </p>
+                                </div>
+                                <p className="text-xs text-red-600">
+                                  Encontre as melhores ofertas em um só lugar!
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      
+                      {/* Rate App */}
+                      <button
+                        onClick={handleEvaluateApp}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20"
+                      >
+                        <Star className="w-5 h-5" />
+                        <span className="font-medium">Avaliar App</span>
+                      </button>
+                    </nav>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
+
+        {/* Search Bar - Always visible at top */}
+        {location.pathname === '/' && (
+          <div className="px-4 pb-3">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5" />
+              <Input
+                placeholder="Buscar produtos..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-10 bg-white border-white/30 text-gray-900 placeholder:text-gray-500 focus:bg-white"
+              />
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* About Modal */}
-      <Dialog open={isAboutModalOpen} onOpenChange={setIsAboutModalOpen}>
-        <DialogContent className="w-full max-w-[95vw] max-h-[90vh] sm:max-w-lg overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl font-bold text-center mb-4">
-              Sobre o App
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 px-2 sm:px-4">
-            <div className="text-center">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2">Shopee Produtos</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                Descubra os melhores produtos da Shopee com preços incríveis e frete grátis para todo o Brasil!
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-2 text-sm sm:text-base">🛍️ Variedade</h4>
-                <p className="text-xs sm:text-sm text-blue-700">
-                  Milhares de produtos organizados por categorias para facilitar sua busca.
-                </p>
-              </div>
-              
-              <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-2 text-sm sm:text-base">💰 Preços Baixos</h4>
-                <p className="text-xs sm:text-sm text-green-700">
-                  Os melhores preços do mercado com ofertas exclusivas da Shopee.
-                </p>
-              </div>
-              
-              <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
-                <h4 className="font-semibold text-purple-800 mb-2 text-sm sm:text-base">🚚 Frete Grátis</h4>
-                <p className="text-xs sm:text-sm text-purple-700">
-                  Entrega gratuita para todo o Brasil em produtos selecionados.
-                </p>
-              </div>
-              
-              <div className="bg-orange-50 p-3 sm:p-4 rounded-lg">
-                <h4 className="font-semibold text-orange-800 mb-2 text-sm sm:text-base">⭐ Qualidade</h4>
-                <p className="text-xs sm:text-sm text-orange-700">
-                  Produtos avaliados com alta qualidade e satisfação dos clientes.
-                </p>
-              </div>
-            </div>
-
-            <div className="text-center pt-4 border-t">
-              <p className="text-xs sm:text-sm text-gray-500 mb-4">
-                Versão 1.0.0 • Desenvolvido com ❤️
-              </p>
-              <Button 
-                onClick={() => setIsAboutModalOpen(false)}
-                className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold px-6 py-2"
-              >
-                Começar a Comprar
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* SearchModal */}
-      <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
-        <DialogContent className="max-w-md bg-white">
-          <div className="flex items-center justify-between p-4 border-b">
-            <DialogTitle>Buscar Produtos</DialogTitle>
-            <Button variant="ghost" size="sm" onClick={() => setIsSearchModalOpen(false)}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-          <form onSubmit={handleSearchSubmit} className="flex flex-col gap-4 p-4">
-            <Input
-              type="search"
-              placeholder="Digite o nome do produto..."
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-            />
-            <Button type="submit">
-              <Search className="w-4 h-4 mr-2" />
-              Buscar
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Bottom Navigation for Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-red-500 to-orange-500 border-t border-white/20 z-50 shadow-2xl">
+        <div className="grid grid-cols-4 gap-1 px-2 py-2">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => handleNavigation(item.path)}
+              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 text-white hover:bg-white/20 relative"
+            >
+              <item.icon className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium truncate max-w-full">
+                {item.label}
+              </span>
+              {item.path === '/favoritos' && favoritesCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs min-w-[16px] h-4 flex items-center justify-center p-0">
+                  {favoritesCount > 9 ? '9+' : favoritesCount}
+                </Badge>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
     </>
   );
 };

@@ -84,9 +84,9 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-[100vw] max-h-[100vh] h-screen md:max-w-[95vw] md:max-h-[95vh] md:h-auto p-0 bg-white">
+      <DialogContent className="w-full max-w-[95vw] max-h-[95vh] p-0 bg-white">
         {/* Header com botão de fechar mais visível */}
-        <DialogHeader className="p-3 sm:p-4 border-b bg-white relative z-20">
+        <DialogHeader className="p-3 sm:p-4 border-b bg-white">
           <DialogTitle className="flex items-center justify-between text-sm sm:text-base lg:text-lg">
             <div className="flex-1 min-w-0 pr-4">
               <span className="font-semibold truncate block">{productName}</span>
@@ -106,9 +106,10 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Container da imagem - Completamente responsivo */}
+        {/* Container da imagem - Ajustado para não cortar */}
         <div 
-          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center h-[calc(100vh-160px)] md:h-[calc(95vh-160px)] min-h-[50vh]"
+          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center" 
+          style={{ height: 'calc(95vh - 200px)', minHeight: '300px' }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -136,25 +137,28 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
             </>
           )}
 
-          {/* Imagem principal - Completamente responsiva */}
+          {/* Imagem principal - Ajustada para não cortar */}
           <img
             ref={imageRef}
             src={images[imageIndex]}
             alt={`${productName} - ${imageIndex + 1}`}
-            className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-200 select-none"
+            className="max-w-none max-h-none object-contain transition-transform duration-200 select-none"
             style={{
               transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
-              cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
+              cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+              width: scale === 1 ? 'auto' : `${100 * scale}%`,
+              height: scale === 1 ? 'auto' : `${100 * scale}%`,
+              maxWidth: scale === 1 ? '100%' : 'none',
+              maxHeight: scale === 1 ? '100%' : 'none'
             }}
             draggable={false}
           />
 
           {/* Indicador de zoom */}
           {scale > 1 && (
-            <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2 z-10">
+            <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2">
               <Move className="w-4 h-4" />
-              <span className="hidden sm:inline">Arraste para mover</span>
-              <span className="sm:hidden">Arraste</span>
+              Arraste para mover
             </div>
           )}
         </div>
