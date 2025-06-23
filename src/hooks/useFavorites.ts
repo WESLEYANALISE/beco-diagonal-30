@@ -1,9 +1,20 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Gerar um ID único para o dispositivo se não existir
+  const getDeviceId = () => {
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+      deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+      localStorage.setItem('device_id', deviceId);
+    }
+    return deviceId;
+  };
 
   // Load favorites from localStorage on mount
   useEffect(() => {
@@ -23,16 +34,44 @@ export const useFavorites = () => {
     }
   }, []);
 
+  // Função para sincronizar com Supabase (futuro)
+  const syncWithSupabase = async (productId: number, action: 'add' | 'remove') => {
+    try {
+      const deviceId = getDeviceId();
+      
+      if (action === 'add') {
+        await supabase
+          .from('user_favorites')
+          .insert({ 
+            user_device_id: deviceId, 
+            product_id: productId 
+          });
+      } else {
+        await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('user_device_id', deviceId)
+          .eq('product_id', productId);
+      }
+    } catch (error) {
+      console.log('Supabase sync failed, using localStorage only:', error);
+    }
+  };
+
   // Memoized toggle function for better performance
   const toggleFavorite = useCallback((productId: number) => {
     setFavorites(prev => {
-      const newFavorites = prev.includes(productId)
+      const isCurrentlyFavorite = prev.includes(productId);
+      const newFavorites = isCurrentlyFavorite
         ? prev.filter(id => id !== productId)
         : [...prev, productId];
       
       // Save to localStorage immediately
       try {
         localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
+        
+        // Tentar sincronizar com Supabase
+        syncWithSupabase(productId, isCurrentlyFavorite ? 'remove' : 'add');
       } catch (error) {
         console.error('Error saving favorites:', error);
       }
@@ -46,6 +85,7 @@ export const useFavorites = () => {
       const newFavorites = prev.filter(id => id !== productId);
       try {
         localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
+        syncWithSupabase(productId, 'remove');
       } catch (error) {
         console.error('Error saving favorites:', error);
       }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
@@ -13,7 +14,9 @@ import { HeroSection } from '@/components/HeroSection';
 import { TabNavigation } from '@/components/TabNavigation';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
+import { Tutorial } from '@/components/Tutorial';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
+import { useTutorialAndUser } from '@/hooks/useTutorialAndUser';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
