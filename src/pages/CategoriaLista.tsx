@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid, List } from 'lucide-react';
@@ -26,6 +27,7 @@ interface Product {
   imagem5: string;
   link: string;
   categoria: string;
+  uso?: string;
 }
 
 const CategoriaLista = () => {
@@ -64,13 +66,22 @@ const CategoriaLista = () => {
       
       if (tipo === 'categoria' && categoria && categoria !== 'todas') {
         query = query.eq('categoria', categoria);
+      } else if (tipo === 'mais-vendidos') {
+        // Para mais vendidos, buscar todos e depois limitar
+        query = query.order('id');
       }
       
-      const { data, error } = await query.order('id');
+      const { data, error } = await query;
       
       if (error) throw error;
 
-      const filteredData = tipo === 'mais-vendidos' ? (data || []).slice(0, 20) : data || [];
+      let filteredData = data || [];
+      
+      // Se for mais-vendidos, pegar os primeiros 20
+      if (tipo === 'mais-vendidos') {
+        filteredData = filteredData.slice(0, 20);
+      }
+      
       setProducts(filteredData);
       showSuccess("Produtos carregados com sucesso!");
     } catch (error) {
@@ -133,7 +144,7 @@ const CategoriaLista = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header onSearch={() => {}} onPriceFilter={() => {}} />
+        <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-4">
             {Array.from({ length: 8 }).map((_, index) => (
@@ -147,7 +158,7 @@ const CategoriaLista = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onSearch={() => {}} onPriceFilter={() => {}} />
+      <Header />
       
       {/* Header da página */}
       <div className="bg-white border-b sticky top-0 z-10">

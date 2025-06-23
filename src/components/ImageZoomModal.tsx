@@ -106,10 +106,10 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Container da imagem - Ajustado para não cortar */}
+        {/* Container da imagem - Responsivo e sem cortes */}
         <div 
           className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center" 
-          style={{ height: 'calc(95vh - 200px)', minHeight: '300px' }}
+          style={{ height: 'min(70vh, 500px)' }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -137,22 +137,20 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
             </>
           )}
 
-          {/* Imagem principal - Ajustada para não cortar */}
-          <img
-            ref={imageRef}
-            src={images[imageIndex]}
-            alt={`${productName} - ${imageIndex + 1}`}
-            className="max-w-none max-h-none object-contain transition-transform duration-200 select-none"
-            style={{
-              transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
-              cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-              width: scale === 1 ? 'auto' : `${100 * scale}%`,
-              height: scale === 1 ? 'auto' : `${100 * scale}%`,
-              maxWidth: scale === 1 ? '100%' : 'none',
-              maxHeight: scale === 1 ? '100%' : 'none'
-            }}
-            draggable={false}
-          />
+          {/* Imagem principal - Responsiva */}
+          <div className="w-full h-full flex items-center justify-center p-4">
+            <img
+              ref={imageRef}
+              src={images[imageIndex]}
+              alt={`${productName} - ${imageIndex + 1}`}
+              className="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
+              style={{
+                transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
+                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
+              }}
+              draggable={false}
+            />
+          </div>
 
           {/* Indicador de zoom */}
           {scale > 1 && (
