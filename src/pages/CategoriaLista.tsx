@@ -235,7 +235,7 @@ const CategoriaLista = () => {
           </div>
           
           <div className="p-3">
-            <h3 className="font-medium text-gray-900 text-sm line-clamp-2 leading-tight mb-2">
+            <h3 className="font-medium text-gray-900 text-sm line-clamp-3 leading-relaxed mb-3 min-h-[3.75rem]">
               {product.produto}
             </h3>
             
@@ -276,7 +276,7 @@ const CategoriaLista = () => {
       <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleProductClick(product)}>
         <CardContent className="p-0">
           <div className="flex">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
               <LazyImage 
                 src={product.imagem1} 
                 alt={product.produto} 
@@ -284,22 +284,22 @@ const CategoriaLista = () => {
               />
             </div>
             
-            <div className="flex-1 p-2 sm:p-3 min-w-0">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1 min-w-0 mr-2">
+            <div className="flex-1 p-3 sm:p-4 min-w-0">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0 mr-3">
                   {tipo === 'mais-vendidos' && index < 3 && (
-                    <Badge className="bg-red-500 text-white text-xs mb-1">
+                    <Badge className="bg-red-500 text-white text-xs mb-2">
                       TOP {index + 1}
                     </Badge>
                   )}
-                  <h3 className="font-medium text-gray-900 text-sm line-clamp-2 leading-tight">
+                  <h3 className="font-medium text-gray-900 text-sm line-clamp-3 leading-relaxed min-h-[3.75rem]">
                     {product.produto}
                   </h3>
                 </div>
                 <FavoriteButton productId={product.id} />
               </div>
               
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <div className="font-bold text-red-500 text-sm">
                   {formatPrice(product.valor)}
                 </div>
@@ -309,7 +309,7 @@ const CategoriaLista = () => {
                 </div>
               </div>
               
-              <div className="flex gap-1 sm:gap-2">
+              <div className="flex gap-2">
                 <ProductPhotosModal 
                   images={getProductImages(product)} 
                   productName={product.produto} 
