@@ -1,13 +1,14 @@
+
 import React, { useState } from 'react';
-import { MagnifyingGlass, ShoppingCart, Menu, X } from 'lucide-react';
+import { Search, ShoppingCart, Menu, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface HeaderProps {
-  onSearch: (query: string) => void;
-  onPriceFilter: (min: number, max: number) => void;
+  onSearch?: (query: string) => void;
+  onPriceFilter?: (min: number, max: number) => void;
 }
 
 const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
@@ -22,7 +23,9 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(searchQuery);
+    if (onSearch) {
+      onSearch(searchQuery);
+    }
     setIsSearchModalOpen(false);
   };
 
@@ -68,14 +71,14 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
               className="h-9"
             />
             <Button type="submit" size="sm">
-              <MagnifyingGlass className="w-4 h-4 mr-2" />
+              <Search className="w-4 h-4 mr-2" />
               Buscar
             </Button>
           </form>
 
           {/* Mobile Search Button */}
           <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setIsSearchModalOpen(true)}>
-            <MagnifyingGlass className="w-5 h-5" />
+            <Search className="w-5 h-5" />
           </Button>
 
           {/* Actions */}
@@ -169,7 +172,7 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
               onChange={handleSearchInputChange}
             />
             <Button type="submit">
-              <MagnifyingGlass className="w-4 h-4 mr-2" />
+              <Search className="w-4 h-4 mr-2" />
               Buscar
             </Button>
           </form>

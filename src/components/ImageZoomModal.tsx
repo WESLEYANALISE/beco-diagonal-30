@@ -84,7 +84,7 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-[100vw] max-h-[100vh] h-[100vh] md:max-w-[95vw] md:max-h-[95vh] md:h-auto p-0 bg-white">
+      <DialogContent className="w-full max-w-[100vw] max-h-[100vh] h-screen md:max-w-[95vw] md:max-h-[95vh] md:h-auto p-0 bg-white">
         {/* Header com botão de fechar mais visível */}
         <DialogHeader className="p-3 sm:p-4 border-b bg-white relative z-20">
           <DialogTitle className="flex items-center justify-between text-sm sm:text-base lg:text-lg">
@@ -108,14 +108,7 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
 
         {/* Container da imagem - Completamente responsivo */}
         <div 
-          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center" 
-          style={{ 
-            height: 'calc(100vh - 160px)', 
-            minHeight: '50vh',
-            '@media (max-width: 768px)': {
-              height: 'calc(100vh - 120px)'
-            }
-          }}
+          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center h-[calc(100vh-160px)] md:h-[calc(95vh-160px)] min-h-[50vh]"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -148,12 +141,10 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
             ref={imageRef}
             src={images[imageIndex]}
             alt={`${productName} - ${imageIndex + 1}`}
-            className="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
+            className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-200 select-none"
             style={{
               transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
-              cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-              width: scale === 1 ? 'auto' : 'auto',
-              height: scale === 1 ? 'auto' : 'auto'
+              cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
             }}
             draggable={false}
           />
