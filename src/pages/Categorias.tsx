@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
@@ -50,7 +51,8 @@ const Categorias = () => {
   };
 
   const handleCategoryClick = (category: string) => {
-    navigate(`/subcategoria-lista?categoria=${encodeURIComponent(category)}`);
+    // Navigate directly to category products page showing all subcategories
+    navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -138,12 +140,29 @@ const Categorias = () => {
                     </div>
                   </div>
                   <CardContent className="p-6">
-                    <Button 
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
-                    >
-                      Ver Subcategorias
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                    <div className="space-y-3">
+                      <Button 
+                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCategoryClick(category.categoria);
+                        }}
+                      >
+                        Ver Produtos
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className="w-full border-orange-200 text-orange-600 hover:bg-orange-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/subcategoria-lista?categoria=${encodeURIComponent(category.categoria)}`);
+                        }}
+                      >
+                        Ver Subcategorias
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               );
