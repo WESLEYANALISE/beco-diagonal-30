@@ -35,8 +35,8 @@ interface ProductCardProps {
   style?: React.CSSProperties;
 }
 
-// Memoized component for better performance
-const ProductCard: React.FC<ProductCardProps> = memo(({
+// Component without memo first
+const ProductCardComponent: React.FC<ProductCardProps> = ({
   product,
   showBadge = false,
   badgeText = "MAIS VENDIDO",
@@ -196,8 +196,8 @@ const ProductCard: React.FC<ProductCardProps> = memo(({
       />
     </>
   );
-});
+};
 
+// Now wrap with memo and export
+export const ProductCard = memo(ProductCardComponent);
 ProductCard.displayName = 'ProductCard';
-
-export { ProductCard };

@@ -9,7 +9,7 @@ interface LazyImageProps {
   placeholder?: string;
 }
 
-const LazyImage: React.FC<LazyImageProps> = ({ 
+export const LazyImage: React.FC<LazyImageProps> = ({ 
   src, 
   alt, 
   className = "", 
@@ -72,5 +72,3 @@ const LazyImage: React.FC<LazyImageProps> = ({
     </div>
   );
 };
-
-export { LazyImage };

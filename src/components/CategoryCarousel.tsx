@@ -18,7 +18,7 @@ interface CategoryCarouselProps {
   onProductClick: (productId: number) => void;
 }
 
-const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselProps) => {
+export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
@@ -157,5 +157,3 @@ const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselProps) =
     </section>
   );
 };
-
-export { CategoryCarousel };
