@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
@@ -49,7 +48,7 @@ const Index = () => {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
-  const { showSuccess, showError, showLoading, showInfo } = useToastNotifications();
+  const { showError, showLoading, showInfo } = useToastNotifications();
 
   useEffect(() => {
     fetchProducts();
@@ -82,7 +81,6 @@ const Index = () => {
 
   const fetchProducts = async () => {
     try {
-      showLoading("Carregando produtos");
       const { data, error } = await supabase
         .from('SHOPEE')
         .select('*')
@@ -103,8 +101,6 @@ const Index = () => {
       if (uniqueCategories.length > 0) {
         setCurrentFeaturedCategory('Todos os Produtos');
       }
-      
-      showSuccess("Produtos carregados com sucesso!");
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
       showError("Erro ao carregar produtos", "Tente novamente em alguns instantes");
@@ -174,7 +170,6 @@ const Index = () => {
           showError("Limite atingido", "Você pode selecionar no máximo 5 produtos");
           return prev;
         }
-        showSuccess("Produto adicionado à seleção");
         return [...prev, product];
       }
     });
@@ -204,7 +199,6 @@ const Index = () => {
         throw new Error(error.message || 'Erro ao analisar produtos');
       }
 
-      showSuccess("Análise concluída!");
       return data.analysis || 'Análise não disponível';
     } catch (error) {
       console.error('Error in analyzeProducts:', error);
@@ -298,34 +292,34 @@ const Index = () => {
       {/* Hero Section */}
       <HeroSection productsCount={products.length} />
 
-      {/* Category Product Carousels - only show when not in AI mode */}
-      {!showingAI && categories.slice(0, 3).map((category, index) => {
+      {/* Category Product Carousels - show all categories when not in AI mode */}
+      {!showingAI && categories.map((category, index) => {
         const categoryProducts = getCategoryProducts(category);
         const IconComponent = getCategoryIcon(category);
         
         if (categoryProducts.length === 0) return null;
         
         return (
-          <section key={category} className="px-4 md:px-6 py-6 animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
+          <section key={category} className="px-4 md:px-6 py-4 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
             <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <IconComponent className="w-5 h-5 text-white" />
+                  <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <IconComponent className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">{category}</h3>
-                    <p className="text-sm text-white/70">{categoryProducts.length} produtos</p>
+                    <h3 className="text-base font-bold text-white">{category}</h3>
+                    <p className="text-xs text-white/70">{categoryProducts.length} produtos</p>
                   </div>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)}
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+                  className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs px-3 py-1 h-auto"
                 >
                   Ver Todos
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
               </div>
               
@@ -334,7 +328,7 @@ const Index = () => {
                   {categoryProducts.map((product) => (
                     <CarouselItem 
                       key={product.id} 
-                      className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                      className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6"
                     >
                       <ProductCard 
                         product={product} 
@@ -343,8 +337,8 @@ const Index = () => {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
+                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
+                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
               </Carousel>
             </div>
           </section>
