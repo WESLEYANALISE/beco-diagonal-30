@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,7 +18,7 @@ interface CategoryCarouselProps {
   onProductClick: (productId: number) => void;
 }
 
-export const CategoryCarousel = memo(({ products, onProductClick }: CategoryCarouselProps) => {
+const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
@@ -156,6 +156,6 @@ export const CategoryCarousel = memo(({ products, onProductClick }: CategoryCaro
       </div>
     </section>
   );
-});
+};
 
-CategoryCarousel.displayName = 'CategoryCarousel';
+export { CategoryCarousel };

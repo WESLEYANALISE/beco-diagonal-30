@@ -9,7 +9,7 @@ interface FavoriteButtonProps {
   size?: 'sm' | 'default';
 }
 
-export const FavoriteButton = ({ productId, size = 'sm' }: FavoriteButtonProps) => {
+const FavoriteButton = ({ productId, size = 'sm' }: FavoriteButtonProps) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [isAnimating, setIsAnimating] = useState(false);
   const favorite = isFavorite(productId);
@@ -45,3 +45,5 @@ export const FavoriteButton = ({ productId, size = 'sm' }: FavoriteButtonProps) 
     </Button>
   );
 };
+
+export { FavoriteButton };
