@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid, List } from 'lucide-react';
@@ -27,6 +26,7 @@ interface Product {
   imagem5: string;
   link: string;
   categoria: string;
+  subcategoria?: string;
   uso?: string;
 }
 
@@ -34,6 +34,7 @@ const CategoriaLista = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const categoria = searchParams.get('categoria') || '';
+  const subcategoria = searchParams.get('subcategoria') || '';
   const tipo = searchParams.get('tipo') || 'categoria';
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -53,7 +54,7 @@ const CategoriaLista = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [categoria, tipo]);
+  }, [categoria, subcategoria, tipo]);
 
   useEffect(() => {
     applyFilters();
@@ -66,6 +67,8 @@ const CategoriaLista = () => {
       
       if (tipo === 'categoria' && categoria && categoria !== 'todas') {
         query = query.eq('categoria', categoria);
+      } else if (tipo === 'subcategoria' && categoria && subcategoria) {
+        query = query.eq('categoria', categoria).eq('subcategoria', subcategoria);
       } else if (tipo === 'mais-vendidos') {
         // Para mais vendidos, buscar todos e depois limitar
         query = query.order('id');
@@ -126,6 +129,9 @@ const CategoriaLista = () => {
     if (tipo === 'mais-vendidos') {
       return 'Mais Vendidos';
     }
+    if (tipo === 'subcategoria' && subcategoria) {
+      return subcategoria;
+    }
     return categoria ? `${categoria}` : 'Produtos';
   };
 
@@ -133,7 +139,17 @@ const CategoriaLista = () => {
     if (tipo === 'mais-vendidos') {
       return 'Os produtos favoritos dos nossos clientes';
     }
+    if (tipo === 'subcategoria' && subcategoria) {
+      return `Produtos em ${categoria} > ${subcategoria}`;
+    }
     return `Explore todos os produtos de ${categoria}`;
+  };
+
+  const getBackPath = () => {
+    if (tipo === 'subcategoria') {
+      return `/subcategoria-lista?categoria=${encodeURIComponent(categoria)}`;
+    }
+    return '/';
   };
 
   const handleProductClick = (product: Product) => {
@@ -167,7 +183,7 @@ const CategoriaLista = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate('/')} 
+              onClick={() => navigate(getBackPath())} 
               className="text-red-500 hover:text-red-600 p-1 sm:p-2"
             >
               <ArrowLeft className="w-4 h-4 sm:mr-2" />
@@ -234,7 +250,7 @@ const CategoriaLista = () => {
               Nenhum produto encontrado
             </h2>
             <p className="text-gray-600">
-              Não há produtos disponíveis nesta categoria
+              Não há produtos disponíveis nesta {tipo === 'subcategoria' ? 'subcategoria' : 'categoria'}
             </p>
           </div>
         ) : (

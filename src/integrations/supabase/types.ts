@@ -5261,8 +5261,11 @@ export type Database = {
           imagem3: string | null
           imagem4: string | null
           imagem5: string | null
+          imagem6: string | null
+          imagem7: string | null
           link: string | null
           produto: string | null
+          subcategoria: string | null
           uso: string | null
           valor: string | null
           video: string | null
@@ -5275,8 +5278,11 @@ export type Database = {
           imagem3?: string | null
           imagem4?: string | null
           imagem5?: string | null
+          imagem6?: string | null
+          imagem7?: string | null
           link?: string | null
           produto?: string | null
+          subcategoria?: string | null
           uso?: string | null
           valor?: string | null
           video?: string | null
@@ -5289,8 +5295,11 @@ export type Database = {
           imagem3?: string | null
           imagem4?: string | null
           imagem5?: string | null
+          imagem6?: string | null
+          imagem7?: string | null
           link?: string | null
           produto?: string | null
+          subcategoria?: string | null
           uso?: string | null
           valor?: string | null
           video?: string | null

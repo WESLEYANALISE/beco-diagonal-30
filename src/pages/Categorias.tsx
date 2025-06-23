@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
@@ -51,7 +50,7 @@ const Categorias = () => {
   };
 
   const handleCategoryClick = (category: string) => {
-    navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
+    navigate(`/subcategoria-lista?categoria=${encodeURIComponent(category)}`);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -142,7 +141,7 @@ const Categorias = () => {
                     <Button 
                       className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
                     >
-                      Ver Produtos
+                      Ver Subcategorias
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </CardContent>
