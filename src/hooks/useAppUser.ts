@@ -42,7 +42,16 @@ export const useAppUser = () => {
           .update({ last_seen: new Date().toISOString() })
           .eq('id', existingUser.id);
         
-        setUser(existingUser);
+        // Convert the user data to match our interface
+        const userData: AppUser = {
+          id: existingUser.id,
+          device_id: existingUser.device_id,
+          created_at: existingUser.created_at,
+          preferences: typeof existingUser.preferences === 'object' && existingUser.preferences !== null
+            ? existingUser.preferences as Record<string, any>
+            : {}
+        };
+        setUser(userData);
       } else {
         // Create new user
         const { data: newUser, error: createError } = await supabase
@@ -54,7 +63,15 @@ export const useAppUser = () => {
         if (createError) {
           console.error('Error creating user:', createError);
         } else {
-          setUser(newUser);
+          const userData: AppUser = {
+            id: newUser.id,
+            device_id: newUser.device_id,
+            created_at: newUser.created_at,
+            preferences: typeof newUser.preferences === 'object' && newUser.preferences !== null
+              ? newUser.preferences as Record<string, any>
+              : {}
+          };
+          setUser(userData);
         }
       }
     } catch (error) {

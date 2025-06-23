@@ -18,9 +18,10 @@ export const useFavoritesSupabase = () => {
     }
 
     try {
+      // Use article_id as the column name based on the error message
       const { data, error } = await supabase
         .from('user_favorites')
-        .select('product_id')
+        .select('article_id')
         .eq('user_id', user.id);
 
       if (error) {
@@ -34,7 +35,7 @@ export const useFavoritesSupabase = () => {
           }
         }
       } else {
-        const productIds = data.map(fav => Number(fav.product_id));
+        const productIds = data.map(fav => Number(fav.article_id));
         setFavorites(productIds);
         // Sync with localStorage for offline access
         localStorage.setItem('shopee-favorites', JSON.stringify(productIds));
@@ -69,7 +70,7 @@ export const useFavoritesSupabase = () => {
           .from('user_favorites')
           .delete()
           .eq('user_id', user.id)
-          .eq('product_id', productId);
+          .eq('article_id', productId.toString());
 
         if (error) throw error;
 
@@ -87,7 +88,7 @@ export const useFavoritesSupabase = () => {
           .from('user_favorites')
           .insert([{
             user_id: user.id,
-            product_id: productId
+            article_id: productId.toString()
           }]);
 
         if (error) throw error;
@@ -119,7 +120,7 @@ export const useFavoritesSupabase = () => {
         .from('user_favorites')
         .delete()
         .eq('user_id', user.id)
-        .eq('product_id', productId);
+        .eq('article_id', productId.toString());
 
       if (error) throw error;
 
