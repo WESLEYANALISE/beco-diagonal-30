@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ZoomIn, ZoomOut, RotateCw, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCw, X, ChevronLeft, ChevronRight, Move } from 'lucide-react';
 
 interface ImageZoomModalProps {
   isOpen: boolean;
@@ -22,13 +22,20 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [imageIndex, setImageIndex] = useState(currentIndex);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const handleZoomIn = () => {
-    setScale(prev => Math.min(prev + 0.5, 3));
+    setScale(prev => Math.min(prev + 0.5, 4));
   };
 
   const handleZoomOut = () => {
     setScale(prev => Math.max(prev - 0.5, 0.5));
+    if (scale <= 1) {
+      setPosition({ x: 0, y: 0 });
+    }
   };
 
   const handleRotate = () => {
@@ -37,25 +44,48 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
 
   const handlePrevious = () => {
     setImageIndex(prev => prev > 0 ? prev - 1 : images.length - 1);
-    setScale(1);
-    setRotation(0);
+    resetTransform();
   };
 
   const handleNext = () => {
     setImageIndex(prev => prev < images.length - 1 ? prev + 1 : 0);
-    setScale(1);
-    setRotation(0);
+    resetTransform();
   };
 
   const resetTransform = () => {
     setScale(1);
     setRotation(0);
+    setPosition({ x: 0, y: 0 });
   };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (scale > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && scale > 1) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    setImageIndex(currentIndex);
+  }, [currentIndex]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-[95vw] max-h-[95vh] p-0 bg-white">
-        {/* Header com título e botão fechar */}
+        {/* Header */}
         <DialogHeader className="p-3 sm:p-4 border-b bg-white">
           <DialogTitle className="flex items-center justify-between text-sm sm:text-base lg:text-lg">
             <div className="flex-1 min-w-0 pr-4">
@@ -77,7 +107,14 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
         </DialogHeader>
 
         {/* Container da imagem */}
-        <div className="relative bg-gray-100 overflow-hidden" style={{ height: 'calc(95vh - 200px)', minHeight: '300px' }}>
+        <div 
+          className="relative bg-gray-100 overflow-hidden cursor-move select-none" 
+          style={{ height: 'calc(95vh - 200px)', minHeight: '300px' }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
           {/* Botões de navegação */}
           {images.length > 1 && (
             <>
@@ -101,20 +138,30 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
           )}
 
           {/* Imagem principal */}
-          <div className="w-full h-full flex items-center justify-center overflow-hidden p-4">
+          <div className="w-full h-full flex items-center justify-center p-4">
             <img
+              ref={imageRef}
               src={images[imageIndex]}
               alt={`${productName} - ${imageIndex + 1}`}
-              className="max-w-full max-h-full object-contain transition-transform duration-200 cursor-move select-none"
+              className="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
               style={{
-                transform: `scale(${scale}) rotate(${rotation}deg)`,
+                transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
+                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
               }}
               draggable={false}
             />
           </div>
+
+          {/* Indicador de zoom */}
+          {scale > 1 && (
+            <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2">
+              <Move className="w-4 h-4" />
+              Arraste para mover
+            </div>
+          )}
         </div>
 
-        {/* Controles de zoom e rotação */}
+        {/* Controles */}
         <div className="p-3 sm:p-4 bg-white border-t">
           <div className="flex items-center justify-center gap-2 mb-3 flex-wrap">
             <Button
@@ -135,7 +182,7 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
               variant="outline"
               size="sm"
               onClick={handleZoomIn}
-              disabled={scale >= 3}
+              disabled={scale >= 4}
               className="hover:bg-blue-50 transition-colors"
             >
               <ZoomIn className="w-4 h-4" />
