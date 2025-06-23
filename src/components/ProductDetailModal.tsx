@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,6 +41,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [aiTips, setAiTips] = useState<string>('');
   const [loadingTips, setLoadingTips] = useState(false);
 
+  // Auto-play video when modal opens
+  useEffect(() => {
+    if (isOpen && product.video) {
+      const timer = setTimeout(() => {
+        setIsVideoOpen(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, product.video]);
+
   const getProductImages = () => {
     return [product.imagem1, product.imagem2, product.imagem3, product.imagem4, product.imagem5].filter(Boolean);
   };
@@ -60,15 +70,46 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const generateAITips = async () => {
     setLoadingTips(true);
     
-    const tips = [
-      `Olha, esse ${product.produto} é perfeito para o seu dia a dia! 💫`,
-      `Uma dica de amiga: aproveite ao máximo usando ele regularmente - a qualidade compensa!`,
-      `Se você está em dúvida, pode confiar! Produtos como esse sempre fazem diferença na rotina.`,
-      `Pro tip: combine com outros itens da mesma categoria para um resultado ainda melhor! ✨`,
-      `Dica valiosa: leia as instruções com calma na primeira vez - vai te ajudar a usar melhor.`,
+    const categoryTips: Record<string, string[]> = {
+      'Fones de Ouvido': [
+        `Ó, esse ${product.produto} é perfeito pra quando você quer se desconectar do mundo! 🎧 Use no trabalho pra focar melhor, ou no ônibus pra curtir sua playlist favorita.`,
+        `Dica de quem entende: coloca ele quando for estudar, malhar na academia ou até fazer uma caminhada. O som fica incrível e você nem sente o tempo passar!`,
+        `Olha só, esse fone é ideal pra quem gosta de jogar online com os amigos ou fazer aquelas calls de trabalho sem incomodar ninguém em casa.`,
+        `Entre nós: é perfeito pra usar quando você quer assistir Netflix tarde da noite sem acordar a família toda! 😄`,
+        `Pro tip: leva ele pra viagem, no avião ou ônibus de longa distância. Vai ser seu melhor companheiro pra passar o tempo!`,
+      ],
+      'Beleza e Cuidados Pessoais': [
+        `Menina, esse ${product.produto} é tudo de bom! Use de manhã depois do banho ou à noite antes de dormir - sua pele vai agradecer! ✨`,
+        `Dica valiosa: aplica ele depois de limpar bem o rosto, pode ser no seu ritual de skincare noturno. Combina super bem com outros produtos!`,
+        `Ó, é perfeito pra usar antes daquela festa importante ou encontro especial. Deixa a pele linda e radiante!`,
+        `Entre amigas: usa regularmente, tipo 2-3 vezes por semana. A consistência é o segredo pra ter resultados incríveis!`,
+        `Dica de ouro: compartilha com sua irmã, mãe ou melhor amiga - vocês vão amar fazer esse ritual juntas!`,
+      ],
+      'Casa e Decoração': [
+        `Esse ${product.produto} vai dar uma renovada incrível na sua casa! Coloca na sala pra impressionar as visitas ou no quarto pra criar um ambiente mais aconchegante 🏠`,
+        `Dica de decoração: combina super bem com plantas, velas aromáticas ou aqueles cantinhos instagramáveis que todo mundo ama!`,
+        `Olha, é perfeito pra quando você quer fazer aquela renovação sem gastar muito. Pequenos detalhes fazem toda diferença!`,
+        `Pro tip: convida as amigas pra ajudar a organizar e decorar - vira uma tarde super divertida e o resultado fica lindo!`,
+        `Entre nós: é ideal pra quem tá começando a vida adulta ou se mudando. Dá pra começar devagar e ir montando a casa dos sonhos!`,
+      ],
+      'Tecnologia e Acessórios': [
+        `Esse ${product.produto} vai facilitar muito sua vida! Use no trabalho, na faculdade ou em casa - é super prático e funcional 📱`,
+        `Dica tech: perfeito pra quem vive grudado no celular ou trabalha no computador. Vai te ajudar a ser mais produtivo!`,
+        `Olha só, é ideal pra quem gosta de estar sempre conectado ou precisa de algo confiável pro dia a dia.`,
+        `Entre nós: compatível com praticamente tudo! Leva pra onde for que não vai te decepcionar.`,
+        `Pro tip: investe nesse tipo de produto porque dura muito e compensa cada centavo. Qualidade que vale a pena!`,
+      ]
+    };
+    
+    const defaultTips = [
+      `Olha, esse ${product.produto} é perfeito para o seu dia a dia! 💫 Use sempre que precisar de praticidade e qualidade.`,
+      `Dica de amigo: aproveite ao máximo usando ele regularmente - a qualidade compensa e você vai adorar!`,
+      `Se você está em dúvida, pode confiar! Produtos como esse sempre fazem diferença na rotina e facilitam a vida.`,
+      `Pro tip: combina com outros itens similares para um resultado ainda melhor! É investimento que vale a pena! ✨`,
       `Entre nós: pelo preço que está, é uma baita oportunidade! Não deixa passar não! 🛍️`,
-      `Ah, e uma coisa importante: cuida bem dele que vai durar muito tempo!`,
     ];
+    
+    const tips = categoryTips[product.categoria] || defaultTips;
     
     setTimeout(() => {
       const randomTip = tips[Math.floor(Math.random() * tips.length)];
@@ -186,7 +227,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <Tabs defaultValue="description" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 h-8">
                   <TabsTrigger value="description" className="text-xs">Descrição</TabsTrigger>
-                  <TabsTrigger value="tips" className="text-xs">Dicas IA</TabsTrigger>
+                  <TabsTrigger value="tips" className="text-xs">Me dê dicas</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="description" className="mt-3">
@@ -214,7 +255,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     <CardContent className="p-3">
                       <div className="flex items-center gap-2 mb-3">
                         <Lightbulb className="w-4 h-4 text-yellow-500" />
-                        <h3 className="font-semibold text-sm">Dicas da IA</h3>
+                        <h3 className="font-semibold text-sm">Me dê dicas</h3>
                       </div>
                       
                       {!aiTips && !loadingTips && (

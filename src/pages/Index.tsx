@@ -50,6 +50,16 @@ const Index = () => {
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
   const { showError, showLoading, showInfo } = useToastNotifications();
 
+  // Function to shuffle array
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -72,7 +82,8 @@ const Index = () => {
         setCurrentFeaturedCategory(randomCategory);
         
         const categoryProducts = products.filter(p => p.categoria === randomCategory);
-        setFeaturedProducts(categoryProducts.slice(0, 8));
+        const shuffledProducts = shuffleArray(categoryProducts);
+        setFeaturedProducts(shuffledProducts.slice(0, 8));
       }, 15000);
 
       return () => clearInterval(interval);
@@ -88,10 +99,12 @@ const Index = () => {
 
       if (error) throw error;
       
-      setProducts(data || []);
+      // Shuffle products when fetched
+      const shuffledProducts = shuffleArray(data || []);
+      setProducts(shuffledProducts);
       
-      // Set initial featured products (first 8)
-      const initialFeatured = (data || []).slice(0, 8);
+      // Set initial featured products (first 8 shuffled)
+      const initialFeatured = shuffledProducts.slice(0, 8);
       setFeaturedProducts(initialFeatured);
 
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
@@ -219,7 +232,9 @@ const Index = () => {
   };
 
   const getCategoryProducts = (category: string, limit: number = 6) => {
-    return products.filter(p => p.categoria === category).slice(0, limit);
+    const categoryProducts = products.filter(p => p.categoria === category);
+    const shuffledProducts = shuffleArray(categoryProducts);
+    return shuffledProducts.slice(0, limit);
   };
 
   if (loading) {
