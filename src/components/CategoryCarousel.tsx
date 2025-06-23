@@ -20,7 +20,6 @@ interface CategoryCarouselProps {
 export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     // Pega os 8 produtos mais recentes
@@ -30,42 +29,28 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
     setRecentProducts(newest);
   }, [products]);
 
-  // Auto-scroll effect with smooth transitions
+  // Auto-scroll effect
   useEffect(() => {
     if (recentProducts.length === 0) return;
     
     const interval = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentIndex((prev) => {
-          const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
-          return prev >= maxIndex ? 0 : prev + 1;
-        });
-        setIsTransitioning(false);
-      }, 150);
+      setCurrentIndex((prev) => {
+        const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
+        return prev >= maxIndex ? 0 : prev + 1;
+      });
     }, 4000); // Move a cada 4 segundos
 
     return () => clearInterval(interval);
   }, [recentProducts.length]);
 
   const nextSlide = () => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
-      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-      setIsTransitioning(false);
-    }, 150);
+    const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
   };
 
   const prevSlide = () => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
-      setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
-      setIsTransitioning(false);
-    }, 150);
+    const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
+    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
   };
 
   if (recentProducts.length === 0) return null;
@@ -82,8 +67,7 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
               size="sm"
               variant="ghost"
               onClick={prevSlide}
-              disabled={isTransitioning}
-              className="text-white hover:bg-white/20 p-2 rounded-full transition-all duration-200"
+              className="text-white hover:bg-white/20 p-2 rounded-full"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -91,8 +75,7 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
               size="sm"
               variant="ghost"
               onClick={nextSlide}
-              disabled={isTransitioning}
-              className="text-white hover:bg-white/20 p-2 rounded-full transition-all duration-200"
+              className="text-white hover:bg-white/20 p-2 rounded-full"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -101,18 +84,13 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
 
         <div className="relative overflow-hidden">
           <div 
-            className={`flex gap-3 transition-all duration-500 ease-in-out ${
-              isTransitioning ? 'opacity-90' : 'opacity-100'
-            }`}
-            style={{ 
-              transform: `translateX(-${currentIndex * 100}%)`,
-              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
+            className="flex transition-transform duration-500 ease-in-out gap-3"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
             {recentProducts.map((product, index) => (
               <Card
                 key={product.id}
-                className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/6 overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl transform-gpu"
+                className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/6 overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
                 onClick={() => onProductClick(product.id)}
               >
                 <div className="relative aspect-[4/3]">
@@ -120,7 +98,6 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
                     src={product.imagem1}
                     alt={product.produto}
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   
@@ -152,17 +129,9 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
           {Array.from({ length: Math.ceil(recentProducts.length / 2) }).map((_, index) => (
             <button
               key={index}
-              onClick={() => {
-                if (!isTransitioning) {
-                  setIsTransitioning(true);
-                  setTimeout(() => {
-                    setCurrentIndex(index);
-                    setIsTransitioning(false);
-                  }, 150);
-                }
-              }}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                currentIndex === index ? 'bg-white w-6' : 'bg-white/50 w-2'
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                currentIndex === index ? 'bg-white w-6' : 'bg-white/50'
               }`}
             />
           ))}

@@ -48,52 +48,15 @@ const Index = () => {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
-  const [shuffledProducts, setShuffledProducts] = useState<Product[]>([]);
   const { showError, showLoading, showInfo } = useToastNotifications();
 
-  // Function to shuffle array - persist in localStorage
+  // Function to shuffle array
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    return shuffled;
-  };
-
-  // Load shuffled order from localStorage or create new one
-  const getShuffledProducts = (products: Product[]): Product[] => {
-    if (categoryFromUrl) {
-      // If viewing a specific category, don't shuffle
-      return products;
-    }
-
-    const sessionKey = 'shuffled_products_session';
-    const stored = localStorage.getItem(sessionKey);
-    
-    if (stored) {
-      try {
-        const parsedIds = JSON.parse(stored);
-        // Reorder products based on stored order
-        const reordered = parsedIds.map((id: number) => 
-          products.find(p => p.id === id)
-        ).filter(Boolean);
-        
-        // Add any new products that weren't in the stored order
-        const existingIds = new Set(parsedIds);
-        const newProducts = products.filter(p => !existingIds.has(p.id));
-        
-        return [...reordered, ...newProducts];
-      } catch {
-        // If parsing fails, create new shuffle
-      }
-    }
-    
-    // Create new shuffle and store it
-    const shuffled = shuffleArray(products);
-    const shuffledIds = shuffled.map(p => p.id);
-    localStorage.setItem(sessionKey, JSON.stringify(shuffledIds));
-    
     return shuffled;
   };
 
@@ -109,22 +72,23 @@ const Index = () => {
 
   useEffect(() => {
     filterProducts();
-  }, [selectedCategory, shuffledProducts, searchTerm, sortBy, sortOrder]);
+  }, [selectedCategory, products, searchTerm, sortBy, sortOrder]);
 
   // Auto-rotate featured products by category every 15 seconds - only when not viewing specific category
   useEffect(() => {
-    if (categories.length > 0 && shuffledProducts.length > 0 && !categoryFromUrl) {
+    if (categories.length > 0 && products.length > 0 && !categoryFromUrl) {
       const interval = setInterval(() => {
         const randomCategory = categories[Math.floor(Math.random() * categories.length)];
         setCurrentFeaturedCategory(randomCategory);
         
-        const categoryProducts = shuffledProducts.filter(p => p.categoria === randomCategory);
-        setFeaturedProducts(categoryProducts.slice(0, 8));
+        const categoryProducts = products.filter(p => p.categoria === randomCategory);
+        const shuffledProducts = shuffleArray(categoryProducts);
+        setFeaturedProducts(shuffledProducts.slice(0, 8));
       }, 15000);
 
       return () => clearInterval(interval);
     }
-  }, [categories, shuffledProducts, categoryFromUrl]);
+  }, [categories, products, categoryFromUrl]);
 
   const fetchProducts = async () => {
     try {
@@ -135,10 +99,9 @@ const Index = () => {
 
       if (error) throw error;
       
-      // Apply shuffling logic
-      const processedProducts = getShuffledProducts(data || []);
-      setProducts(data || []);
-      setShuffledProducts(processedProducts);
+      // Only shuffle products when not viewing a specific category
+      const processedProducts = categoryFromUrl ? (data || []) : shuffleArray(data || []);
+      setProducts(processedProducts);
       
       // Set initial featured products (first 8)
       const initialFeatured = processedProducts.slice(0, 8);
@@ -160,7 +123,7 @@ const Index = () => {
   };
 
   const filterProducts = () => {
-    let filtered = shuffledProducts;
+    let filtered = products;
 
     if (selectedCategory !== 'todas') {
       filtered = filtered.filter(product => product.categoria === selectedCategory);
@@ -268,13 +231,11 @@ const Index = () => {
     return iconMap[category] || ShoppingCart;
   };
 
-  const getCategoryProducts = (category: string, limit?: number) => {
-    const categoryProducts = shuffledProducts.filter(p => p.categoria === category);
-    
-    // Para "Diversão e Família" e outras categorias grandes, mostrar mais produtos
-    const defaultLimit = category === 'Diversão e Familia' ? 12 : (limit || 8);
-    
-    return categoryProducts.slice(0, defaultLimit);
+  const getCategoryProducts = (category: string, limit: number = 6) => {
+    const categoryProducts = products.filter(p => p.categoria === category);
+    // Only shuffle if not viewing a specific category
+    const processedProducts = categoryFromUrl ? categoryProducts : shuffleArray(categoryProducts);
+    return processedProducts.slice(0, limit);
   };
 
   if (loading) {
@@ -299,7 +260,7 @@ const Index = () => {
       {searchTerm && (
         <SearchPreview 
           searchTerm={searchTerm} 
-          products={shuffledProducts.filter(p => 
+          products={products.filter(p => 
             p.produto.toLowerCase().includes(searchTerm.toLowerCase())
           ).slice(0, 5)} 
           onProductClick={handleProductClick}
@@ -308,7 +269,7 @@ const Index = () => {
 
       {/* Novidades Carousel */}
       <CategoryCarousel 
-        products={shuffledProducts}
+        products={products}
         onProductClick={handleProductClick}
       />
       
