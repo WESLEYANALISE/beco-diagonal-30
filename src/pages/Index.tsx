@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from '@/components/Header';
+import { WelcomeTutorial } from '@/components/WelcomeTutorial';
 import { SearchPreview } from '@/components/SearchPreview';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
 import { ProductSelector } from '@/components/ProductSelector';
@@ -14,6 +15,7 @@ import { TabNavigation } from '@/components/TabNavigation';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -49,6 +51,7 @@ const Index = () => {
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
   const { showError, showLoading, showInfo } = useToastNotifications();
+  const { updatePreferences } = useUserPreferences();
 
   // Function to shuffle array
   const shuffleArray = <T,>(array: T[]): T[] => {
@@ -72,6 +75,8 @@ const Index = () => {
 
   useEffect(() => {
     fetchProducts();
+    // Update last visit
+    updatePreferences({ lastVisit: new Date().toISOString() });
   }, []);
 
   useEffect(() => {
@@ -270,6 +275,7 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+        <WelcomeTutorial />
         <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
@@ -283,6 +289,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+      <WelcomeTutorial />
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
       {/* Search Preview */}
