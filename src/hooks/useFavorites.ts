@@ -1,7 +1,7 @@
 
-// Updated to use Supabase backend with localStorage fallback
-import { useFavoritesSupabase } from './useFavoritesSupabase';
+// Updated to use local storage instead of Supabase backend
+import { useFavoritesLocal } from './useFavoritesLocal';
 
 export const useFavorites = () => {
-  return useFavoritesSupabase();
+  return useFavoritesLocal();
 };

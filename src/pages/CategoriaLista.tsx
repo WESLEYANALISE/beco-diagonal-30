@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid, List } from 'lucide-react';
@@ -9,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Header from '@/components/Header';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
-import { LazyImage } from '@/components/LazyImage';
+import { OptimizedImage } from '@/components/OptimizedImage';
+import { SubcategoryCard } from '@/components/SubcategoryCard';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
 import { supabase } from "@/integrations/supabase/client";
@@ -202,14 +202,16 @@ const CategoriaLista = () => {
 
   const getCategoryGradient = (index: number) => {
     const gradients = [
-      'from-pink-500 to-red-500',
-      'from-blue-500 to-purple-500',
-      'from-green-500 to-teal-500',
-      'from-yellow-500 to-orange-500',
-      'from-purple-500 to-pink-500',
-      'from-indigo-500 to-blue-500',
-      'from-red-500 to-orange-500',
-      'from-teal-500 to-green-500'
+      'from-pink-500 via-purple-500 to-red-500',
+      'from-blue-500 via-cyan-500 to-purple-500',
+      'from-green-500 via-emerald-500 to-teal-500',
+      'from-yellow-500 via-orange-500 to-red-500',
+      'from-purple-500 via-pink-500 to-rose-500',
+      'from-indigo-500 via-blue-500 to-cyan-500',
+      'from-red-500 via-orange-500 to-yellow-500',
+      'from-teal-500 via-green-500 to-emerald-500',
+      'from-rose-500 via-pink-500 to-purple-500',
+      'from-amber-500 via-yellow-500 to-orange-500'
     ];
     return gradients[index % gradients.length];
   };
@@ -219,10 +221,10 @@ const CategoriaLista = () => {
       <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleProductClick(product)}>
         <CardContent className="p-0">
           <div className="aspect-square relative">
-            <LazyImage 
+            <OptimizedImage 
               src={product.imagem1} 
               alt={product.produto} 
-              className="w-full h-full object-cover" 
+              className="w-full h-full" 
             />
             <div className="absolute top-2 right-2">
               <FavoriteButton productId={product.id} size="sm" />
@@ -277,10 +279,10 @@ const CategoriaLista = () => {
         <CardContent className="p-0">
           <div className="flex">
             <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
-              <LazyImage 
+              <OptimizedImage 
                 src={product.imagem1} 
                 alt={product.produto} 
-                className="w-full h-full object-cover" 
+                className="w-full h-full" 
               />
             </div>
             
@@ -423,14 +425,16 @@ const CategoriaLista = () => {
       {/* Content */}
       <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
         {tipo === 'categoria' && !subcategoria ? (
-          // Show subcategories as cards (like Shopee)
+          // Enhanced subcategories grid
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
-              Subcategorias
-              <span className="text-sm font-normal text-gray-600 ml-2">
-                ({subcategoryGroups.length} subcategorias)
-              </span>
-            </h2>
+            <div className="text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                Subcategorias
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Encontre exatamente o que procura em {subcategoryGroups.length} subcategorias
+              </p>
+            </div>
             
             {subcategoryGroups.length === 0 ? (
               <div className="text-center py-16">
@@ -445,30 +449,16 @@ const CategoriaLista = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                 {subcategoryGroups.map((group, index) => (
-                  <Card 
-                    key={group.subcategoria} 
-                    className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group cursor-pointer"
+                  <SubcategoryCard
+                    key={group.subcategoria}
+                    subcategoria={group.subcategoria}
+                    productCount={group.products.length}
+                    sampleImage={group.sampleImage}
+                    gradient={getCategoryGradient(index)}
                     onClick={() => handleSubcategoryClick(group.subcategoria)}
-                  >
-                    <div className="aspect-square relative overflow-hidden">
-                      <LazyImage 
-                        src={group.sampleImage} 
-                        alt={group.subcategoria} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                      />
-                      <div className={`absolute inset-0 bg-gradient-to-t ${getCategoryGradient(index)} opacity-60`} />
-                      <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                        <h3 className="text-sm sm:text-base font-bold mb-1 line-clamp-2">
-                          {group.subcategoria}
-                        </h3>
-                        <p className="text-xs text-white/90">
-                          {group.products.length} produtos
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
+                  />
                 ))}
               </div>
             )}
