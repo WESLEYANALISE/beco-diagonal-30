@@ -38,7 +38,7 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
         const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
         return prev >= maxIndex ? 0 : prev + 1;
       });
-    }, 4000); // Move a cada 4 segundos
+    }, 5000); // Aumentei para 5 segundos para ser mais suave
 
     return () => clearInterval(interval);
   }, [recentProducts.length]);
@@ -67,7 +67,7 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
               size="sm"
               variant="ghost"
               onClick={prevSlide}
-              className="text-white hover:bg-white/20 p-2 rounded-full"
+              className="text-white hover:bg-white/20 p-2 rounded-full transition-all duration-300"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -75,7 +75,7 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
               size="sm"
               variant="ghost"
               onClick={nextSlide}
-              className="text-white hover:bg-white/20 p-2 rounded-full"
+              className="text-white hover:bg-white/20 p-2 rounded-full transition-all duration-300"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -84,20 +84,20 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
 
         <div className="relative overflow-hidden">
           <div 
-            className="flex transition-transform duration-500 ease-in-out gap-3"
+            className="flex transition-transform duration-700 ease-in-out gap-3"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
             {recentProducts.map((product, index) => (
               <Card
                 key={product.id}
-                className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/6 overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/6 overflow-hidden cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-xl"
                 onClick={() => onProductClick(product.id)}
               >
                 <div className="relative aspect-[4/3]">
                   <img
                     src={product.imagem1}
                     alt={product.produto}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   
@@ -130,7 +130,7 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              className={`w-2 h-2 rounded-full transition-all duration-500 ${
                 currentIndex === index ? 'bg-white w-6' : 'bg-white/50'
               }`}
             />

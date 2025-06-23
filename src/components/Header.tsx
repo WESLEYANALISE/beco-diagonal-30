@@ -16,7 +16,7 @@ interface HeaderProps {
   onPriceFilter?: (minPrice: number, maxPrice: number) => void;
 }
 
-const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
+const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState([0, 500]);
@@ -38,11 +38,11 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    onSearch?.(value);
+    onSearch(value);
   };
 
   const handlePriceFilter = () => {
-    onPriceFilter?.(priceRange[0], priceRange[1]);
+    onPriceFilter(priceRange[0], priceRange[1]);
   };
 
   const handleEvaluateApp = () => {
@@ -172,47 +172,47 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
                             <span className="font-medium">Sobre o app</span>
                           </button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-md mx-4 bg-white/95 backdrop-blur-xl border-0 shadow-2xl">
+                        <DialogContent className="max-w-sm mx-4 bg-white/95 backdrop-blur-xl border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
                           <div className="absolute inset-0 bg-gradient-to-br from-red-50/90 via-orange-50/90 to-white/90 rounded-lg backdrop-blur-xl"></div>
                           <div className="relative z-10">
-                            <DialogHeader className="space-y-4 text-center pb-6">
-                              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
-                                <ShoppingCart className="w-8 h-8 text-white" />
+                            <DialogHeader className="space-y-3 text-center pb-4">
+                              <div className="mx-auto w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                                <ShoppingCart className="w-6 h-6 text-white" />
                               </div>
-                              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                              <DialogTitle className="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
                                 Achadinhos Shopee
                               </DialogTitle>
                             </DialogHeader>
-                            <div className="space-y-6 text-gray-700">
+                            <div className="space-y-4 text-gray-700 text-sm">
                               <div className="text-center">
-                                <p className="text-lg font-semibold text-gray-800 mb-2">
+                                <p className="font-semibold text-gray-800 mb-2">
                                   Seu companheiro perfeito para economizar!
                                 </p>
-                                <p className="text-sm text-gray-600 leading-relaxed">
+                                <p className="text-xs text-gray-600 leading-relaxed">
                                   Encontre os melhores produtos com os menores preços
                                 </p>
                               </div>
                               
-                              <div className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                  <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                                  <p className="text-sm leading-relaxed">
+                              <div className="space-y-3">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                                  <p className="text-xs leading-relaxed">
                                     Nosso app reúne cuidadosamente os <span className="font-semibold text-red-600">melhores achadinhos da Shopee</span>, oferecendo acesso aos produtos mais essenciais para o seu dia a dia.
                                   </p>
                                 </div>
                                 
-                                <div className="flex items-start gap-3">
-                                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-                                  <p className="text-sm leading-relaxed">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                                  <p className="text-xs leading-relaxed">
                                     Desde itens de beleza, casa e decoração até gadgets e acessórios, tudo selecionado para garantir <span className="font-semibold text-orange-600">qualidade e economia</span>.
                                   </p>
                                 </div>
                               </div>
                               
-                              <div className="bg-gradient-to-r from-red-100 via-orange-100 to-red-100 p-4 rounded-xl border border-red-200/50 backdrop-blur-sm">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-lg">💰</span>
-                                  <p className="text-sm font-semibold text-red-700">
+                              <div className="bg-gradient-to-r from-red-100 via-orange-100 to-red-100 p-3 rounded-lg border border-red-200/50 backdrop-blur-sm">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-base">💰</span>
+                                  <p className="text-xs font-semibold text-red-700">
                                     Economize tempo e dinheiro
                                   </p>
                                 </div>

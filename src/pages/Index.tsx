@@ -60,6 +60,16 @@ const Index = () => {
     return shuffled;
   };
 
+  // Persistir ordem dos produtos no localStorage para manter durante a sessão
+  const getStoredProductOrder = () => {
+    const stored = localStorage.getItem('shuffledProductIds');
+    return stored ? JSON.parse(stored) : null;
+  };
+
+  const storeProductOrder = (productIds: number[]) => {
+    localStorage.setItem('shuffledProductIds', JSON.stringify(productIds));
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -99,8 +109,24 @@ const Index = () => {
 
       if (error) throw error;
       
-      // Only shuffle products when not viewing a specific category
-      const processedProducts = categoryFromUrl ? (data || []) : shuffleArray(data || []);
+      let processedProducts = data || [];
+      
+      // Verificar se já existe uma ordem armazenada
+      const storedOrder = getStoredProductOrder();
+      
+      if (storedOrder && storedOrder.length === processedProducts.length) {
+        // Usar ordem armazenada
+        processedProducts = storedOrder.map((id: number) => 
+          processedProducts.find(p => p.id === id)
+        ).filter(Boolean);
+      } else {
+        // Primeira visita - randomizar e armazenar
+        if (!categoryFromUrl) {
+          processedProducts = shuffleArray(processedProducts);
+          storeProductOrder(processedProducts.map(p => p.id));
+        }
+      }
+      
       setProducts(processedProducts);
       
       // Set initial featured products (first 8)
@@ -231,11 +257,14 @@ const Index = () => {
     return iconMap[category] || ShoppingCart;
   };
 
-  const getCategoryProducts = (category: string, limit: number = 6) => {
+  const getCategoryProducts = (category: string, limit: number = 12) => {
     const categoryProducts = products.filter(p => p.categoria === category);
-    // Only shuffle if not viewing a specific category
-    const processedProducts = categoryFromUrl ? categoryProducts : shuffleArray(categoryProducts);
-    return processedProducts.slice(0, limit);
+    
+    // Aumentar limite especialmente para "Diversão e Familia"
+    const actualLimit = category === 'Diversão e Familia' ? 12 : limit;
+    
+    // Não randomizar mais aqui, manter ordem original dos produtos
+    return categoryProducts.slice(0, actualLimit);
   };
 
   if (loading) {
