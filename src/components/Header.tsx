@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Sparkles, Info, Star } from 'lucide-react';
@@ -80,11 +81,6 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                   >
                     <item.icon className="w-4 h-4 mr-2" />
                     {item.label}
-                    {item.path === '/favoritos' && favoritesCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs min-w-[20px] h-5 flex items-center justify-center p-0">
-                        {favoritesCount}
-                      </Badge>
-                    )}
                   </Button>
                 ))}
               </div>
@@ -127,11 +123,6 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                         >
                           <item.icon className="w-5 h-5" />
                           <span className="font-medium">{item.label}</span>
-                          {item.path === '/favoritos' && favoritesCount > 0 && (
-                            <Badge className="ml-auto bg-yellow-500 text-black text-xs">
-                              {favoritesCount}
-                            </Badge>
-                          )}
                         </button>
                       ))}
                       
@@ -244,11 +235,6 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
               <span className="text-xs font-medium truncate max-w-full">
                 {item.label}
               </span>
-              {item.path === '/favoritos' && favoritesCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs min-w-[16px] h-4 flex items-center justify-center p-0">
-                  {favoritesCount > 9 ? '9+' : favoritesCount}
-                </Badge>
-              )}
             </button>
           ))}
         </div>

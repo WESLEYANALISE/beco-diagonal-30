@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Star, ShoppingCart, Play, Sparkles, Grid, List } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import Header from '@/components/Header';
 import { ProductVideoModal } from '@/components/ProductVideoModal';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
+import { ProductCard } from '@/components/ProductCard';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { LazyImage } from '@/components/LazyImage';
 import { supabase } from "@/integrations/supabase/client";
