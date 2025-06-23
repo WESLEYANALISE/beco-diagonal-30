@@ -1,42 +1,68 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Load favorites from localStorage on mount
   useEffect(() => {
-    const storedFavorites = localStorage.getItem('shopee-favorites');
-    if (storedFavorites) {
-      setFavorites(JSON.parse(storedFavorites));
+    try {
+      const storedFavorites = localStorage.getItem('shopee-favorites');
+      if (storedFavorites) {
+        const parsed = JSON.parse(storedFavorites);
+        if (Array.isArray(parsed)) {
+          setFavorites(parsed);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      setFavorites([]);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  const toggleFavorite = (productId: number) => {
+  // Memoized toggle function for better performance
+  const toggleFavorite = useCallback((productId: number) => {
     setFavorites(prev => {
       const newFavorites = prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId];
       
-      localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
+      // Save to localStorage immediately
+      try {
+        localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
+      } catch (error) {
+        console.error('Error saving favorites:', error);
+      }
+      
       return newFavorites;
     });
-  };
+  }, []);
 
-  const removeFavorite = (productId: number) => {
+  const removeFavorite = useCallback((productId: number) => {
     setFavorites(prev => {
       const newFavorites = prev.filter(id => id !== productId);
-      localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
+      try {
+        localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
+      } catch (error) {
+        console.error('Error saving favorites:', error);
+      }
       return newFavorites;
     });
-  };
+  }, []);
 
-  const isFavorite = (productId: number) => favorites.includes(productId);
+  const isFavorite = useCallback((productId: number) => {
+    return favorites.includes(productId);
+  }, [favorites]);
 
   return {
     favorites,
     toggleFavorite,
     removeFavorite,
     isFavorite,
-    favoritesCount: favorites.length
+    favoritesCount: favorites.length,
+    isLoading
   };
 };

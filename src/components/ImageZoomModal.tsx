@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut, RotateCw, X, ChevronLeft, ChevronRight, Move } from 'lucide-react';
@@ -27,65 +27,75 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
 
-  const handleZoomIn = () => {
+  const handleZoomIn = useCallback(() => {
     setScale(prev => Math.min(prev + 0.5, 4));
-  };
+  }, []);
 
-  const handleZoomOut = () => {
-    setScale(prev => Math.max(prev - 0.5, 0.5));
-    if (scale <= 1) {
-      setPosition({ x: 0, y: 0 });
-    }
-  };
+  const handleZoomOut = useCallback(() => {
+    setScale(prev => {
+      const newScale = Math.max(prev - 0.5, 0.5);
+      if (newScale <= 1) {
+        setPosition({ x: 0, y: 0 });
+      }
+      return newScale;
+    });
+  }, []);
 
-  const handleRotate = () => {
+  const handleRotate = useCallback(() => {
     setRotation(prev => prev + 90);
-  };
+  }, []);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     setImageIndex(prev => prev > 0 ? prev - 1 : images.length - 1);
     resetTransform();
-  };
+  }, [images.length]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setImageIndex(prev => prev < images.length - 1 ? prev + 1 : 0);
     resetTransform();
-  };
+  }, [images.length]);
 
-  const resetTransform = () => {
+  const resetTransform = useCallback(() => {
     setScale(1);
     setRotation(0);
     setPosition({ x: 0, y: 0 });
-  };
+  }, []);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (scale > 1) {
       setIsDragging(true);
       setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
     }
-  };
+  }, [scale, position]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isDragging && scale > 1) {
       setPosition({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y
       });
     }
-  };
+  }, [isDragging, scale, dragStart]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
   useEffect(() => {
     setImageIndex(currentIndex);
   }, [currentIndex]);
 
+  // Reset transform when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      resetTransform();
+    }
+  }, [isOpen, resetTransform]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-[95vw] max-h-[95vh] p-0 bg-white">
-        {/* Header com botão de fechar mais visível */}
+        {/* Header otimizado */}
         <DialogHeader className="p-3 sm:p-4 border-b bg-white">
           <DialogTitle className="flex items-center justify-between text-sm sm:text-base lg:text-lg">
             <div className="flex-1 min-w-0 pr-4">
@@ -106,15 +116,16 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Container da imagem - Totalmente responsivo sem cortes */}
+        {/* Container da imagem - Otimizado para mobile */}
         <div 
-          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center w-full h-[60vh] sm:h-[70vh]"
+          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center w-full"
+          style={{ height: 'min(60vh, 400px)' }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          {/* Botões de navegação */}
+          {/* Botões de navegação otimizados */}
           {images.length > 1 && (
             <>
               <Button
@@ -136,33 +147,31 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
             </>
           )}
 
-          {/* Imagem principal - Totalmente responsiva */}
-          <div className="w-full h-full flex items-center justify-center p-2 sm:p-4">
+          {/* Imagem principal - Completamente responsiva */}
+          <div className="w-full h-full flex items-center justify-center p-2">
             <img
               ref={imageRef}
               src={images[imageIndex]}
               alt={`${productName} - ${imageIndex + 1}`}
-              className="w-full h-full object-contain transition-transform duration-200 select-none"
+              className="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
               style={{
                 transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
-                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-                maxWidth: '100%',
-                maxHeight: '100%'
+                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
               }}
               draggable={false}
             />
           </div>
 
-          {/* Indicador de zoom */}
+          {/* Indicador de zoom otimizado */}
           {scale > 1 && (
             <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2">
               <Move className="w-4 h-4" />
-              Arraste para mover
+              <span className="hidden sm:inline">Arraste para mover</span>
             </div>
           )}
         </div>
 
-        {/* Controles */}
+        {/* Controles otimizados */}
         <div className="p-3 sm:p-4 bg-white border-t">
           <div className="flex items-center justify-center gap-2 mb-3 flex-wrap">
             <Button
@@ -208,7 +217,7 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
             </Button>
           </div>
 
-          {/* Miniaturas */}
+          {/* Miniaturas otimizadas */}
           {images.length > 1 && (
             <div className="flex gap-2 justify-center overflow-x-auto pb-2">
               {images.map((image, index) => (
@@ -226,8 +235,9 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
                 >
                   <img
                     src={image}
-                    alt={`${productName} - Miniatura ${index + 1}`}
+                    alt={`${productName} - Mini ${index + 1}`}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </button>
               ))}

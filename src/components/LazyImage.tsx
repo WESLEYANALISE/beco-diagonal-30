@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface LazyImageProps {
@@ -20,6 +20,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
+  // Optimized intersection observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -28,7 +29,10 @@ export const LazyImage: React.FC<LazyImageProps> = ({
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { 
+        threshold: 0.1,
+        rootMargin: '50px' // Start loading before image is visible
+      }
     );
 
     if (imgRef.current) {
@@ -38,19 +42,19 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  const handleLoad = () => {
+  const handleLoad = useCallback(() => {
     setIsLoaded(true);
-  };
+  }, []);
 
-  const handleError = () => {
+  const handleError = useCallback(() => {
     setHasError(true);
     setIsLoaded(true);
-  };
+  }, []);
 
   return (
     <div ref={imgRef} className={`relative ${className}`}>
       {!isLoaded && (
-        <Skeleton className="absolute inset-0 w-full h-full" />
+        <Skeleton className="absolute inset-0 w-full h-full animate-pulse" />
       )}
       {isInView && (
         <img
@@ -61,6 +65,8 @@ export const LazyImage: React.FC<LazyImageProps> = ({
           }`}
           onLoad={handleLoad}
           onError={handleError}
+          loading="lazy"
+          decoding="async"
         />
       )}
     </div>

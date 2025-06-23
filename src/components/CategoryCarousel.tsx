@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { LazyImage } from '@/components/LazyImage';
 
 interface Product {
   id: number;
@@ -17,9 +18,10 @@ interface CategoryCarouselProps {
   onProductClick: (productId: number) => void;
 }
 
-export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselProps) => {
+export const CategoryCarousel = memo(({ products, onProductClick }: CategoryCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
 
   useEffect(() => {
     // Pega os 8 produtos mais recentes
@@ -29,29 +31,39 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
     setRecentProducts(newest);
   }, [products]);
 
-  // Auto-scroll effect
+  // Auto-scroll otimizado
   useEffect(() => {
-    if (recentProducts.length === 0) return;
+    if (recentProducts.length === 0 || !isAutoScrolling) return;
     
     const interval = setInterval(() => {
       setCurrentIndex((prev) => {
         const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
         return prev >= maxIndex ? 0 : prev + 1;
       });
-    }, 5000); // Aumentei para 5 segundos para ser mais suave
+    }, 4000);
 
     return () => clearInterval(interval);
-  }, [recentProducts.length]);
+  }, [recentProducts.length, isAutoScrolling]);
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
+    setIsAutoScrolling(false);
     const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
     setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-  };
+    // Reativar auto-scroll após 10 segundos
+    setTimeout(() => setIsAutoScrolling(true), 10000);
+  }, [recentProducts.length]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
+    setIsAutoScrolling(false);
     const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
     setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
-  };
+    // Reativar auto-scroll após 10 segundos
+    setTimeout(() => setIsAutoScrolling(true), 10000);
+  }, [recentProducts.length]);
+
+  const handleProductClick = useCallback((productId: number) => {
+    onProductClick(productId);
+  }, [onProductClick]);
 
   if (recentProducts.length === 0) return null;
 
@@ -91,10 +103,10 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
               <Card
                 key={product.id}
                 className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/6 overflow-hidden cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-xl"
-                onClick={() => onProductClick(product.id)}
+                onClick={() => handleProductClick(product.id)}
               >
                 <div className="relative aspect-[4/3]">
-                  <img
+                  <LazyImage
                     src={product.imagem1}
                     alt={product.produto}
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
@@ -124,19 +136,26 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
           </div>
         </div>
 
-        {/* Indicadores de slide */}
+        {/* Indicadores de slide otimizados */}
         <div className="flex justify-center mt-4 gap-2">
           {Array.from({ length: Math.ceil(recentProducts.length / 2) }).map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => {
+                setCurrentIndex(index);
+                setIsAutoScrolling(false);
+                setTimeout(() => setIsAutoScrolling(true), 10000);
+              }}
               className={`w-2 h-2 rounded-full transition-all duration-500 ${
                 currentIndex === index ? 'bg-white w-6' : 'bg-white/50'
               }`}
+              aria-label={`Ir para slide ${index + 1}`}
             />
           ))}
         </div>
       </div>
     </section>
   );
-};
+});
+
+CategoryCarousel.displayName = 'CategoryCarousel';
