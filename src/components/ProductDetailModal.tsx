@@ -70,50 +70,60 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const generateAITips = async () => {
     setLoadingTips(true);
     
-    const categoryTips: Record<string, string[]> = {
-      'Fones de Ouvido': [
-        `Olha só, esse ${product.produto} é perfeito pra várias situações! 🎧 Use no trabalho quando você precisa focar - principalmente se trabalha em escritório aberto ou home office com barulho. É ideal pra quem estuda também, ajuda muito na concentração! No transporte público então, é essencial - ônibus, metrô, avião... você fica no seu mundo ouvindo música, podcast ou até audiobook. Pra quem malha na academia, nossa, faz toda diferença! A música te motiva muito mais. E pra calls de trabalho ou aulas online? Perfeito! Ninguém mais reclama que não te escuta bem. Ah, e pra gamers que jogam online com os amigos, é indispensável pra uma boa comunicação na equipe!`,
-        
-        `Esse fone vai ser seu melhor amigo em tantos momentos! 🎵 De manhã cedo, quando você quer ouvir música sem acordar a família. À noite, quando quer assistir Netflix ou YouTube sem incomodar ninguém. É excelente pra quem tem filhos pequenos e precisa trabalhar em casa - você consegue se concentrar mesmo com a criançada brincando. Pra estudantes então, nossa! Biblioteca, quarto de república, qualquer lugar fica mais silencioso. E pra quem viaja muito? Indispensável! No avião você não sofre com choro de bebê ou conversa alta. É ótimo também pra relaxar fazendo meditação ou ouvindo sons da natureza antes de dormir.`,
-        
-        `Vou te dar umas dicas de ouro de quando usar esse ${product.produto}! 💎 Primeiro, no trabalho: reuniões online, aquelas calls chatas, ou quando você precisa dar uma pausinha e ouvir uma música pra relaxar. Em casa, é perfeito quando tem visita e você quer se desconectar um pouquinho, ou quando está cozinhando e quer ouvir seu podcast favorito. Pra quem faz exercício, seja caminhada, corrida ou academia, a música com um bom fone muda tudo! E olha, pra quem tem ansiedade ou stress, é terapêutico colocar um som relaxante e respirar fundo. Ah, e pra gamers: usar em jogos cooperativos com amigos é essencial pra estratégia!`
-      ],
-      'Beleza e Cuidados Pessoais': [
-        `Menina, esse ${product.produto} vai revolucionar sua rotina! ✨ Use de manhã depois do banho, principalmente se sua pele tá meio ressecada - aplica com a pele ainda levemente úmida que absorve melhor. À noite, no seu ritual de skincare, é perfeito depois de limpar bem o rosto. Fins de semana, faz uma sessão spa em casa: aplica, coloca uma música relaxante e aproveita o momento. É ótimo também antes de eventos importantes - casamento, formatura, encontro especial - deixa a pele preparada pra maquiagem. E olha, pra quem trabalha muito no computador ou fica em ambiente com ar condicionado, usar durante o dia ajuda a manter a hidratação!`,
-        
-        `Esse produto é tudo de bom pra vários momentos! 🌟 De manhã, no seu ritual matinal - acorda a pele e te deixa com aquela sensação fresquinha pro dia. Depois do exercício, é maravilhoso pra acalmar a pele. No pós-sol também, se você foi à praia ou piscina. À noite, depois de um dia cansativo, é como um mimo pra você mesma! É perfeito pra usar antes de dormir - você acorda com a pele renovada. E olha, nos dias de TPM quando a pele fica mais sensível, ele ajuda muito a acalmar. Pra quem tem rotina corrida, aplica rapidinho antes de sair que já faz diferença!`,
-        
-        `Vou te contar os segredos de quando usar esse ${product.produto}! 💕 Primeira coisa: sempre teste numa pequena área primeiro, principalmente se você tem pele sensível. Use depois do banho quando os poros estão abertos - absorve muito melhor! É ideal pra usar antes de eventos - aplica uns 30 minutos antes da maquiagem. Pra quem faz skincare em dupla com a irmã, mãe ou melhor amiga, vocês vão amar fazer esse ritual juntas! E uma dica especial: nos dias frios e secos, aplica antes de sair de casa pra proteger a pele do vento. É ótimo também pra usar enquanto relaxa assistindo sua série favorita!`
-      ],
-      'Casa e Decoração': [
-        `Gente, esse ${product.produto} vai transformar sua casa! 🏠 É perfeito pra sala de estar - deixa o ambiente mais aconchegante pra receber amigos e família. No quarto, cria aquela vibe relaxante que todo mundo ama. É ideal pra quem tá decorando o primeiro apartamento ou mudando de casa - pequenos detalhes fazem toda diferença! Use pra criar aqueles cantinhos instagramáveis que ficam lindos nas fotos. É ótimo também pra apartamentos alugados onde você não pode fazer mudanças grandes - melhora o visual sem furar parede! E olha, combina super bem com plantas, livros e outros elementos decorativos!`,
-        
-        `Esse item vai ser o destaque da sua casa! ✨ Coloca na entrada pra causar boa primeira impressão nas visitas. Na sala de jantar, deixa as refeições em família mais especiais. É perfeito pra home office também - deixa o ambiente mais inspirador pra trabalhar. Pra quem mora com roommates, é uma forma de personalizar seu espaço. Use pra criar um ambiente romântico pra jantares especiais com seu amor. É ideal também pra festas em casa - deixa tudo mais bonito pros amigos. E uma dica: combina muito bem com iluminação indireta, velas aromáticas e texturas aconchegantes!`,
-        
-        `Vou te dar dicas incríveis de como usar esse ${product.produto}! 💫 Primeiro, pensa no ambiente onde você passa mais tempo - geralmente é a sala ou quarto. É perfeito pra criar um ponto focal no ambiente. Use pra balancear outros elementos decorativos que você já tem. É ótimo pra apartamentos pequenos porque otimiza o espaço com estilo. Combina muito bem com móveis de madeira, plantas verdes e tecidos neutros. Pra quem gosta de mudanças, é fácil de reposicionar quando quiser renovar o visual. E olha, é uma ótima opção pra presente de casa nova, casamento ou até pra você mesma se dar esse mimo!`
-      ],
-      'Tecnologia e Acessórios': [
-        `Cara, esse ${product.produto} vai facilitar muito sua vida! 📱 É essencial pra quem trabalha muito no computador ou celular - evita aquele stress de cabo desorganizado. Perfeito pra home office, deixa tudo mais profissional e organizado. Use no quarto também, principalmente pra carregar o celular durante a noite. É ideal pra quem viaja muito - ocupa pouco espaço na mala e resolve vários problemas. Na faculdade ou trabalho, todo mundo vai te pedir emprestado! É ótimo também pra família - um produto que toda casa deveria ter. E olha, combina com qualquer setup, seja gamer, profissional ou casual!`,
-        
-        `Esse acessório é indispensável hoje em dia! ⚡ Use no carro pra manter os dispositivos sempre carregados em viagens longas. É perfeito pra escritório, principalmente se você fica muito tempo fora de casa. Em casa, deixa na sala pra toda família usar - evita briga por carregador! É ideal pra estudantes que passam o dia na faculdade ou biblioteca. Pra quem trabalha com delivery, freelancer ou qualquer trabalho que depende do celular, é essencial! Use também em cafés, aeroportos, qualquer lugar onde você precisa trabalhar fora. É compatível com praticamente todos os dispositivos modernos!`,
-        
-        `Vou te contar por que esse ${product.produto} é um investimento que vale cada centavo! 💡 Primeiro, economiza tempo - não fica procurando carregador pela casa. É durável e confiável, então você compra uma vez e usa por muito tempo. Perfeito pra quem tem vários dispositivos - tablet, fone, smartwatch, tudo carrega numa coisa só! Use no trabalho pra impressionar colegas e chefes com sua organização. É ótimo presente também - todo mundo precisa, mas nem todo mundo compra pra si. E uma dica: deixa sempre um na bolsa/mochila de reserva, você vai agradecer quando precisar!`
-      ]
-    };
+    // Generate tips based on category and product name
+    const productName = product.produto.toLowerCase();
+    const category = product.categoria || '';
     
-    const defaultTips = [
-      `Olha, esse ${product.produto} é perfeito para o seu dia a dia! 💫 Use sempre que precisar de praticidade e qualidade. É ideal pra você, sua família e amigos - todo mundo vai aprovar! Funciona super bem em casa, no trabalho, na escola, em viagens... é bem versátil mesmo! A qualidade compensa cada centavo, e você vai ver como facilita sua rotina. É daqueles produtos que depois que você tem, não consegue mais ficar sem!`,
-      
-      `Esse produto vai ser seu melhor amigo! 🌟 Use de manhã pra começar o dia bem, à tarde quando precisar de praticidade, e à noite pra relaxar. É perfeito pra usar sozinho ou com a família. Combina com seu estilo de vida, seja mais agitado ou mais tranquilo. É uma escolha inteligente - você investe uma vez e aproveita por muito tempo. Recomendo muito!`,
-      
-      `Vou te dar a real sobre esse ${product.produto}! ✨ É daqueles itens que você compra achando que é só mais um, mas vira essencial na sua vida. Use sempre que quiser se sentir bem e confortável. É perfeito pra presentear também - mãe, pai, irmão, melhor amigo... todo mundo gosta! A qualidade é top e o preço tá super justo. Não deixa passar essa oportunidade! 🛍️`
-    ];
+    let specificTips = '';
     
-    const tips = categoryTips[product.categoria] || defaultTips;
+    if (category.includes('Fones de Ouvido') || productName.includes('fone') || productName.includes('headphone') || productName.includes('earphone')) {
+      const fonesExamples = [
+        `Esse ${product.produto} é perfeito para várias situações do seu dia! 🎧 Use no trabalho quando você precisa se concentrar - especialmente se trabalha em escritório aberto ou home office com barulho. É ideal para estudar também, ajuda muito na concentração! No transporte público então, é essencial - ônibus, metrô, avião... você fica no seu mundo ouvindo música, podcast ou audiobook. Para quem malha na academia, faz toda diferença! A música te motiva muito mais. Para calls de trabalho ou aulas online? Perfeito! Ninguém mais reclama que não te escuta bem. E para gamers que jogam online com amigos, é indispensável para uma boa comunicação na equipe!`,
+        
+        `O ${product.produto} vai ser seu melhor amigo em tantos momentos! 🎵 De manhã cedo, quando você quer ouvir música sem acordar a família. À noite, quando quer assistir Netflix ou YouTube sem incomodar ninguém. É excelente para quem tem filhos pequenos e precisa trabalhar em casa - você consegue se concentrar mesmo com a criançada brincando. Para estudantes então, nossa! Biblioteca, quarto de república, qualquer lugar fica mais silencioso. E para quem viaja muito? Indispensável! No avião você não sofre com choro de bebê ou conversa alta. É ótimo também para relaxar fazendo meditação ou ouvindo sons da natureza antes de dormir.`,
+        
+        `Vou te dar dicas de ouro sobre quando usar o ${product.produto}! 💎 No trabalho: reuniões online, calls importantes, ou quando você precisa dar uma pausa e ouvir música para relaxar. Em casa, é perfeito quando tem visita e você quer se desconectar um pouquinho, ou quando está cozinhando e quer ouvir seu podcast favorito. Para exercícios, seja caminhada, corrida ou academia, a música com um bom fone muda tudo! Para quem tem ansiedade ou stress, é terapêutico colocar um som relaxante. E para gamers: essencial em jogos cooperativos com amigos!`
+      ];
+      specificTips = fonesExamples[Math.floor(Math.random() * fonesExamples.length)];
+    }
+    else if (category.includes('Beleza') || category.includes('Cuidados') || productName.includes('creme') || productName.includes('loção') || productName.includes('serum')) {
+      const belezaExamples = [
+        `O ${product.produto} vai revolucionar sua rotina de cuidados! ✨ Use de manhã depois do banho, principalmente se sua pele está ressecada - aplique com a pele ainda úmida que absorve melhor. À noite, no seu ritual de skincare, é perfeito depois de limpar bem o rosto. Fins de semana, faça uma sessão spa em casa: aplique, coloque música relaxante e aproveite o momento. É ótimo antes de eventos importantes - casamentos, formaturas, encontros especiais - deixa a pele preparada para maquiagem. Para quem trabalha muito no computador ou fica em ambiente com ar condicionado, usar durante o dia ajuda a manter a hidratação!`,
+        
+        `Esse ${product.produto} é perfeito para vários momentos! 🌟 De manhã, no seu ritual matinal - acorda a pele e te deixa fresquinha para o dia. Depois do exercício, é maravilhoso para acalmar a pele. No pós-sol também, se você foi à praia ou piscina. À noite, depois de um dia cansativo, é como um mimo para você! Perfeito para usar antes de dormir - você acorda com a pele renovada. Nos dias de TPM quando a pele fica mais sensível, ele ajuda muito a acalmar. Para quem tem rotina corrida, aplique rapidinho antes de sair que já faz diferença!`
+      ];
+      specificTips = belezaExamples[Math.floor(Math.random() * belezaExamples.length)];
+    }
+    else if (category.includes('Casa') || category.includes('Decoração') || productName.includes('decoração') || productName.includes('organizador')) {
+      const casaExamples = [
+        `O ${product.produto} vai transformar sua casa! 🏠 É perfeito para sala de estar - deixa o ambiente mais aconchegante para receber amigos e família. No quarto, cria aquela vibe relaxante que todo mundo ama. Ideal para quem está decorando o primeiro apartamento ou mudando de casa - pequenos detalhes fazem toda diferença! Use para criar cantinhos instagramáveis que ficam lindos nas fotos. Ótimo para apartamentos alugados onde você não pode fazer mudanças grandes - melhora o visual sem furar parede! Combina super bem com plantas, livros e outros elementos decorativos!`,
+        
+        `Esse ${product.produto} será o destaque da sua casa! ✨ Coloque na entrada para causar boa primeira impressão nas visitas. Na sala de jantar, deixa as refeições em família mais especiais. Perfeito para home office também - deixa o ambiente mais inspirador para trabalhar. Para quem mora com roommates, é uma forma de personalizar seu espaço. Use para criar ambiente romântico para jantares especiais. Ideal também para festas em casa - deixa tudo mais bonito para os amigos!`
+      ];
+      specificTips = casaExamples[Math.floor(Math.random() * casaExamples.length)];
+    }
+    else if (category.includes('Tecnologia') || category.includes('Acessórios') || productName.includes('carregador') || productName.includes('cabo') || productName.includes('suporte')) {
+      const tecExamples = [
+        `O ${product.produto} vai facilitar muito sua vida! 📱 É essencial para quem trabalha muito no computador ou celular - evita aquele stress de cabo desorganizado. Perfeito para home office, deixa tudo mais profissional e organizado. Use no quarto também, principalmente para carregar o celular durante a noite. Ideal para quem viaja muito - ocupa pouco espaço na mala e resolve vários problemas. Na faculdade ou trabalho, todo mundo vai te pedir emprestado! Ótimo também para família - um produto que toda casa deveria ter!`,
+        
+        `Esse ${product.produto} é indispensável hoje em dia! ⚡ Use no carro para manter os dispositivos sempre carregados em viagens longas. Perfeito para escritório, principalmente se você fica muito tempo fora de casa. Em casa, deixe na sala para toda família usar - evita briga por carregador! Ideal para estudantes que passam o dia na faculdade. Para quem trabalha com delivery, freelancer ou qualquer trabalho que depende do celular, é essencial!`
+      ];
+      specificTips = tecExamples[Math.floor(Math.random() * tecExamples.length)];
+    }
+    else {
+      // Default tips based on product name and category
+      const defaultExamples = [
+        `O ${product.produto} é perfeito para o seu dia a dia! 💫 Use sempre que precisar de praticidade e qualidade na categoria ${category}. É ideal para você, sua família e amigos - todo mundo vai aprovar! Funciona super bem em casa, no trabalho, na escola, em viagens... é bem versátil mesmo! A qualidade compensa cada centavo, e você vai ver como facilita sua rotina. É daqueles produtos que depois que você tem, não consegue mais ficar sem!`,
+        
+        `Esse ${product.produto} vai ser seu melhor amigo! 🌟 Use de manhã para começar o dia bem, à tarde quando precisar de praticidade, e à noite para relaxar. É perfeito para usar sozinho ou com a família. Combina com seu estilo de vida, seja mais agitado ou mais tranquilo. É uma escolha inteligente na categoria ${category} - você investe uma vez e aproveita por muito tempo. Recomendo muito!`,
+        
+        `Vou te dar a real sobre o ${product.produto}! ✨ É daqueles itens que você compra achando que é só mais um, mas vira essencial na sua vida. Use sempre que quiser se sentir bem e confortável. É perfeito para presentear também - mãe, pai, irmão, melhor amigo... todo mundo gosta de produtos da categoria ${category}! A qualidade é top e o preço está super justo. Não deixe passar essa oportunidade! 🛍️`
+      ];
+      specificTips = defaultExamples[Math.floor(Math.random() * defaultExamples.length)];
+    }
     
     setTimeout(() => {
-      const randomTip = tips[Math.floor(Math.random() * tips.length)];
-      setAiTips(randomTip);
+      setAiTips(specificTips);
       setLoadingTips(false);
     }, 1500);
   };
