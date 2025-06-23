@@ -119,13 +119,7 @@ const Categorias = () => {
                         Ver Produtos
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
-                      <Button variant="outline" className="w-full border-orange-200 text-orange-600 hover:bg-orange-50" onClick={e => {
-                    e.stopPropagation();
-                    navigate(`/subcategoria-lista?categoria=${encodeURIComponent(category.categoria)}`);
-                  }}>
-                        Ver Subcategorias
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
+                      
                     </div>
                   </CardContent>
                 </Card>;
