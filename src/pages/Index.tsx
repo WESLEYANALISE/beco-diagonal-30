@@ -162,8 +162,12 @@ const Index = () => {
     setSearchTerm(term);
   };
   const handlePriceFilter = (min: number, max: number) => {
-    console.log('Price filter:', min, max);
-    showInfo("Filtro de preço aplicado", `R$ ${min} - R$ ${max}`);
+    const filtered = products.filter(product => {
+      const price = parseFloat(product.valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+      return price >= min && price <= max;
+    });
+    setDisplayedProducts(filtered);
+    showInfo("Filtro de preço aplicado", `R$ ${min.toFixed(2)} - R$ ${max.toFixed(2)}`);
   };
   const handleProductClick = (productId: number) => {
     const productElement = document.getElementById(`product-${productId}`);
