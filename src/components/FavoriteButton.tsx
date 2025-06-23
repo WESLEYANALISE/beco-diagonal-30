@@ -18,12 +18,16 @@ export const FavoriteButton = ({ productId, size = 'sm' }: FavoriteButtonProps) 
     e.stopPropagation();
     e.preventDefault();
     
+    console.log('FavoriteButton clicked for product:', productId); // Debug log
+    
     setIsAnimating(true);
     toggleFavorite(productId);
     
     // Reset animation after a short delay
     setTimeout(() => setIsAnimating(false), 300);
   };
+
+  console.log(`FavoriteButton render - Product ${productId}, isFavorite: ${favorite}`); // Debug log
 
   return (
     <Button
@@ -41,7 +45,9 @@ export const FavoriteButton = ({ productId, size = 'sm' }: FavoriteButtonProps) 
           favorite ? 'fill-current text-red-500' : ''
         } ${isAnimating ? 'scale-125' : ''}`} 
       />
-      {favorite ? 'Favoritado' : 'Favoritar'}
+      <span className="ml-1 text-xs">
+        {favorite ? 'Favoritado' : 'Favoritar'}
+      </span>
     </Button>
   );
 };

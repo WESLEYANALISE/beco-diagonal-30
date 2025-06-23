@@ -27,6 +27,7 @@ export const useFavorites = () => {
   const saveFavorites = useCallback((newFavorites: number[]) => {
     try {
       localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
+      console.log('Favorites saved:', newFavorites); // Debug log
     } catch (error) {
       console.error('Error saving favorites:', error);
     }
@@ -34,17 +35,20 @@ export const useFavorites = () => {
 
   // Memoized toggle function for better performance
   const toggleFavorite = useCallback((productId: number) => {
+    console.log('Toggling favorite for product:', productId); // Debug log
     setFavorites(prev => {
       const newFavorites = prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId];
       
+      console.log('New favorites array:', newFavorites); // Debug log
       saveFavorites(newFavorites);
       return newFavorites;
     });
   }, [saveFavorites]);
 
   const removeFavorite = useCallback((productId: number) => {
+    console.log('Removing favorite:', productId); // Debug log
     setFavorites(prev => {
       const newFavorites = prev.filter(id => id !== productId);
       saveFavorites(newFavorites);
@@ -53,7 +57,9 @@ export const useFavorites = () => {
   }, [saveFavorites]);
 
   const isFavorite = useCallback((productId: number) => {
-    return favorites.includes(productId);
+    const result = favorites.includes(productId);
+    console.log(`Is product ${productId} favorite?`, result); // Debug log
+    return result;
   }, [favorites]);
 
   const clearAllFavorites = useCallback(() => {

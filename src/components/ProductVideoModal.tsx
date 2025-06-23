@@ -25,7 +25,6 @@ export const ProductVideoModal = ({
 }: ProductVideoModalProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isVideoHorizontal, setIsVideoHorizontal] = useState(false);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -35,27 +34,15 @@ export const ProductVideoModal = ({
     window.open(productLink, '_blank');
   };
 
-  // Check if video is horizontal/landscape
+  // Auto-rotate images carousel
   useEffect(() => {
-    if (isOpen && videoUrl) {
-      const video = document.createElement('video');
-      video.src = videoUrl;
-      video.addEventListener('loadedmetadata', () => {
-        const isHorizontal = video.videoWidth > video.videoHeight;
-        setIsVideoHorizontal(isHorizontal);
-      });
-    }
-  }, [isOpen, videoUrl]);
-
-  // Auto-rotate images carousel only for horizontal videos
-  useEffect(() => {
-    if (isOpen && productImages.length > 1 && isVideoHorizontal && !isFullscreen) {
+    if (isOpen && productImages.length > 1 && !isFullscreen) {
       const interval = setInterval(() => {
         setCurrentImageIndex(prev => (prev + 1) % productImages.length);
       }, 3000);
       return () => clearInterval(interval);
     }
-  }, [isOpen, productImages.length, isVideoHorizontal, isFullscreen]);
+  }, [isOpen, productImages.length, isFullscreen]);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -76,35 +63,35 @@ export const ProductVideoModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`${isFullscreen ? 'max-w-full h-full p-0' : 'max-w-4xl'} bg-black border-0`}>
         <div className="relative w-full h-full flex flex-col">
+          {/* Image Carousel - Positioned ABOVE video container */}
+          {!isFullscreen && productImages.length > 0 && (
+            <div className="bg-white p-4 flex justify-center gap-2 overflow-x-auto">
+              {productImages.slice(0, 5).map((image, index) => (
+                <div 
+                  key={index} 
+                  className={`w-16 h-16 md:w-20 md:h-20 rounded border-2 overflow-hidden transition-all duration-500 flex-shrink-0 ${
+                    index === currentImageIndex 
+                      ? 'border-blue-500 opacity-100 scale-110 shadow-lg' 
+                      : 'border-gray-300 opacity-70'
+                  }`}
+                >
+                  <img 
+                    src={image} 
+                    alt={`${productName} - ${index + 1}`} 
+                    className="w-full h-full object-cover" 
+                  />
+                </div>
+              ))}
+              {productImages.length > 5 && (
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded border-2 border-gray-300 bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-gray-600 text-xs font-bold">+{productImages.length - 5}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Video Container */}
           <div className="relative flex-1 bg-black">
-            {/* Image Carousel - Only for horizontal videos and positioned above video */}
-            {!isFullscreen && productImages.length > 0 && isVideoHorizontal && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 flex gap-2 bg-black/60 p-3 rounded-lg backdrop-blur-sm">
-                {productImages.slice(0, 5).map((image, index) => (
-                  <div 
-                    key={index} 
-                    className={`w-16 h-16 rounded border-2 overflow-hidden transition-all duration-500 ${
-                      index === currentImageIndex 
-                        ? 'border-white opacity-100 scale-110 shadow-lg' 
-                        : 'border-gray-400 opacity-70'
-                    }`}
-                  >
-                    <img 
-                      src={image} 
-                      alt={`${productName} - ${index + 1}`} 
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                ))}
-                {productImages.length > 5 && (
-                  <div className="w-16 h-16 rounded border-2 border-gray-400 bg-black/70 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">+{productImages.length - 5}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
             <video 
               src={videoUrl} 
               controls 
