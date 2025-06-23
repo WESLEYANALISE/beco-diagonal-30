@@ -166,8 +166,28 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <div className="text-2xl font-bold text-red-500 mb-1">
                   Menos de {formatPrice(product.valor)}
                 </div>
-                <div className="text-xs text-gray-600">
+                <div className="text-xs text-gray-600 mb-3">
                   Frete grátis para todo o Brasil
+                </div>
+                
+                {/* Botões de ação movidos para baixo do preço */}
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1 border-red-200 text-red-600 hover:bg-red-50 h-9"
+                  >
+                    <Heart className="w-4 h-4 mr-2" />
+                    Favoritar
+                  </Button>
+                  <Button
+                    onClick={handleBuyClick}
+                    size="sm"
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold h-9"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Comprar na Shopee
+                  </Button>
                 </div>
               </div>
 
@@ -221,26 +241,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </Card>
                 </TabsContent>
               </Tabs>
-
-              {/* Botões de ação */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 border-red-200 text-red-600 hover:bg-red-50 h-9"
-                >
-                  <Heart className="w-4 h-4 mr-2" />
-                  Favoritar
-                </Button>
-                <Button
-                  onClick={handleBuyClick}
-                  size="sm"
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold h-9"
-                >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Comprar na Shopee
-                </Button>
-              </div>
             </div>
           </div>
         </DialogContent>

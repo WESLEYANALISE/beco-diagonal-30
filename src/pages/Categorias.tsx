@@ -51,7 +51,7 @@ const Categorias = () => {
   };
 
   const handleCategoryClick = (category: string) => {
-    navigate(`/?categoria=${encodeURIComponent(category)}`);
+    navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
   };
 
   const getCategoryIcon = (category: string) => {

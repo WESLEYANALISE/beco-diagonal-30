@@ -106,10 +106,9 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Container da imagem - Responsivo e sem cortes */}
+        {/* Container da imagem - Totalmente responsivo sem cortes */}
         <div 
-          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center" 
-          style={{ height: 'min(70vh, 500px)' }}
+          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center w-full h-[60vh] sm:h-[70vh]"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -137,16 +136,18 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
             </>
           )}
 
-          {/* Imagem principal - Responsiva */}
-          <div className="w-full h-full flex items-center justify-center p-4">
+          {/* Imagem principal - Totalmente responsiva */}
+          <div className="w-full h-full flex items-center justify-center p-2 sm:p-4">
             <img
               ref={imageRef}
               src={images[imageIndex]}
               alt={`${productName} - ${imageIndex + 1}`}
-              className="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
+              className="w-full h-full object-contain transition-transform duration-200 select-none"
               style={{
                 transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
-                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
+                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                maxWidth: '100%',
+                maxHeight: '100%'
               }}
               draggable={false}
             />
