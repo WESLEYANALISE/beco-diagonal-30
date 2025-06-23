@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Star, ShoppingCart, Play, Sparkles, Grid, List } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -161,70 +160,15 @@ const Novos = () => {
           }>
             {products.map((product, index) => (
               viewMode === 'grid' ? (
-                // Grid View
-                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer" onClick={() => handleProductClick(product)}>
-                  <CardContent className="p-0">
-                    <div className="aspect-square relative">
-                      <LazyImage 
-                        src={product.imagem1} 
-                        alt={product.produto} 
-                        className="w-full h-full object-cover" 
-                      />
-                      <div className="absolute top-2 right-2">
-                        <FavoriteButton productId={product.id} size="sm" />
-                      </div>
-                      <div className="absolute top-2 left-2">
-                        <Badge className="bg-green-500 text-white font-bold text-xs animate-bounce">
-                          NOVO
-                        </Badge>
-                      </div>
-                      {product.video && (
-                        <div className="absolute bottom-2 right-2">
-                          <div className="bg-red-500 rounded-full p-1 animate-pulse">
-                            <Play className="w-3 h-3 text-white" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="p-3">
-                      <h3 className="font-medium text-gray-900 text-sm line-clamp-2 leading-tight mb-2">
-                        {product.produto}
-                      </h3>
-                      
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="font-bold text-red-500 text-sm">
-                          {formatPrice(product.valor)}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                          <span className="text-xs text-gray-600">4.8</span>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <ProductPhotosModal 
-                          images={getProductImages(product)} 
-                          productName={product.produto} 
-                          productPrice={formatPrice(product.valor)} 
-                          productLink={product.link}
-                          videoUrl={product.video}
-                        />
-                        <Button 
-                          size="sm" 
-                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(product.link, '_blank');
-                          }}
-                        >
-                          <ShoppingCart className="w-3 h-3 mr-1" />
-                          Comprar
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                // Grid View - usando ProductCard
+                <div key={product.id}>
+                  <ProductCard 
+                    product={product} 
+                    showBadge={true}
+                    badgeText="NOVO"
+                    compact={true}
+                  />
+                </div>
               ) : (
                 // List View
                 <Card 
@@ -265,6 +209,11 @@ const Novos = () => {
                         <Badge className="bg-green-500 text-white font-bold text-xs animate-bounce">
                           NOVO
                         </Badge>
+                      </div>
+
+                      {/* Favorite button sempre presente */}
+                      <div className="absolute bottom-2 left-2">
+                        <FavoriteButton productId={product.id} size="sm" />
                       </div>
                     </div>
 

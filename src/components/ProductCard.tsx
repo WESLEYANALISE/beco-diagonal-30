@@ -147,9 +147,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             </div>
           )}
 
-          {/* Favorite button positioned in top-right when no video */}
-          {!product.video && (
-            <div className={`absolute ${compact ? 'top-1 right-1' : 'top-2 right-2'}`}>
+          {/* Favorite button - sempre presente no canto superior esquerdo se não houver badge ou seleção */}
+          {!showBadge && !selectable && (
+            <div className={`absolute ${compact ? 'top-1 left-1' : 'top-2 left-2'}`}>
               <FavoriteButton productId={product.id} showText={false} />
             </div>
           )}
@@ -175,8 +175,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
           
           <div className="space-y-1">
-            {/* Show favorite button here if there's a video (since it's not in top-right) */}
-            {product.video && (
+            {/* Sempre mostrar botão de favoritar no conteúdo do card se houver badge ou seleção */}
+            {(showBadge || selectable) && (
               <div className="flex gap-1 mb-1">
                 <FavoriteButton productId={product.id} />
               </div>
