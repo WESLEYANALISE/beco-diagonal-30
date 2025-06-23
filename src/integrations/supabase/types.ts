@@ -5207,6 +5207,7 @@ export type Database = {
           imagem5: string | null
           link: string | null
           produto: string | null
+          uso: string | null
           valor: string | null
           video: string | null
         }
@@ -5220,6 +5221,7 @@ export type Database = {
           imagem5?: string | null
           link?: string | null
           produto?: string | null
+          uso?: string | null
           valor?: string | null
           video?: string | null
         }
@@ -5233,6 +5235,7 @@ export type Database = {
           imagem5?: string | null
           link?: string | null
           produto?: string | null
+          uso?: string | null
           valor?: string | null
           video?: string | null
         }

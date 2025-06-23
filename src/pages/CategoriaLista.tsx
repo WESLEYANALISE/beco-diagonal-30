@@ -70,9 +70,11 @@ const CategoriaLista = () => {
       
       if (error) throw error;
 
+      // Remove limit for category view - show all products
       const filteredData = tipo === 'mais-vendidos' ? (data || []).slice(0, 20) : data || [];
+      console.log(`Produtos encontrados para categoria "${categoria}":`, filteredData.length);
       setProducts(filteredData);
-      showSuccess("Produtos carregados com sucesso!");
+      showSuccess(`${filteredData.length} produtos carregados!`);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
       showError("Erro ao carregar produtos", "Tente novamente em alguns instantes");
@@ -165,6 +167,7 @@ const CategoriaLista = () => {
             <div className="flex-1 min-w-0">
               <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{getTitle()}</h1>
               <p className="text-xs sm:text-sm text-gray-600 truncate">{getSubtitle()}</p>
+              <p className="text-xs text-gray-500 mt-1">{filteredProducts.length} produtos encontrados</p>
             </div>
           </div>
 
@@ -223,7 +226,7 @@ const CategoriaLista = () => {
               Nenhum produto encontrado
             </h2>
             <p className="text-gray-600">
-              Não há produtos disponíveis nesta categoria
+              Não há produtos disponíveis nesta categoria no momento
             </p>
           </div>
         ) : (
