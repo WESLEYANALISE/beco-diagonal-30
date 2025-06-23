@@ -1,6 +1,6 @@
 
 import React, { useState, memo, useCallback } from 'react';
-import { Star, Play, ShoppingCart, Eye } from 'lucide-react';
+import { Star, Play, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +35,6 @@ interface ProductCardProps {
   style?: React.CSSProperties;
 }
 
-// Component without memo first
 const ProductCardComponent: React.FC<ProductCardProps> = ({
   product,
   showBadge = false,
@@ -142,6 +141,13 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               </div>
             </div>
           )}
+
+          {/* Favorite button positioned in top-right when no video */}
+          {!product.video && (
+            <div className={`absolute ${compact ? 'top-1 right-1' : 'top-2 right-2'}`}>
+              <FavoriteButton productId={product.id} showText={false} />
+            </div>
+          )}
         </div>
 
         <CardContent className={compact ? "p-2" : "p-3"}>
@@ -165,9 +171,13 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
           
           <div className="space-y-1">
-            <div className="flex gap-1">
-              <FavoriteButton productId={product.id} />
-            </div>
+            {/* Show favorite button here if there's a video (since it's not in top-right) */}
+            {product.video && (
+              <div className="flex gap-1 mb-1">
+                <FavoriteButton productId={product.id} />
+              </div>
+            )}
+            
             <ProductPhotosModal 
               images={images} 
               productName={product.produto} 
@@ -175,6 +185,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               productLink={product.link} 
               videoUrl={product.video} 
             />
+            
             <Button 
               size="sm" 
               className={`w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs hover:scale-105 transition-all duration-300 ${
@@ -198,6 +209,5 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   );
 };
 
-// Now wrap with memo and export
 export const ProductCard = memo(ProductCardComponent);
 ProductCard.displayName = 'ProductCard';

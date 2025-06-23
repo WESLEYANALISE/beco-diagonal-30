@@ -66,6 +66,33 @@ export type Database = {
         }
         Relationships: []
       }
+      app_users: {
+        Row: {
+          created_at: string | null
+          device_id: string
+          id: string
+          last_seen: string | null
+          preferences: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_id: string
+          id?: string
+          last_seen?: string | null
+          preferences?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string
+          id?: string
+          last_seen?: string | null
+          preferences?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       article_annotations: {
         Row: {
           annotation_text: string
@@ -4487,6 +4514,35 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      product_views: {
+        Row: {
+          id: string
+          product_id: number
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          product_id: number
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          product_id?: number
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
