@@ -38,7 +38,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 }) => {
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedImageUrl, setSelectedImageUrl] = useState('');
 
   // Auto-play video when modal opens
   useEffect(() => {
@@ -66,8 +66,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     return `${product.produto} é um ${category.toLowerCase()} de alta qualidade que oferece excelente custo-benefício. Perfeito para quem busca praticidade, durabilidade e funcionalidade no dia a dia. Com design moderno e acabamento cuidadoso, este produto foi desenvolvido para atender suas necessidades com máxima satisfação.`;
   };
 
-  const handleImageClick = (index: number) => {
-    setSelectedImageIndex(index);
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImageUrl(imageUrl);
     setIsZoomOpen(true);
   };
 
@@ -116,7 +116,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       <CarouselItem key={index}>
                         <div 
                           className="h-full cursor-pointer"
-                          onClick={() => handleImageClick(index)}
+                          onClick={() => handleImageClick(image)}
                         >
                           <img
                             src={image}
@@ -147,7 +147,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <button
                     key={index}
                     className="flex-shrink-0 w-12 h-12 rounded border-2 border-gray-200 hover:border-purple-500 overflow-hidden transition-colors"
-                    onClick={() => handleImageClick(index)}
+                    onClick={() => handleImageClick(image)}
                   >
                     <img
                       src={image}
@@ -249,9 +249,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       <ImageZoomModal
         isOpen={isZoomOpen}
         onClose={() => setIsZoomOpen(false)}
-        images={getProductImages()}
-        currentIndex={selectedImageIndex}
-        productName={product.produto}
+        imageUrl={selectedImageUrl}
+        alt={product.produto}
       />
 
       {product.video && (

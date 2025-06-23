@@ -24,10 +24,10 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedImageUrl, setSelectedImageUrl] = useState('');
 
-  const handleImageClick = (index: number) => {
-    setSelectedImageIndex(index);
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImageUrl(imageUrl);
     setIsZoomOpen(true);
   };
 
@@ -109,7 +109,7 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
                 <div 
                   key={index} 
                   className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300" 
-                  onClick={() => handleImageClick(index)}
+                  onClick={() => handleImageClick(image)}
                 >
                   <img 
                     src={image} 
@@ -141,9 +141,8 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
       <ImageZoomModal
         isOpen={isZoomOpen}
         onClose={() => setIsZoomOpen(false)}
-        images={images}
-        currentIndex={selectedImageIndex}
-        productName={productName}
+        imageUrl={selectedImageUrl}
+        alt={productName}
       />
 
       {videoUrl && (
