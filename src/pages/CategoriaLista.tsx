@@ -6,14 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Header from '@/components/Header';
-import { ProductVideoModal } from '@/components/ProductVideoModal';
-import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { LazyImage } from '@/components/LazyImage';
-import { ProductCard } from '@/components/ProductCard';
+import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,6 +33,7 @@ interface Product {
 interface SubcategoryGroup {
   subcategoria: string;
   products: Product[];
+  sampleImage: string;
 }
 
 const CategoriaLista = () => {
@@ -130,7 +128,8 @@ const CategoriaLista = () => {
           const comparison = priceA - priceB;
           return sortOrder === 'asc' ? comparison : -comparison;
         }
-      })
+      }),
+      sampleImage: products[0]?.imagem1 || ''
     }));
 
     setSubcategoryGroups(groups);
@@ -182,12 +181,12 @@ const CategoriaLista = () => {
     if (tipo === 'subcategoria' && subcategoria) {
       return `Produtos em ${categoria} > ${subcategoria}`;
     }
-    return `Explore todos os produtos de ${categoria}`;
+    return `Explore todas as subcategorias de ${categoria}`;
   };
 
   const getBackPath = () => {
     if (tipo === 'subcategoria') {
-      return `/subcategoria-lista?categoria=${encodeURIComponent(categoria)}`;
+      return `/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`;
     }
     return '/categorias';
   };
@@ -195,6 +194,24 @@ const CategoriaLista = () => {
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
     setIsDetailModalOpen(true);
+  };
+
+  const handleSubcategoryClick = (subcategoriaName: string) => {
+    navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&subcategoria=${encodeURIComponent(subcategoriaName)}&tipo=subcategoria`);
+  };
+
+  const getCategoryGradient = (index: number) => {
+    const gradients = [
+      'from-pink-500 to-red-500',
+      'from-blue-500 to-purple-500',
+      'from-green-500 to-teal-500',
+      'from-yellow-500 to-orange-500',
+      'from-purple-500 to-pink-500',
+      'from-indigo-500 to-blue-500',
+      'from-red-500 to-orange-500',
+      'from-teal-500 to-green-500'
+    ];
+    return gradients[index % gradients.length];
   };
 
   const renderProductCard = (product: Product, index: number) => (
@@ -406,45 +423,55 @@ const CategoriaLista = () => {
       {/* Content */}
       <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
         {tipo === 'categoria' && !subcategoria ? (
-          // Show products grouped by subcategory in carousels (like home page)
-          <div className="space-y-8">
-            {subcategoryGroups.map((group) => (
-              <div key={group.subcategoria} className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {group.subcategoria}
-                    <span className="text-sm font-normal text-gray-600 ml-2">
-                      ({group.products.length} produtos)
-                    </span>
-                  </h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&subcategoria=${encodeURIComponent(group.subcategoria)}&tipo=subcategoria`)}
-                  >
-                    Ver todos
-                  </Button>
+          // Show subcategories as cards (like Shopee)
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">
+              Subcategorias
+              <span className="text-sm font-normal text-gray-600 ml-2">
+                ({subcategoryGroups.length} subcategorias)
+              </span>
+            </h2>
+            
+            {subcategoryGroups.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <ShoppingCart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
                 </div>
-                
-                {/* Carousel for each subcategory */}
-                <div className="relative">
-                  <Carousel className="w-full">
-                    <CarouselContent className="-ml-2 md:-ml-4">
-                      {group.products.slice(0, 12).map((product) => (
-                        <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                          <ProductCard 
-                            product={product} 
-                            compact={true}
-                          />
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="hidden md:flex -left-4" />
-                    <CarouselNext className="hidden md:flex -right-4" />
-                  </Carousel>
-                </div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+                  Nenhuma subcategoria encontrada
+                </h2>
+                <p className="text-gray-600">
+                  Esta categoria ainda não possui subcategorias
+                </p>
               </div>
-            ))}
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {subcategoryGroups.map((group, index) => (
+                  <Card 
+                    key={group.subcategoria} 
+                    className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group cursor-pointer"
+                    onClick={() => handleSubcategoryClick(group.subcategoria)}
+                  >
+                    <div className="aspect-square relative overflow-hidden">
+                      <LazyImage 
+                        src={group.sampleImage} 
+                        alt={group.subcategoria} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-t ${getCategoryGradient(index)} opacity-60`} />
+                      <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                        <h3 className="text-sm sm:text-base font-bold mb-1 line-clamp-2">
+                          {group.subcategoria}
+                        </h3>
+                        <p className="text-xs text-white/90">
+                          {group.products.length} produtos
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           // Show filtered products list
