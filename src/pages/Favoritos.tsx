@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Heart, ShoppingCart, Play, Star, ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { useFavorites } from '@/hooks/useFavorites';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
+import FooterNavigation from '@/components/FooterNavigation';
 
 interface Product {
   id: number;
@@ -92,10 +92,10 @@ const Favoritos = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <section className="px-4 md:px-6 py-8 md:py-16 pb-20">
         <div className="flex items-center gap-4 mb-8">
           <Button
             variant="ghost"
@@ -213,18 +213,9 @@ const Favoritos = () => {
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      {selectedVideoProduct && (
-        <ProductVideoModal
-          isOpen={!!selectedVideoProduct}
-          onClose={() => setSelectedVideoProduct(null)}
-          videoUrl={selectedVideoProduct.video}
-          productName={selectedVideoProduct.produto}
-          productPrice={formatPrice(selectedVideoProduct.valor)}
-          productLink={selectedVideoProduct.link}
-        />
-      )}
+      <FooterNavigation />
     </div>
   );
 };
