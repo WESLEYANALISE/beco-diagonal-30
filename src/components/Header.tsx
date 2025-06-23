@@ -8,11 +8,11 @@ import { Slider } from "@/components/ui/slider";
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
-  onSearch: (term: string) => void;
-  onPriceFilter: (min: number, max: number) => void;
+  onSearch?: (term: string) => void;
+  onPriceFilter?: (min: number, max: number) => void;
 }
 
-const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
+const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -138,13 +138,13 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
                   <Info className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md sm:max-w-lg mx-4 max-h-[85vh] overflow-y-auto">
+              <DialogContent className="max-w-md sm:max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold text-center bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
                     Sobre o ShopeeHub
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 text-sm leading-relaxed">
+                <div className="space-y-4 text-sm leading-relaxed pb-4">
                   <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg">
                     <h3 className="font-semibold text-orange-700 mb-2">🛍️ Sua Central de Compras</h3>
                     <p className="text-gray-700">
@@ -165,7 +165,7 @@ const Header = ({ onSearch, onPriceFilter }: HeaderProps) => {
                     <div className="bg-white p-3 rounded-lg border border-orange-100">
                       <h4 className="font-semibold text-orange-600 mb-1">🤖 IA Assistente</h4>
                       <p className="text-xs text-gray-600">
-                        Nossa IA analisa produtos e te ajuda a escolher a melhor opção baseada nas suas necessidades.
+                        Nossa IA analiza produtos e te ajuda a escolher a melhor opção baseada nas suas necessidades.
                       </p>
                     </div>
                     
