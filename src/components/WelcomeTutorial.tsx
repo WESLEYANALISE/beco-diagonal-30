@@ -1,91 +1,64 @@
 
-import { useState, useEffect } from 'react';
-import { X, ArrowRight, Heart, Search, ShoppingCart, User } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { Sparkles, ShoppingCart, Heart, Search, ArrowRight } from 'lucide-react';
 
 export const WelcomeTutorial = () => {
-  const { preferences, updatePreferences } = useUserPreferences();
-  const [isOpen, setIsOpen] = useState(false);
+  const { preferences, updatePreferences, isLoading } = useUserPreferences();
   const [currentStep, setCurrentStep] = useState(0);
   const [userName, setUserName] = useState('');
+  const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
-    if (preferences.firstVisit && !preferences.tutorialCompleted) {
-      setIsOpen(true);
+    if (!isLoading && preferences.firstVisit && !preferences.tutorialCompleted) {
+      setShowTutorial(true);
     }
-  }, [preferences]);
+  }, [isLoading, preferences]);
 
-  const tutorialSteps = [
+  const steps = [
     {
       title: "Bem-vindo ao Shopee Ofertas! 🎉",
-      content: "Primeiro, como podemos te chamar?",
-      component: (
-        <div className="space-y-4">
-          <Input
-            placeholder="Digite seu nome..."
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            className="text-center"
-          />
-        </div>
-      )
+      content: "Descobrir os melhores produtos com os melhores preços nunca foi tão fácil!",
+      icon: <Sparkles className="w-8 h-8 text-yellow-500" />
     },
     {
-      title: `Olá, ${userName || 'visitante'}! ✨`,
-      content: "Aqui você encontra os melhores produtos da Shopee com preços incríveis!",
-      component: (
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShoppingCart className="w-8 h-8 text-white" />
-          </div>
-          <p className="text-gray-600">Produtos selecionados especialmente para você</p>
-        </div>
-      )
+      title: "Como te chamamos? 😊",
+      content: "Queremos personalizar sua experiência:",
+      icon: <Heart className="w-8 h-8 text-red-500" />,
+      showInput: true
     },
     {
-      title: "Como usar? 🔍",
-      content: "É super fácil navegar pelo app:",
-      component: (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-            <Search className="w-5 h-5 text-blue-600" />
-            <span className="text-sm">Use a busca para encontrar produtos</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
-            <Heart className="w-5 h-5 text-red-600" />
-            <span className="text-sm">Favorite produtos para ver depois</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
-            <ShoppingCart className="w-5 h-5 text-orange-600" />
-            <span className="text-sm">Clique para comprar na Shopee</span>
-          </div>
-        </div>
-      )
+      title: "Explore Categorias 🛍️",
+      content: "Navegue por diferentes categorias de produtos e encontre exatamente o que precisa.",
+      icon: <ShoppingCart className="w-8 h-8 text-blue-500" />
     },
     {
-      title: "Tudo pronto! 🚀",
-      content: "Agora você pode explorar milhares de produtos incríveis!",
-      component: (
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">🎯</span>
-          </div>
-          <p className="text-gray-600">Aproveite as melhores ofertas da Shopee!</p>
-        </div>
-      )
+      title: "Busque Produtos 🔍",
+      content: "Use nossa busca inteligente para encontrar produtos específicos rapidamente.",
+      icon: <Search className="w-8 h-8 text-green-500" />
+    },
+    {
+      title: "Salve seus Favoritos ❤️",
+      content: "Clique no coração para salvar produtos e acessá-los depois na aba Favoritos.",
+      icon: <Heart className="w-8 h-8 text-red-500" />
+    },
+    {
+      title: "Pronto para começar! 🚀",
+      content: "Agora você está pronto para descobrir ofertas incríveis. Vamos começar?",
+      icon: <ArrowRight className="w-8 h-8 text-purple-500" />
     }
   ];
 
   const handleNext = () => {
-    if (currentStep === 0 && userName.trim()) {
+    if (currentStep === 1 && userName.trim()) {
       updatePreferences({ userName: userName.trim() });
     }
     
-    if (currentStep < tutorialSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(prev => prev + 1);
     } else {
       handleComplete();
     }
@@ -94,79 +67,97 @@ export const WelcomeTutorial = () => {
   const handleComplete = () => {
     updatePreferences({ 
       tutorialCompleted: true,
-      userName: userName.trim() || preferences.userName
+      firstVisit: false,
+      userName: userName.trim() || 'visitante'
     });
-    setIsOpen(false);
+    setShowTutorial(false);
   };
 
   const handleSkip = () => {
-    updatePreferences({ tutorialCompleted: true });
-    setIsOpen(false);
+    updatePreferences({ 
+      tutorialCompleted: true,
+      firstVisit: false,
+      userName: 'visitante'
+    });
+    setShowTutorial(false);
   };
 
-  const currentStepData = tutorialSteps[currentStep];
-  const canProceed = currentStep === 0 ? userName.trim().length > 0 : true;
+  if (!showTutorial || isLoading) return null;
+
+  const currentStepData = steps[currentStep];
+  const isLastStep = currentStep === steps.length - 1;
+  const isNameStep = currentStep === 1;
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md mx-auto" hideClose>
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <div className="flex space-x-1">
-                {tutorialSteps.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index <= currentStep ? 'bg-orange-500' : 'bg-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-gray-500 ml-2">
-                {currentStep + 1} de {tutorialSteps.length}
-              </span>
+    <Dialog open={showTutorial} onOpenChange={() => {}}>
+      <DialogContent className="max-w-md mx-auto bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
+        <div className="text-center space-y-6 p-4">
+          {/* Step indicator */}
+          <div className="flex justify-center space-x-2 mb-4">
+            {steps.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentStep 
+                    ? 'bg-orange-500 w-6' 
+                    : index < currentStep 
+                      ? 'bg-orange-300' 
+                      : 'bg-gray-200'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Icon */}
+          <div className="flex justify-center">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg animate-bounce">
+              {currentStepData.icon}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSkip}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </div>
 
           {/* Content */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-center text-gray-900">
+            <h2 className="text-xl font-bold text-gray-800">
               {currentStepData.title}
             </h2>
-            <p className="text-center text-gray-600">
+            <p className="text-gray-600 leading-relaxed">
               {currentStepData.content}
             </p>
-            {currentStepData.component}
+
+            {/* Name input */}
+            {isNameStep && (
+              <div className="space-y-3">
+                <Input
+                  placeholder="Digite seu nome"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="text-center text-lg border-orange-200 focus:border-orange-400"
+                  maxLength={30}
+                />
+                <p className="text-xs text-gray-500">
+                  Opcional - você pode pular esta etapa
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 mt-8">
-            {currentStep > 0 && (
+          <div className="flex gap-3 pt-4">
+            {!isLastStep && (
               <Button
                 variant="outline"
-                onClick={() => setCurrentStep(currentStep - 1)}
-                className="flex-1"
+                onClick={handleSkip}
+                className="flex-1 border-gray-300 text-gray-600 hover:bg-gray-50"
               >
-                Voltar
+                Pular
               </Button>
             )}
             <Button
               onClick={handleNext}
-              disabled={!canProceed}
-              className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+              disabled={isNameStep && userName.length > 30}
+              className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
             >
-              {currentStep === tutorialSteps.length - 1 ? 'Começar' : 'Próximo'}
-              <ArrowRight className="w-4 h-4 ml-2" />
+              {isLastStep ? 'Começar!' : 'Próximo'}
             </Button>
           </div>
         </div>
