@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid, List } from 'lucide-react';
@@ -5,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Header from '@/components/Header';
 import { ProductVideoModal } from '@/components/ProductVideoModal';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { LazyImage } from '@/components/LazyImage';
+import { ProductCard } from '@/components/ProductCard';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -354,59 +357,66 @@ const CategoriaLista = () => {
             </div>
           </div>
 
-          {/* Controles de visualização e filtros */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="p-2"
-              >
-                <List className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="p-2"
-              >
-                <Grid className="w-4 h-4" />
-              </Button>
-            </div>
+          {/* Controles de visualização e filtros - apenas para lista de subcategoria */}
+          {(tipo === 'subcategoria' || tipo === 'mais-vendidos') && (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="p-2"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="p-2"
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
-                <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nome">Nome</SelectItem>
-                  <SelectItem value="preco">Preço</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="px-2 sm:px-3"
-              >
-                {sortOrder === 'asc' ? '↑' : '↓'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
+                  <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nome">Nome</SelectItem>
+                    <SelectItem value="preco">Preço</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="px-2 sm:px-3"
+                >
+                  {sortOrder === 'asc' ? '↑' : '↓'}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Content */}
       <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
         {tipo === 'categoria' && !subcategoria ? (
-          // Show products grouped by subcategory (like home page)
+          // Show products grouped by subcategory in carousels (like home page)
           <div className="space-y-8">
             {subcategoryGroups.map((group) => (
               <div key={group.subcategoria} className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-gray-900">{group.subcategoria}</h2>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {group.subcategoria}
+                    <span className="text-sm font-normal text-gray-600 ml-2">
+                      ({group.products.length} produtos)
+                    </span>
+                  </h2>
                   <Button
                     variant="outline"
                     size="sm"
@@ -416,13 +426,22 @@ const CategoriaLista = () => {
                   </Button>
                 </div>
                 
-                <div className={viewMode === 'grid' ? 
-                  "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4" : 
-                  "space-y-2 sm:space-y-3"
-                }>
-                  {group.products.slice(0, viewMode === 'grid' ? 10 : 5).map((product, index) => 
-                    renderProductCard(product, index)
-                  )}
+                {/* Carousel for each subcategory */}
+                <div className="relative">
+                  <Carousel className="w-full">
+                    <CarouselContent className="-ml-2 md:-ml-4">
+                      {group.products.slice(0, 12).map((product) => (
+                        <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                          <ProductCard 
+                            product={product} 
+                            compact={true}
+                          />
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="hidden md:flex -left-4" />
+                    <CarouselNext className="hidden md:flex -right-4" />
+                  </Carousel>
                 </div>
               </div>
             ))}
