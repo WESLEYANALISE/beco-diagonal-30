@@ -74,9 +74,9 @@ const Index = () => {
     filterProducts();
   }, [selectedCategory, products, searchTerm, sortBy, sortOrder]);
 
-  // Auto-rotate featured products by category every 15 seconds
+  // Auto-rotate featured products by category every 15 seconds - only when not viewing specific category
   useEffect(() => {
-    if (categories.length > 0 && products.length > 0) {
+    if (categories.length > 0 && products.length > 0 && !categoryFromUrl) {
       const interval = setInterval(() => {
         const randomCategory = categories[Math.floor(Math.random() * categories.length)];
         setCurrentFeaturedCategory(randomCategory);
@@ -88,7 +88,7 @@ const Index = () => {
 
       return () => clearInterval(interval);
     }
-  }, [categories, products]);
+  }, [categories, products, categoryFromUrl]);
 
   const fetchProducts = async () => {
     try {
@@ -99,12 +99,12 @@ const Index = () => {
 
       if (error) throw error;
       
-      // Shuffle products when fetched
-      const shuffledProducts = shuffleArray(data || []);
-      setProducts(shuffledProducts);
+      // Only shuffle products when not viewing a specific category
+      const processedProducts = categoryFromUrl ? (data || []) : shuffleArray(data || []);
+      setProducts(processedProducts);
       
-      // Set initial featured products (first 8 shuffled)
-      const initialFeatured = shuffledProducts.slice(0, 8);
+      // Set initial featured products (first 8)
+      const initialFeatured = processedProducts.slice(0, 8);
       setFeaturedProducts(initialFeatured);
 
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
@@ -233,8 +233,9 @@ const Index = () => {
 
   const getCategoryProducts = (category: string, limit: number = 6) => {
     const categoryProducts = products.filter(p => p.categoria === category);
-    const shuffledProducts = shuffleArray(categoryProducts);
-    return shuffledProducts.slice(0, limit);
+    // Only shuffle if not viewing a specific category
+    const processedProducts = categoryFromUrl ? categoryProducts : shuffleArray(categoryProducts);
+    return processedProducts.slice(0, limit);
   };
 
   if (loading) {

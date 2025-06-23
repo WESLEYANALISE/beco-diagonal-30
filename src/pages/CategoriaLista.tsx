@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Header from '@/components/Header';
 import { ProductVideoModal } from '@/components/ProductVideoModal';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
+import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { LazyImage } from '@/components/LazyImage';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
@@ -39,6 +40,8 @@ const CategoriaLista = () => {
   const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   const {
     showSuccess,
@@ -120,6 +123,11 @@ const CategoriaLista = () => {
       return 'Os produtos favoritos dos nossos clientes';
     }
     return `Explore todos os produtos de ${categoria}`;
+  };
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsDetailModalOpen(true);
   };
 
   if (loading) {
@@ -225,8 +233,8 @@ const CategoriaLista = () => {
           }>
             {filteredProducts.map((product, index) => (
               viewMode === 'grid' ? (
-                // Grid View
-                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                // Grid View with click handler
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleProductClick(product)}>
                   <CardContent className="p-0">
                     <div className="aspect-square relative">
                       <LazyImage 
@@ -259,7 +267,6 @@ const CategoriaLista = () => {
                         </div>
                       </div>
                       
-                      {/* Botões de ação para grid */}
                       <div className="space-y-2">
                         <ProductPhotosModal 
                           images={getProductImages(product)} 
@@ -270,8 +277,11 @@ const CategoriaLista = () => {
                         />
                         <Button 
                           size="sm" 
-                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs" 
-                          onClick={() => window.open(product.link, '_blank')}
+                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"  
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(product.link, '_blank');
+                          }}
                         >
                           <ShoppingCart className="w-3 h-3 mr-1" />
                           Comprar
@@ -281,11 +291,10 @@ const CategoriaLista = () => {
                   </CardContent>
                 </Card>
               ) : (
-                // List View (versão melhorada)
-                <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                // List View with click handler and improved layout
+                <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleProductClick(product)}>
                   <CardContent className="p-0">
                     <div className="flex">
-                      {/* Imagem do produto */}
                       <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
                         <LazyImage 
                           src={product.imagem1} 
@@ -294,7 +303,6 @@ const CategoriaLista = () => {
                         />
                       </div>
                       
-                      {/* Conteúdo do produto */}
                       <div className="flex-1 p-2 sm:p-3 min-w-0">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1 min-w-0 mr-2">
@@ -320,7 +328,6 @@ const CategoriaLista = () => {
                           </div>
                         </div>
                         
-                        {/* Botões de ação */}
                         <div className="flex gap-1 sm:gap-2">
                           <ProductPhotosModal 
                             images={getProductImages(product)} 
@@ -332,7 +339,10 @@ const CategoriaLista = () => {
                           <Button 
                             size="sm" 
                             className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs flex-1" 
-                            onClick={() => window.open(product.link, '_blank')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(product.link, '_blank');
+                            }}
                           >
                             <ShoppingCart className="w-3 h-3 mr-1" />
                             Comprar
@@ -347,6 +357,15 @@ const CategoriaLista = () => {
           </div>
         )}
       </div>
+
+      {/* Product Detail Modal with Tips */}
+      {selectedProduct && (
+        <ProductDetailModal 
+          isOpen={isDetailModalOpen} 
+          onClose={() => setIsDetailModalOpen(false)} 
+          product={selectedProduct} 
+        />
+      )}
     </div>
   );
 };
