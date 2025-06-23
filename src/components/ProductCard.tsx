@@ -58,16 +58,22 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
     return `R$ ${price}`;
   }, []);
 
-  const handleCardClick = useCallback(() => {
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
+    // Evitar abrir o modal se clicar em botões específicos
+    if (
+      (e.target as HTMLElement).closest('button') ||
+      (e.target as HTMLElement).closest('[role="button"]') ||
+      (e.target as HTMLElement).closest('.carousel-nav')
+    ) {
+      return;
+    }
+
     if (selectable && onToggle) {
       onToggle(product);
+    } else {
+      setIsDetailModalOpen(true);
     }
   }, [selectable, onToggle, product]);
-
-  const handleTitleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDetailModalOpen(true);
-  }, []);
 
   const handleBuyClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -83,8 +89,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         style={style} 
         className={`
           overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 
-          bg-white border-0 shadow-lg group animate-fade-in 
-          ${selectable ? 'cursor-pointer' : ''} 
+          bg-white border-0 shadow-lg group animate-fade-in cursor-pointer
           ${selected ? 'ring-2 ring-blue-500' : ''}
         `} 
         onClick={handleCardClick}
@@ -104,8 +109,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className={`left-1 bg-white/90 hover:bg-white ${compact ? 'w-5 h-5' : 'w-6 h-6'}`} />
-            <CarouselNext className={`right-1 bg-white/90 hover:bg-white ${compact ? 'w-5 h-5' : 'w-6 h-6'}`} />
+            <CarouselPrevious className={`carousel-nav left-1 bg-white/90 hover:bg-white ${compact ? 'w-5 h-5' : 'w-6 h-6'}`} />
+            <CarouselNext className={`carousel-nav right-1 bg-white/90 hover:bg-white ${compact ? 'w-5 h-5' : 'w-6 h-6'}`} />
           </Carousel>
           
           {product.video && (
@@ -152,10 +157,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
         <CardContent className={compact ? "p-2" : "p-3"}>
           <h3 
-            className={`font-medium text-gray-900 mb-2 line-clamp-2 hover:text-red-600 transition-colors cursor-pointer ${
+            className={`font-medium text-gray-900 mb-2 line-clamp-2 hover:text-red-600 transition-colors ${
               compact ? 'text-xs leading-tight' : 'text-sm'
-            }`} 
-            onClick={handleTitleClick}
+            }`}
           >
             {product.produto}
           </h3>

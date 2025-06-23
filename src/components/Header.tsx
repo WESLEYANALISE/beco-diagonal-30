@@ -1,14 +1,12 @@
-
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Filter, DollarSign, Sparkles, Info, Star } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Sparkles, Info, Star } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { PriceFilter } from '@/components/PriceFilter';
 import { useFavorites } from '@/hooks/useFavorites';
 
 interface HeaderProps {
@@ -19,7 +17,6 @@ interface HeaderProps {
 const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 500]);
   const navigate = useNavigate();
   const location = useLocation();
   const { favoritesCount } = useFavorites();
@@ -41,8 +38,12 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
     onSearch(value);
   };
 
-  const handlePriceFilter = () => {
-    onPriceFilter(priceRange[0], priceRange[1]);
+  const handlePriceFilterChange = (minPrice: number, maxPrice: number) => {
+    onPriceFilter(minPrice, maxPrice);
+  };
+
+  const handleClearFilter = () => {
+    onPriceFilter(0, 1000); // Reset to default range
   };
 
   const handleEvaluateApp = () => {
@@ -107,41 +108,14 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                       </div>
                     </div>
                     
-                    {/* Advanced Price Filter */}
+                    {/* Price Filter - Only show on homepage */}
                     {location.pathname === '/' && (
-                      <Card className="mb-6 mx-2 bg-white/10 border-white/20">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-white text-sm flex items-center gap-2">
-                            <Filter className="w-4 h-4" />
-                            Filtro por Preço
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-xs text-white/80">
-                              <span>R$ {priceRange[0]}</span>
-                              <span>R$ {priceRange[1]}</span>
-                            </div>
-                            <Slider
-                              value={priceRange}
-                              onValueChange={setPriceRange}
-                              max={1000}
-                              min={0}
-                              step={10}
-                              className="w-full"
-                            />
-                          </div>
-                          <Button
-                            onClick={handlePriceFilter}
-                            size="sm"
-                            className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
-                            variant="outline"
-                          >
-                            <DollarSign className="w-4 h-4 mr-2" />
-                            Aplicar Filtro
-                          </Button>
-                        </CardContent>
-                      </Card>
+                      <div className="mb-6 mx-2">
+                        <PriceFilter
+                          onFilter={handlePriceFilterChange}
+                          onClear={handleClearFilter}
+                        />
+                      </div>
                     )}
                     
                     <nav className="space-y-2">

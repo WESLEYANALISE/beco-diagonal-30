@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
@@ -35,6 +36,7 @@ const Index = () => {
   const navigate = useNavigate();
   const categoryFromUrl = searchParams.get('categoria');
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [currentFeaturedCategory, setCurrentFeaturedCategory] = useState<string>('');
@@ -48,6 +50,7 @@ const Index = () => {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
+  const [priceFilter, setPriceFilter] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
   const { showError, showLoading, showInfo } = useToastNotifications();
 
   // Function to shuffle array
@@ -58,6 +61,12 @@ const Index = () => {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  };
+
+  // Parse price from string to number
+  const parsePrice = (priceString: string): number => {
+    const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
+    return parseFloat(cleanPrice) || 0;
   };
 
   // Persistir ordem dos produtos no localStorage para manter durante a sessão
@@ -82,7 +91,12 @@ const Index = () => {
 
   useEffect(() => {
     filterProducts();
-  }, [selectedCategory, products, searchTerm, sortBy, sortOrder]);
+  }, [selectedCategory, filteredProducts, searchTerm, sortBy, sortOrder]);
+
+  // Apply price filter whenever priceFilter changes
+  useEffect(() => {
+    applyPriceFilter();
+  }, [products, priceFilter]);
 
   // Auto-rotate featured products by category every 15 seconds - only when not viewing specific category
   useEffect(() => {
@@ -148,8 +162,16 @@ const Index = () => {
     }
   };
 
+  const applyPriceFilter = () => {
+    const filtered = products.filter(product => {
+      const price = parsePrice(product.valor);
+      return price >= priceFilter.min && price <= priceFilter.max;
+    });
+    setFilteredProducts(filtered);
+  };
+
   const filterProducts = () => {
-    let filtered = products;
+    let filtered = filteredProducts;
 
     if (selectedCategory !== 'todas') {
       filtered = filtered.filter(product => product.categoria === selectedCategory);
@@ -167,8 +189,8 @@ const Index = () => {
         const comparison = a.produto.localeCompare(b.produto);
         return sortOrder === 'asc' ? comparison : -comparison;
       } else {
-        const priceA = parseFloat(a.valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-        const priceB = parseFloat(b.valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        const priceA = parsePrice(a.valor);
+        const priceB = parsePrice(b.valor);
         const comparison = priceA - priceB;
         return sortOrder === 'asc' ? comparison : -comparison;
       }
@@ -182,7 +204,7 @@ const Index = () => {
   };
 
   const handlePriceFilter = (min: number, max: number) => {
-    console.log('Price filter:', min, max);
+    setPriceFilter({ min, max });
     showInfo("Filtro de preço aplicado", `R$ ${min} - R$ ${max}`);
   };
 
@@ -258,7 +280,7 @@ const Index = () => {
   };
 
   const getCategoryProducts = (category: string, limit: number = 12) => {
-    const categoryProducts = products.filter(p => p.categoria === category);
+    const categoryProducts = filteredProducts.filter(p => p.categoria === category);
     
     // Aumentar limite especialmente para "Diversão e Familia"
     const actualLimit = category === 'Diversão e Familia' ? 12 : limit;
@@ -289,7 +311,7 @@ const Index = () => {
       {searchTerm && (
         <SearchPreview 
           searchTerm={searchTerm} 
-          products={products.filter(p => 
+          products={filteredProducts.filter(p => 
             p.produto.toLowerCase().includes(searchTerm.toLowerCase())
           ).slice(0, 5)} 
           onProductClick={handleProductClick}
@@ -298,7 +320,7 @@ const Index = () => {
 
       {/* Novidades Carousel */}
       <CategoryCarousel 
-        products={products}
+        products={filteredProducts}
         onProductClick={handleProductClick}
       />
       
@@ -335,7 +357,7 @@ const Index = () => {
       </section>
 
       {/* Hero Section */}
-      <HeroSection productsCount={products.length} />
+      <HeroSection productsCount={filteredProducts.length} />
 
       {/* Category Product Carousels - show all categories when not in AI mode */}
       {!showingAI && categories.map((category, index) => {

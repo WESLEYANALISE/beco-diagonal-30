@@ -25,6 +25,7 @@ export const ProductVideoModal = ({
 }: ProductVideoModalProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isVerticalVideo, setIsVerticalVideo] = useState(false);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -34,15 +35,27 @@ export const ProductVideoModal = ({
     window.open(productLink, '_blank');
   };
 
-  // Auto-rotate images carousel
+  // Check if video is vertical (portrait)
   useEffect(() => {
-    if (isOpen && productImages.length > 1 && !isFullscreen) {
+    if (isOpen && videoUrl) {
+      const video = document.createElement('video');
+      video.src = videoUrl;
+      video.onloadedmetadata = () => {
+        const aspectRatio = video.videoWidth / video.videoHeight;
+        setIsVerticalVideo(aspectRatio < 1); // If width < height, it's vertical
+      };
+    }
+  }, [isOpen, videoUrl]);
+
+  // Auto-rotate images carousel - only for horizontal videos
+  useEffect(() => {
+    if (isOpen && productImages.length > 1 && !isFullscreen && !isVerticalVideo) {
       const interval = setInterval(() => {
         setCurrentImageIndex(prev => (prev + 1) % productImages.length);
       }, 3000);
       return () => clearInterval(interval);
     }
-  }, [isOpen, productImages.length, isFullscreen]);
+  }, [isOpen, productImages.length, isFullscreen, isVerticalVideo]);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -63,8 +76,8 @@ export const ProductVideoModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`${isFullscreen ? 'max-w-full h-full p-0' : 'max-w-4xl'} bg-black border-0`}>
         <div className="relative w-full h-full flex flex-col">
-          {/* Image Carousel - Positioned ABOVE video container */}
-          {!isFullscreen && productImages.length > 0 && (
+          {/* Image Carousel - Only show for horizontal videos and when not in fullscreen */}
+          {!isFullscreen && !isVerticalVideo && productImages.length > 0 && (
             <div className="bg-white p-4 flex justify-center gap-2 overflow-x-auto">
               {productImages.slice(0, 5).map((image, index) => (
                 <div 
@@ -98,7 +111,7 @@ export const ProductVideoModal = ({
               autoPlay 
               muted={false} 
               loop 
-              className="w-full h-full object-contain" 
+              className={`w-full h-full ${isVerticalVideo ? 'object-contain' : 'object-contain'}`}
               playsInline 
             />
             
