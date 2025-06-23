@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/Header';
-import ProductGrid from '@/components/ProductGrid';
-import CategoryCarousel from '@/components/CategoryCarousel';
-import EvolutionCarousel from '@/components/EvolutionCarousel';
+import { ProductGrid } from '@/components/ProductGrid';
+import { CategoryCarousel } from '@/components/CategoryCarousel';
+import { EvolutionCarousel } from '@/components/EvolutionCarousel';
 import { useSearchParams } from 'react-router-dom';
 import { useGetProducts } from '@/hooks/useGetProducts';
 import { HeroSection } from '@/components/HeroSection';
@@ -10,6 +11,7 @@ import { TabNavigation } from '@/components/TabNavigation';
 import { SearchPreview } from '@/components/SearchPreview';
 import { Tutorial } from '@/components/Tutorial';
 import FooterNavigation from '@/components/FooterNavigation';
+import { useTutorialAndUser } from '@/hooks/useTutorialAndUser';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<'todos' | 'categorias' | 'evolution'>('todos');
@@ -31,6 +33,7 @@ const Index = () => {
   } = useGetProducts();
 
   const [filteredProducts, setFilteredProducts] = useState(products);
+  const { showTutorial, completeTutorial, skipTutorial } = useTutorialAndUser();
 
   useEffect(() => {
     refetch();
@@ -42,13 +45,13 @@ const Index = () => {
 
       if (categoryFilter) {
         filtered = filtered.filter(product =>
-          product.category.toLowerCase() === categoryFilter.toLowerCase()
+          product.categoria.toLowerCase() === categoryFilter.toLowerCase()
         );
       }
 
       if (searchTerm) {
         filtered = filtered.filter(product =>
-          product.name.toLowerCase().includes(searchTerm.toLowerCase())
+          product.produto.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
 
@@ -74,26 +77,44 @@ const Index = () => {
     console.log(`Filtrar por preço: Min ${min}, Max ${max}`);
   };
 
+  const handleProductClick = (productId: number) => {
+    console.log('Product clicked:', productId);
+  };
+
+  const handleTabChange = (tab: 'featured' | 'ai') => {
+    // Mapeamento dos tipos de aba
+    if (tab === 'featured') {
+      setActiveTab('todos');
+    } else {
+      setActiveTab('evolution');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
       {/* Tutorial */}
-      <Tutorial />
+      {showTutorial && (
+        <Tutorial onComplete={completeTutorial} onSkip={skipTutorial} />
+      )}
       
       {/* Hero Section */}
-      <HeroSection />
+      <HeroSection productsCount={products?.length || 0} />
 
       {/* Navigation Tabs */}
       <TabNavigation 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab}
-        productCounts={productCounts}
+        showingAI={activeTab === 'evolution'}
+        onTabChange={handleTabChange}
       />
 
       {/* Search Preview */}
-      {searchTerm && (
-        <SearchPreview searchTerm={searchTerm} />
+      {searchTerm && filteredProducts && (
+        <SearchPreview 
+          searchTerm={searchTerm} 
+          products={filteredProducts}
+          onProductClick={handleProductClick}
+        />
       )}
 
       {/* Main Content */}
@@ -101,15 +122,21 @@ const Index = () => {
         <div className="max-w-7xl mx-auto">
           {activeTab === 'todos' && (
             <ProductGrid 
-              products={filteredProducts}
-              isLoading={isLoading}
-              searchTerm={searchTerm}
+              products={filteredProducts || []}
+              loading={isLoading}
             />
           )}
           
-          {activeTab === 'categorias' && <CategoryCarousel />}
+          {activeTab === 'categorias' && (
+            <CategoryCarousel 
+              products={products || []}
+              onProductClick={handleProductClick}
+            />
+          )}
           
-          {activeTab === 'evolution' && <EvolutionCarousel />}
+          {activeTab === 'evolution' && (
+            <EvolutionCarousel fotos={[]} />
+          )}
         </div>
       </main>
 
