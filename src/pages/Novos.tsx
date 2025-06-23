@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Star, ShoppingCart, Play, Sparkles, Grid, List } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import { FavoriteButton } from '@/components/FavoriteButton';
 import { LazyImage } from '@/components/LazyImage';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
-import FooterNavigation from '@/components/FooterNavigation';
 
 interface Product {
   id: number;
@@ -92,10 +92,10 @@ const Novos = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
-      <Header />
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+      <Header onSearch={() => {}} onPriceFilter={() => {}} />
       
-      <section className="px-4 md:px-6 py-8 md:py-16 pb-20">
+      <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-6 animate-fade-in">
           <Button
             variant="ghost"
@@ -322,7 +322,7 @@ const Novos = () => {
             ))}
           </div>
         )}
-      </section>
+      </div>
 
       {/* Product Detail Modal with Tips */}
       {selectedProduct && (
@@ -332,8 +332,6 @@ const Novos = () => {
           product={selectedProduct} 
         />
       )}
-      
-      <FooterNavigation />
     </div>
   );
 };

@@ -5,16 +5,6 @@ export const useFavorites = () => {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Gerar um ID único para o dispositivo se não existir
-  const getDeviceId = () => {
-    let deviceId = localStorage.getItem('device_id');
-    if (!deviceId) {
-      deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-      localStorage.setItem('device_id', deviceId);
-    }
-    return deviceId;
-  };
-
   // Load favorites from localStorage on mount
   useEffect(() => {
     try {
@@ -36,8 +26,7 @@ export const useFavorites = () => {
   // Memoized toggle function for better performance
   const toggleFavorite = useCallback((productId: number) => {
     setFavorites(prev => {
-      const isCurrentlyFavorite = prev.includes(productId);
-      const newFavorites = isCurrentlyFavorite
+      const newFavorites = prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId];
       

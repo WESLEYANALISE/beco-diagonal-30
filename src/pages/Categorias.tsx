@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
@@ -5,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
 import { supabase } from "@/integrations/supabase/client";
-import FooterNavigation from '@/components/FooterNavigation';
 
 interface CategoryStats {
   categoria: string;
@@ -98,7 +98,8 @@ const Categorias = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
       <Header />
       
-      <section className="px-4 md:px-6 py-8 md:py-16 pb-20">
+      {/* Hero Section */}
+      <section className="px-4 md:px-6 py-8 md:py-16">
         <div className="max-w-7xl mx-auto">
           <div className="text-center space-y-6 mb-12">
             <div className="w-20 h-20 md:w-24 md:h-24 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-bounce-gentle shadow-2xl backdrop-blur-sm">
@@ -114,6 +115,7 @@ const Categorias = () => {
         </div>
       </section>
 
+      {/* Categories Grid */}
       <section className="px-4 md:px-6 py-12">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -150,8 +152,6 @@ const Categorias = () => {
           </div>
         </div>
       </section>
-
-      <FooterNavigation />
     </div>
   );
 };

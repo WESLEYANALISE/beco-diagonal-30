@@ -1,9 +1,9 @@
+
 import { User, Heart, Eye, ShoppingCart, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from '@/components/Header';
 import { useFavorites } from '@/hooks/useFavorites';
-import FooterNavigation from '@/components/FooterNavigation';
 
 const Perfil = () => {
   const { favoritesCount } = useFavorites();
@@ -50,7 +50,7 @@ const Perfil = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500">
       <Header />
       
-      <section className="px-4 md:px-6 py-8 md:py-16 pb-20">
+      <section className="px-4 md:px-6 py-8 md:py-16">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
             <div className="w-20 h-20 md:w-24 md:h-24 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-bounce-gentle shadow-2xl backdrop-blur-sm">
@@ -149,8 +149,6 @@ const Perfil = () => {
           </Card>
         </div>
       </section>
-
-      <FooterNavigation />
     </div>
   );
 };
