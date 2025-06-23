@@ -11,10 +11,20 @@ interface ProductVideoModalProps {
   productName: string;
   productPrice: string;
   productLink: string;
+  productImages?: string[];
 }
 
-export const ProductVideoModal = ({ isOpen, onClose, videoUrl, productName, productPrice, productLink }: ProductVideoModalProps) => {
+export const ProductVideoModal = ({ 
+  isOpen, 
+  onClose, 
+  videoUrl, 
+  productName, 
+  productPrice, 
+  productLink,
+  productImages = []
+}: ProductVideoModalProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -23,6 +33,17 @@ export const ProductVideoModal = ({ isOpen, onClose, videoUrl, productName, prod
   const handleBuyClick = () => {
     window.open(productLink, '_blank');
   };
+
+  // Auto-rotate images carousel
+  useEffect(() => {
+    if (isOpen && productImages.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isOpen, productImages.length]);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -57,6 +78,31 @@ export const ProductVideoModal = ({ isOpen, onClose, videoUrl, productName, prod
               playsInline
             />
             
+            {/* Image Carousel Overlay - Only when not fullscreen */}
+            {!isFullscreen && productImages.length > 0 && (
+              <div className="absolute top-4 left-4 flex gap-2 bg-black/50 p-2 rounded-lg">
+                {productImages.slice(0, 4).map((image, index) => (
+                  <div
+                    key={index}
+                    className={`w-12 h-12 rounded border-2 overflow-hidden transition-all duration-500 ${
+                      index === currentImageIndex ? 'border-white opacity-100 scale-110' : 'border-gray-400 opacity-70'
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${productName} - ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+                {productImages.length > 4 && (
+                  <div className="w-12 h-12 rounded border-2 border-gray-400 bg-black/70 flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">+{productImages.length - 4}</span>
+                  </div>
+                )}
+              </div>
+            )}
+            
             {/* Controls Container */}
             <div className="absolute top-4 right-4 flex gap-2">
               <Button
@@ -82,7 +128,7 @@ export const ProductVideoModal = ({ isOpen, onClose, videoUrl, productName, prod
 
             {/* ESC hint */}
             {!isFullscreen && (
-              <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-xs">
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-lg text-xs">
                 Pressione ESC para fechar
               </div>
             )}

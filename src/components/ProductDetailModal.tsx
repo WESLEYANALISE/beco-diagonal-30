@@ -72,41 +72,41 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     
     const categoryTips: Record<string, string[]> = {
       'Fones de Ouvido': [
-        `Ó, esse ${product.produto} é perfeito pra quando você quer se desconectar do mundo! 🎧 Use no trabalho pra focar melhor, ou no ônibus pra curtir sua playlist favorita.`,
-        `Dica de quem entende: coloca ele quando for estudar, malhar na academia ou até fazer uma caminhada. O som fica incrível e você nem sente o tempo passar!`,
-        `Olha só, esse fone é ideal pra quem gosta de jogar online com os amigos ou fazer aquelas calls de trabalho sem incomodar ninguém em casa.`,
-        `Entre nós: é perfeito pra usar quando você quer assistir Netflix tarde da noite sem acordar a família toda! 😄`,
-        `Pro tip: leva ele pra viagem, no avião ou ônibus de longa distância. Vai ser seu melhor companheiro pra passar o tempo!`,
+        `Olha só, esse ${product.produto} é perfeito pra várias situações! 🎧 Use no trabalho quando você precisa focar - principalmente se trabalha em escritório aberto ou home office com barulho. É ideal pra quem estuda também, ajuda muito na concentração! No transporte público então, é essencial - ônibus, metrô, avião... você fica no seu mundo ouvindo música, podcast ou até audiobook. Pra quem malha na academia, nossa, faz toda diferença! A música te motiva muito mais. E pra calls de trabalho ou aulas online? Perfeito! Ninguém mais reclama que não te escuta bem. Ah, e pra gamers que jogam online com os amigos, é indispensável pra uma boa comunicação na equipe!`,
+        
+        `Esse fone vai ser seu melhor amigo em tantos momentos! 🎵 De manhã cedo, quando você quer ouvir música sem acordar a família. À noite, quando quer assistir Netflix ou YouTube sem incomodar ninguém. É excelente pra quem tem filhos pequenos e precisa trabalhar em casa - você consegue se concentrar mesmo com a criançada brincando. Pra estudantes então, nossa! Biblioteca, quarto de república, qualquer lugar fica mais silencioso. E pra quem viaja muito? Indispensável! No avião você não sofre com choro de bebê ou conversa alta. É ótimo também pra relaxar fazendo meditação ou ouvindo sons da natureza antes de dormir.`,
+        
+        `Vou te dar umas dicas de ouro de quando usar esse ${product.produto}! 💎 Primeiro, no trabalho: reuniões online, aquelas calls chatas, ou quando você precisa dar uma pausinha e ouvir uma música pra relaxar. Em casa, é perfeito quando tem visita e você quer se desconectar um pouquinho, ou quando está cozinhando e quer ouvir seu podcast favorito. Pra quem faz exercício, seja caminhada, corrida ou academia, a música com um bom fone muda tudo! E olha, pra quem tem ansiedade ou stress, é terapêutico colocar um som relaxante e respirar fundo. Ah, e pra gamers: usar em jogos cooperativos com amigos é essencial pra estratégia!`
       ],
       'Beleza e Cuidados Pessoais': [
-        `Menina, esse ${product.produto} é tudo de bom! Use de manhã depois do banho ou à noite antes de dormir - sua pele vai agradecer! ✨`,
-        `Dica valiosa: aplica ele depois de limpar bem o rosto, pode ser no seu ritual de skincare noturno. Combina super bem com outros produtos!`,
-        `Ó, é perfeito pra usar antes daquela festa importante ou encontro especial. Deixa a pele linda e radiante!`,
-        `Entre amigas: usa regularmente, tipo 2-3 vezes por semana. A consistência é o segredo pra ter resultados incríveis!`,
-        `Dica de ouro: compartilha com sua irmã, mãe ou melhor amiga - vocês vão amar fazer esse ritual juntas!`,
+        `Menina, esse ${product.produto} vai revolucionar sua rotina! ✨ Use de manhã depois do banho, principalmente se sua pele tá meio ressecada - aplica com a pele ainda levemente úmida que absorve melhor. À noite, no seu ritual de skincare, é perfeito depois de limpar bem o rosto. Fins de semana, faz uma sessão spa em casa: aplica, coloca uma música relaxante e aproveita o momento. É ótimo também antes de eventos importantes - casamento, formatura, encontro especial - deixa a pele preparada pra maquiagem. E olha, pra quem trabalha muito no computador ou fica em ambiente com ar condicionado, usar durante o dia ajuda a manter a hidratação!`,
+        
+        `Esse produto é tudo de bom pra vários momentos! 🌟 De manhã, no seu ritual matinal - acorda a pele e te deixa com aquela sensação fresquinha pro dia. Depois do exercício, é maravilhoso pra acalmar a pele. No pós-sol também, se você foi à praia ou piscina. À noite, depois de um dia cansativo, é como um mimo pra você mesma! É perfeito pra usar antes de dormir - você acorda com a pele renovada. E olha, nos dias de TPM quando a pele fica mais sensível, ele ajuda muito a acalmar. Pra quem tem rotina corrida, aplica rapidinho antes de sair que já faz diferença!`,
+        
+        `Vou te contar os segredos de quando usar esse ${product.produto}! 💕 Primeira coisa: sempre teste numa pequena área primeiro, principalmente se você tem pele sensível. Use depois do banho quando os poros estão abertos - absorve muito melhor! É ideal pra usar antes de eventos - aplica uns 30 minutos antes da maquiagem. Pra quem faz skincare em dupla com a irmã, mãe ou melhor amiga, vocês vão amar fazer esse ritual juntas! E uma dica especial: nos dias frios e secos, aplica antes de sair de casa pra proteger a pele do vento. É ótimo também pra usar enquanto relaxa assistindo sua série favorita!`
       ],
       'Casa e Decoração': [
-        `Esse ${product.produto} vai dar uma renovada incrível na sua casa! Coloca na sala pra impressionar as visitas ou no quarto pra criar um ambiente mais aconchegante 🏠`,
-        `Dica de decoração: combina super bem com plantas, velas aromáticas ou aqueles cantinhos instagramáveis que todo mundo ama!`,
-        `Olha, é perfeito pra quando você quer fazer aquela renovação sem gastar muito. Pequenos detalhes fazem toda diferença!`,
-        `Pro tip: convida as amigas pra ajudar a organizar e decorar - vira uma tarde super divertida e o resultado fica lindo!`,
-        `Entre nós: é ideal pra quem tá começando a vida adulta ou se mudando. Dá pra começar devagar e ir montando a casa dos sonhos!`,
+        `Gente, esse ${product.produto} vai transformar sua casa! 🏠 É perfeito pra sala de estar - deixa o ambiente mais aconchegante pra receber amigos e família. No quarto, cria aquela vibe relaxante que todo mundo ama. É ideal pra quem tá decorando o primeiro apartamento ou mudando de casa - pequenos detalhes fazem toda diferença! Use pra criar aqueles cantinhos instagramáveis que ficam lindos nas fotos. É ótimo também pra apartamentos alugados onde você não pode fazer mudanças grandes - melhora o visual sem furar parede! E olha, combina super bem com plantas, livros e outros elementos decorativos!`,
+        
+        `Esse item vai ser o destaque da sua casa! ✨ Coloca na entrada pra causar boa primeira impressão nas visitas. Na sala de jantar, deixa as refeições em família mais especiais. É perfeito pra home office também - deixa o ambiente mais inspirador pra trabalhar. Pra quem mora com roommates, é uma forma de personalizar seu espaço. Use pra criar um ambiente romântico pra jantares especiais com seu amor. É ideal também pra festas em casa - deixa tudo mais bonito pros amigos. E uma dica: combina muito bem com iluminação indireta, velas aromáticas e texturas aconchegantes!`,
+        
+        `Vou te dar dicas incríveis de como usar esse ${product.produto}! 💫 Primeiro, pensa no ambiente onde você passa mais tempo - geralmente é a sala ou quarto. É perfeito pra criar um ponto focal no ambiente. Use pra balancear outros elementos decorativos que você já tem. É ótimo pra apartamentos pequenos porque otimiza o espaço com estilo. Combina muito bem com móveis de madeira, plantas verdes e tecidos neutros. Pra quem gosta de mudanças, é fácil de reposicionar quando quiser renovar o visual. E olha, é uma ótima opção pra presente de casa nova, casamento ou até pra você mesma se dar esse mimo!`
       ],
       'Tecnologia e Acessórios': [
-        `Esse ${product.produto} vai facilitar muito sua vida! Use no trabalho, na faculdade ou em casa - é super prático e funcional 📱`,
-        `Dica tech: perfeito pra quem vive grudado no celular ou trabalha no computador. Vai te ajudar a ser mais produtivo!`,
-        `Olha só, é ideal pra quem gosta de estar sempre conectado ou precisa de algo confiável pro dia a dia.`,
-        `Entre nós: compatível com praticamente tudo! Leva pra onde for que não vai te decepcionar.`,
-        `Pro tip: investe nesse tipo de produto porque dura muito e compensa cada centavo. Qualidade que vale a pena!`,
+        `Cara, esse ${product.produto} vai facilitar muito sua vida! 📱 É essencial pra quem trabalha muito no computador ou celular - evita aquele stress de cabo desorganizado. Perfeito pra home office, deixa tudo mais profissional e organizado. Use no quarto também, principalmente pra carregar o celular durante a noite. É ideal pra quem viaja muito - ocupa pouco espaço na mala e resolve vários problemas. Na faculdade ou trabalho, todo mundo vai te pedir emprestado! É ótimo também pra família - um produto que toda casa deveria ter. E olha, combina com qualquer setup, seja gamer, profissional ou casual!`,
+        
+        `Esse acessório é indispensável hoje em dia! ⚡ Use no carro pra manter os dispositivos sempre carregados em viagens longas. É perfeito pra escritório, principalmente se você fica muito tempo fora de casa. Em casa, deixa na sala pra toda família usar - evita briga por carregador! É ideal pra estudantes que passam o dia na faculdade ou biblioteca. Pra quem trabalha com delivery, freelancer ou qualquer trabalho que depende do celular, é essencial! Use também em cafés, aeroportos, qualquer lugar onde você precisa trabalhar fora. É compatível com praticamente todos os dispositivos modernos!`,
+        
+        `Vou te contar por que esse ${product.produto} é um investimento que vale cada centavo! 💡 Primeiro, economiza tempo - não fica procurando carregador pela casa. É durável e confiável, então você compra uma vez e usa por muito tempo. Perfeito pra quem tem vários dispositivos - tablet, fone, smartwatch, tudo carrega numa coisa só! Use no trabalho pra impressionar colegas e chefes com sua organização. É ótimo presente também - todo mundo precisa, mas nem todo mundo compra pra si. E uma dica: deixa sempre um na bolsa/mochila de reserva, você vai agradecer quando precisar!`
       ]
     };
     
     const defaultTips = [
-      `Olha, esse ${product.produto} é perfeito para o seu dia a dia! 💫 Use sempre que precisar de praticidade e qualidade.`,
-      `Dica de amigo: aproveite ao máximo usando ele regularmente - a qualidade compensa e você vai adorar!`,
-      `Se você está em dúvida, pode confiar! Produtos como esse sempre fazem diferença na rotina e facilitam a vida.`,
-      `Pro tip: combina com outros itens similares para um resultado ainda melhor! É investimento que vale a pena! ✨`,
-      `Entre nós: pelo preço que está, é uma baita oportunidade! Não deixa passar não! 🛍️`,
+      `Olha, esse ${product.produto} é perfeito para o seu dia a dia! 💫 Use sempre que precisar de praticidade e qualidade. É ideal pra você, sua família e amigos - todo mundo vai aprovar! Funciona super bem em casa, no trabalho, na escola, em viagens... é bem versátil mesmo! A qualidade compensa cada centavo, e você vai ver como facilita sua rotina. É daqueles produtos que depois que você tem, não consegue mais ficar sem!`,
+      
+      `Esse produto vai ser seu melhor amigo! 🌟 Use de manhã pra começar o dia bem, à tarde quando precisar de praticidade, e à noite pra relaxar. É perfeito pra usar sozinho ou com a família. Combina com seu estilo de vida, seja mais agitado ou mais tranquilo. É uma escolha inteligente - você investe uma vez e aproveita por muito tempo. Recomendo muito!`,
+      
+      `Vou te dar a real sobre esse ${product.produto}! ✨ É daqueles itens que você compra achando que é só mais um, mas vira essencial na sua vida. Use sempre que quiser se sentir bem e confortável. É perfeito pra presentear também - mãe, pai, irmão, melhor amigo... todo mundo gosta! A qualidade é top e o preço tá super justo. Não deixa passar essa oportunidade! 🛍️`
     ];
     
     const tips = categoryTips[product.categoria] || defaultTips;
@@ -131,7 +131,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-white">
-          {/* Header compacto */}
+          {/* Header com botão de fechar mais visível */}
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 flex items-center justify-between">
             <div className="flex-1 min-w-0 pr-4">
               <h2 className="text-base md:text-lg font-bold line-clamp-1">
@@ -151,9 +151,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               onClick={onClose}
               variant="ghost" 
               size="sm"
-              className="text-white hover:bg-white/20 rounded-full w-8 h-8 p-0 flex-shrink-0"
+              className="text-white hover:bg-red-500/80 bg-red-500/60 border border-white/50 rounded-full w-10 h-10 p-0 flex-shrink-0 transition-all duration-300 hover:scale-110"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </Button>
           </div>
 
@@ -173,7 +173,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           <img
                             src={image}
                             alt={`${product.produto} - ${index + 1}`}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
                           />
                         </div>
                       </CarouselItem>
@@ -279,7 +279,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       
                       {aiTips && (
                         <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-200">
-                          <p className="text-sm text-gray-800 leading-relaxed">{aiTips}</p>
+                          <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{aiTips}</p>
                           <Button
                             onClick={generateAITips}
                             variant="ghost"
@@ -336,6 +336,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           productName={product.produto}
           productPrice={formatPrice(product.valor)}
           productLink={product.link}
+          productImages={getProductImages()}
         />
       )}
     </>

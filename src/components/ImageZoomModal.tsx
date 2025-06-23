@@ -85,7 +85,7 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-[95vw] max-h-[95vh] p-0 bg-white">
-        {/* Header */}
+        {/* Header com botão de fechar mais visível */}
         <DialogHeader className="p-3 sm:p-4 border-b bg-white">
           <DialogTitle className="flex items-center justify-between text-sm sm:text-base lg:text-lg">
             <div className="flex-1 min-w-0 pr-4">
@@ -98,7 +98,7 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
               variant="outline"
               size="sm"
               onClick={onClose}
-              className="flex-shrink-0 bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700 hover:border-red-300 transition-all duration-300"
+              className="flex-shrink-0 bg-red-500 text-white border-red-500 hover:bg-red-600 hover:border-red-600 transition-all duration-300 hover:scale-110 shadow-lg"
             >
               <X className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Fechar</span>
@@ -106,9 +106,9 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Container da imagem */}
+        {/* Container da imagem - Ajustado para não cortar */}
         <div 
-          className="relative bg-gray-100 overflow-hidden cursor-move select-none" 
+          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center" 
           style={{ height: 'calc(95vh - 200px)', minHeight: '300px' }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -137,20 +137,22 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
             </>
           )}
 
-          {/* Imagem principal */}
-          <div className="w-full h-full flex items-center justify-center p-4">
-            <img
-              ref={imageRef}
-              src={images[imageIndex]}
-              alt={`${productName} - ${imageIndex + 1}`}
-              className="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
-              style={{
-                transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
-                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
-              }}
-              draggable={false}
-            />
-          </div>
+          {/* Imagem principal - Ajustada para não cortar */}
+          <img
+            ref={imageRef}
+            src={images[imageIndex]}
+            alt={`${productName} - ${imageIndex + 1}`}
+            className="max-w-none max-h-none object-contain transition-transform duration-200 select-none"
+            style={{
+              transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
+              cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+              width: scale === 1 ? 'auto' : `${100 * scale}%`,
+              height: scale === 1 ? 'auto' : `${100 * scale}%`,
+              maxWidth: scale === 1 ? '100%' : 'none',
+              maxHeight: scale === 1 ? '100%' : 'none'
+            }}
+            draggable={false}
+          />
 
           {/* Indicador de zoom */}
           {scale > 1 && (
