@@ -25,38 +25,15 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [screenSize, setScreenSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const imageRef = useRef<HTMLImageElement>(null);
 
-  // Update screen size on resize
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Calculate responsive modal dimensions
-  const getModalDimensions = () => {
-    const padding = 32; // 16px padding on each side
-    const headerHeight = 120; // Approximate header height
-    const controlsHeight = 120; // Approximate controls height
-    
-    const maxWidth = Math.min(screenSize.width - padding, 1200);
-    const maxHeight = Math.min(screenSize.height - headerHeight - controlsHeight, 800);
-    
-    return { maxWidth, maxHeight };
-  };
-
   const handleZoomIn = useCallback(() => {
-    setScale(prev => Math.min(prev + 0.3, 3));
+    setScale(prev => Math.min(prev + 0.5, 4));
   }, []);
 
   const handleZoomOut = useCallback(() => {
     setScale(prev => {
-      const newScale = Math.max(prev - 0.3, 0.5);
+      const newScale = Math.max(prev - 0.5, 0.5);
       if (newScale <= 1) {
         setPosition({ x: 0, y: 0 });
       }
@@ -139,22 +116,14 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
     }
   }, [isOpen, resetTransform]);
 
-  const { maxWidth, maxHeight } = getModalDimensions();
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
-        className="p-0 bg-white m-2 overflow-hidden"
-        style={{ 
-          width: `min(${maxWidth}px, 98vw)`,
-          maxHeight: `min(${maxHeight + 200}px, 95vh)`
-        }}
-      >
-        {/* Header compacto */}
-        <DialogHeader className="p-3 border-b bg-white flex-shrink-0">
-          <DialogTitle className="flex items-center justify-between text-sm">
+      <DialogContent className="w-full max-w-[98vw] max-h-[98vh] p-0 bg-white m-2">
+        {/* Header mais compacto para mobile */}
+        <DialogHeader className="p-2 sm:p-4 border-b bg-white flex-shrink-0">
+          <DialogTitle className="flex items-center justify-between text-sm sm:text-base">
             <div className="flex-1 min-w-0 pr-2">
-              <span className="font-semibold truncate block text-sm">{productName}</span>
+              <span className="font-semibold truncate block text-xs sm:text-sm">{productName}</span>
               <span className="text-xs text-gray-500 mt-1 block">
                 Imagem {imageIndex + 1} de {images.length}
               </span>
@@ -163,19 +132,21 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
               variant="outline"
               size="sm"
               onClick={onClose}
-              className="flex-shrink-0 bg-red-500 text-white border-red-500 hover:bg-red-600 hover:border-red-600 transition-all duration-300 hover:scale-110 shadow-lg p-2"
+              className="flex-shrink-0 bg-red-500 text-white border-red-500 hover:bg-red-600 hover:border-red-600 transition-all duration-300 hover:scale-110 shadow-lg p-1 sm:p-2"
             >
               <X className="w-4 h-4" />
+              <span className="hidden sm:inline ml-2">Fechar</span>
             </Button>
           </DialogTitle>
         </DialogHeader>
 
-        {/* Container da imagem - Responsivo com altura dinâmica baseada no tamanho da tela */}
+        {/* Container da imagem - Responsivo e com altura dinâmica */}
         <div 
-          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center"
+          className="relative bg-gray-100 overflow-hidden cursor-move select-none flex items-center justify-center flex-1"
           style={{ 
-            height: `${maxHeight}px`,
-            minHeight: '300px'
+            height: 'calc(100vh - 200px)',
+            maxHeight: '70vh',
+            minHeight: '200px'
           }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -185,30 +156,30 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Botões de navegação */}
+          {/* Botões de navegação mais visíveis */}
           {images.length > 1 && (
             <>
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full w-10 h-10 p-0"
+                className="absolute left-1 sm:left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full w-8 h-8 sm:w-10 sm:h-10 p-0"
                 onClick={handlePrevious}
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full w-10 h-10 p-0"
+                className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/95 hover:bg-white shadow-lg rounded-full w-8 h-8 sm:w-10 sm:h-10 p-0"
                 onClick={handleNext}
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </>
           )}
 
-          {/* Imagem principal - Responsiva baseada no tamanho da tela */}
-          <div className="w-full h-full flex items-center justify-center p-2">
+          {/* Imagem principal - Completamente responsiva */}
+          <div className="w-full h-full flex items-center justify-center p-1 sm:p-2">
             <img
               ref={imageRef}
               src={images[imageIndex]}
@@ -216,15 +187,13 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
               className="max-w-full max-h-full object-contain transition-transform duration-200 select-none"
               style={{
                 transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
-                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-                maxWidth: `${maxWidth - 40}px`,
-                maxHeight: `${maxHeight - 40}px`
+                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
               }}
               draggable={false}
             />
           </div>
 
-          {/* Indicador de zoom */}
+          {/* Indicador de zoom para mobile */}
           {scale > 1 && (
             <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded-lg text-xs flex items-center gap-1">
               <Move className="w-3 h-3" />
@@ -233,20 +202,20 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
           )}
         </div>
 
-        {/* Controles */}
-        <div className="p-3 bg-white border-t flex-shrink-0">
-          <div className="flex items-center justify-center gap-2 mb-3 flex-wrap">
+        {/* Controles mais compactos para mobile */}
+        <div className="p-2 sm:p-4 bg-white border-t flex-shrink-0">
+          <div className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
             <Button
               variant="outline"
               size="sm"
               onClick={handleZoomOut}
               disabled={scale <= 0.5}
-              className="hover:bg-blue-50 transition-colors"
+              className="hover:bg-blue-50 transition-colors p-1 sm:p-2"
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
             
-            <div className="px-3 py-1 bg-gray-100 rounded text-sm font-medium min-w-16 text-center">
+            <div className="px-2 py-1 bg-gray-100 rounded text-xs font-medium min-w-12 text-center">
               {Math.round(scale * 100)}%
             </div>
             
@@ -254,38 +223,38 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
               variant="outline"
               size="sm"
               onClick={handleZoomIn}
-              disabled={scale >= 3}
-              className="hover:bg-blue-50 transition-colors"
+              disabled={scale >= 4}
+              className="hover:bg-blue-50 transition-colors p-1 sm:p-2"
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
             
             <Button
               variant="outline"
               size="sm"
               onClick={handleRotate}
-              className="hover:bg-green-50 transition-colors"
+              className="hover:bg-green-50 transition-colors p-1 sm:p-2"
             >
-              <RotateCw className="w-4 h-4" />
+              <RotateCw className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
             
             <Button
               variant="outline"
               size="sm"
               onClick={resetTransform}
-              className="hover:bg-gray-50 transition-colors text-sm px-3"
+              className="hover:bg-gray-50 transition-colors text-xs px-2 py-1"
             >
               Reset
             </Button>
           </div>
 
-          {/* Miniaturas responsivas */}
+          {/* Miniaturas mais compactas */}
           {images.length > 1 && (
-            <div className="flex gap-2 justify-center overflow-x-auto pb-1">
+            <div className="flex gap-1 sm:gap-2 justify-center overflow-x-auto pb-1">
               {images.map((image, index) => (
                 <button
                   key={index}
-                  className={`flex-shrink-0 w-12 h-12 md:w-16 md:h-16 rounded border-2 overflow-hidden transition-all ${
+                  className={`flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded border-2 overflow-hidden transition-all ${
                     index === imageIndex 
                       ? 'border-blue-500 ring-2 ring-blue-200' 
                       : 'border-gray-200 hover:border-gray-400'

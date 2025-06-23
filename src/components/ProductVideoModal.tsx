@@ -25,7 +25,6 @@ export const ProductVideoModal = ({
 }: ProductVideoModalProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [videoAspectRatio, setVideoAspectRatio] = useState<'vertical' | 'horizontal' | 'unknown'>('unknown');
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -35,27 +34,15 @@ export const ProductVideoModal = ({
     window.open(productLink, '_blank');
   };
 
-  // Detect video aspect ratio
+  // Auto-rotate images carousel
   useEffect(() => {
-    if (isOpen && videoUrl) {
-      const video = document.createElement('video');
-      video.src = videoUrl;
-      video.onloadedmetadata = () => {
-        const ratio = video.videoWidth / video.videoHeight;
-        setVideoAspectRatio(ratio < 1 ? 'vertical' : 'horizontal');
-      };
-    }
-  }, [isOpen, videoUrl]);
-
-  // Auto-rotate images carousel only for horizontal videos
-  useEffect(() => {
-    if (isOpen && productImages.length > 1 && !isFullscreen && videoAspectRatio === 'horizontal') {
+    if (isOpen && productImages.length > 1 && !isFullscreen) {
       const interval = setInterval(() => {
         setCurrentImageIndex(prev => (prev + 1) % productImages.length);
       }, 3000);
       return () => clearInterval(interval);
     }
-  }, [isOpen, productImages.length, isFullscreen, videoAspectRatio]);
+  }, [isOpen, productImages.length, isFullscreen]);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -76,8 +63,8 @@ export const ProductVideoModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`${isFullscreen ? 'max-w-full h-full p-0' : 'max-w-4xl'} bg-black border-0`}>
         <div className="relative w-full h-full flex flex-col">
-          {/* Image Carousel - Only show for horizontal videos and when not fullscreen */}
-          {!isFullscreen && videoAspectRatio === 'horizontal' && productImages.length > 0 && (
+          {/* Image Carousel - Positioned ABOVE video container */}
+          {!isFullscreen && productImages.length > 0 && (
             <div className="bg-white p-4 flex justify-center gap-2 overflow-x-auto">
               {productImages.slice(0, 5).map((image, index) => (
                 <div 
@@ -111,7 +98,7 @@ export const ProductVideoModal = ({
               autoPlay 
               muted={false} 
               loop 
-              className={`w-full h-full ${videoAspectRatio === 'vertical' ? 'object-contain' : 'object-contain'}`}
+              className="w-full h-full object-contain" 
               playsInline 
             />
             
@@ -139,8 +126,8 @@ export const ProductVideoModal = ({
             </div>
           </div>
 
-          {/* Product Info - Hidden in fullscreen or for vertical videos */}
-          {!isFullscreen && videoAspectRatio === 'horizontal' && (
+          {/* Product Info - Hidden in fullscreen */}
+          {!isFullscreen && (
             <div className="bg-white p-4 space-y-3">
               <h3 className="font-semibold text-gray-900 line-clamp-2">
                 {productName}
@@ -154,19 +141,6 @@ export const ProductVideoModal = ({
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 Comprar na Shopee
-              </Button>
-            </div>
-          )}
-
-          {/* Floating Buy Button for vertical videos */}
-          {videoAspectRatio === 'vertical' && !isFullscreen && (
-            <div className="absolute bottom-4 left-4 right-4">
-              <Button 
-                onClick={handleBuyClick} 
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg"
-              >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Comprar na Shopee - {productPrice}
               </Button>
             </div>
           )}
