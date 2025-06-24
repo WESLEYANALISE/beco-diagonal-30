@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid } from 'lucide-react';
@@ -205,6 +204,8 @@ const CategoriaLista = () => {
     return gradients[index % gradients.length];
   };
 
+  const showingProducts = tipo === 'subcategoria' || tipo === 'mais-vendidos';
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -251,8 +252,8 @@ const CategoriaLista = () => {
                 </div>
               </div>
 
-              {/* Controles de visualização e filtros - apenas para lista de subcategoria */}
-              {(tipo === 'subcategoria' || tipo === 'mais-vendidos') && (
+              {/* Controles de visualização e filtros - mostrar quando exibindo produtos */}
+              {showingProducts && (
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
