@@ -33,16 +33,20 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    if (videoRef.current) {
-      if (isActive && product.video) {
-        videoRef.current.play();
-        setIsPlaying(true);
-      } else {
-        videoRef.current.pause();
-        setIsPlaying(false);
+    if (isActive && product.video) {
+      setIsPlaying(true);
+      // Para vídeos do YouTube, vamos recriar o iframe para forçar o autoplay
+      if (iframeRef.current) {
+        const youtubeId = getYouTubeVideoId(product.video);
+        if (youtubeId) {
+          iframeRef.current.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1&allow=autoplay`;
+        }
       }
+    } else {
+      setIsPlaying(false);
     }
   }, [isActive, product.video]);
 
@@ -89,11 +93,13 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
       <div className="relative w-full h-full max-w-md mx-auto" onClick={handleVideoClick}>
         {product.video && youtubeId ? (
           <iframe 
+            ref={iframeRef}
             src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=0&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1`}
             className="w-full h-full object-cover rounded-lg" 
             frameBorder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
             allowFullScreen
+            title={product.produto}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
