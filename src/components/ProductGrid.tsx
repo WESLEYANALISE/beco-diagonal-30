@@ -25,7 +25,7 @@ interface ProductGridProps {
   onProductToggle?: (product: Product) => void;
 }
 
-export const ProductGrid: React.FC<ProductGridProps> = ({ 
+export const ProductGrid: React.FC<ProductGridProps> = React.memo(({ 
   products, 
   loading = false, 
   compact = true,
@@ -74,4 +74,6 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
       ))}
     </div>
   );
-};
+});
+
+ProductGrid.displayName = 'ProductGrid';

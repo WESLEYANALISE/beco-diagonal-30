@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Sparkles, Info, Star } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Sparkles, Info, Star, Compass } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
     { path: '/categorias', label: 'Categorias', icon: Grid3X3 },
     { path: '/favoritos', label: 'Favoritos', icon: Heart },
     { path: '/novos', label: 'Novidades', icon: Sparkles },
+    { path: '/explorar', label: 'Explorar', icon: Compass },
   ];
 
   const handleNavigation = (path: string) => {
@@ -44,7 +45,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
   };
 
   const handleClearFilter = () => {
-    onPriceFilter(0, 1000); // Reset to default range
+    onPriceFilter(0, 1000);
   };
 
   const handleEvaluateApp = () => {
@@ -69,6 +70,19 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
             </div>
 
             <div className="flex items-center space-x-2">
+              {/* Desktop Search Bar - Smaller and positioned in header */}
+              {location.pathname === '/' && (
+                <div className="hidden md:block relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
+                  <Input
+                    placeholder="Buscar produtos..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pl-10 w-80 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:bg-white h-9"
+                  />
+                </div>
+              )}
+
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center space-x-2">
                 {navItems.slice(1).map((item) => (
@@ -206,9 +220,9 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
           </div>
         </div>
 
-        {/* Search Bar - Always visible at top */}
+        {/* Mobile Search Bar - Only show on homepage and mobile */}
         {location.pathname === '/' && (
-          <div className="px-4 pb-3">
+          <div className="px-4 pb-3 md:hidden">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5" />
               <Input
@@ -224,14 +238,14 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
 
       {/* Bottom Navigation for Mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-red-500 to-orange-500 border-t border-white/20 z-50 shadow-2xl">
-        <div className="grid grid-cols-4 gap-1 px-2 py-2">
+        <div className="grid grid-cols-5 gap-1 px-2 py-2">
           {navItems.map((item) => (
             <button
               key={item.path}
               onClick={() => handleNavigation(item.path)}
               className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 text-white hover:bg-white/20 relative"
             >
-              <item.icon className="w-5 h-5 mb-1" />
+              <item.icon className="w-4 h-4 mb-1" />
               <span className="text-xs font-medium truncate max-w-full">
                 {item.label}
               </span>
