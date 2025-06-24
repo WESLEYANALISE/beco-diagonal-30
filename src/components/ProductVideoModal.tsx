@@ -74,19 +74,15 @@ export const ProductVideoModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${
-        isFullscreen 
-          ? 'max-w-full h-full p-0' 
-          : 'max-w-5xl max-h-[95vh] mt-4 mb-4'
-        } bg-black border-0 overflow-hidden`}>
+      <DialogContent className={`${isFullscreen ? 'max-w-full h-full p-0' : 'max-w-4xl'} bg-black border-0`}>
         <div className="relative w-full h-full flex flex-col">
           {/* Image Carousel - Only show for horizontal videos and when not in fullscreen */}
           {!isFullscreen && !isVerticalVideo && productImages.length > 0 && (
-            <div className="bg-white p-3 md:p-4 flex justify-center gap-2 overflow-x-auto flex-shrink-0">
+            <div className="bg-white p-4 flex justify-center gap-2 overflow-x-auto">
               {productImages.slice(0, 5).map((image, index) => (
                 <div 
                   key={index} 
-                  className={`w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded border-2 overflow-hidden transition-all duration-500 flex-shrink-0 ${
+                  className={`w-16 h-16 md:w-20 md:h-20 rounded border-2 overflow-hidden transition-all duration-500 flex-shrink-0 ${
                     index === currentImageIndex 
                       ? 'border-blue-500 opacity-100 scale-110 shadow-lg' 
                       : 'border-gray-300 opacity-70'
@@ -100,38 +96,27 @@ export const ProductVideoModal = ({
                 </div>
               ))}
               {productImages.length > 5 && (
-                <div className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded border-2 border-gray-300 bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded border-2 border-gray-300 bg-gray-100 flex items-center justify-center flex-shrink-0">
                   <span className="text-gray-600 text-xs font-bold">+{productImages.length - 5}</span>
                 </div>
               )}
             </div>
           )}
 
-          {/* Video Container - Com altura responsiva e margem de segurança */}
-          <div className={`relative flex-1 bg-black ${
-            isFullscreen 
-              ? 'h-full' 
-              : 'h-[50vh] md:h-[60vh] lg:h-[70vh] max-h-[calc(95vh-200px)]'
-          }`}>
+          {/* Video Container */}
+          <div className="relative flex-1 bg-black">
             <video 
               src={videoUrl} 
               controls 
               autoPlay 
               muted={false} 
               loop 
-              className={`w-full h-full ${
-                isVerticalVideo 
-                  ? 'object-contain max-w-[50vh] mx-auto' 
-                  : 'object-contain'
-              }`}
+              className={`w-full h-full ${isVerticalVideo ? 'object-contain' : 'object-contain'}`}
               playsInline 
-              style={{
-                maxHeight: isFullscreen ? '100vh' : 'calc(95vh - 200px)'
-              }}
             />
             
             {/* Controls Container */}
-            <div className="absolute top-3 md:top-4 right-3 md:right-4 flex gap-2">
+            <div className="absolute top-4 right-4 flex gap-2">
               <Button 
                 size="sm" 
                 variant="ghost" 
@@ -139,7 +124,7 @@ export const ProductVideoModal = ({
                 className="bg-black/70 hover:bg-black/90 text-white border-2 border-white/50 hover:border-white/70 transition-all duration-300 hover:scale-110 rounded-lg p-2" 
                 title={isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
               >
-                <Expand className="w-4 h-4 md:w-5 md:h-5" />
+                <Expand className="w-5 h-5" />
               </Button>
               
               <Button 
@@ -149,23 +134,23 @@ export const ProductVideoModal = ({
                 className="bg-red-600/90 hover:bg-red-700 text-white border-2 border-red-400/50 hover:border-red-300 transition-all duration-300 hover:scale-110 rounded-lg p-2" 
                 title="Fechar vídeo"
               >
-                <X className="w-4 h-4 md:w-5 md:h-5" />
+                <X className="w-5 h-5" />
               </Button>
             </div>
           </div>
 
           {/* Product Info - Hidden in fullscreen */}
           {!isFullscreen && (
-            <div className="bg-white p-3 md:p-4 space-y-3 flex-shrink-0">
-              <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm md:text-base">
+            <div className="bg-white p-4 space-y-3">
+              <h3 className="font-semibold text-gray-900 line-clamp-2">
                 {productName}
               </h3>
-              <div className="text-lg md:text-xl font-bold text-red-500">
+              <div className="text-lg font-bold text-red-500">
                 Menos de {productPrice}
               </div>
               <Button 
                 onClick={handleBuyClick} 
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold h-10 md:h-11"
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 Comprar na Shopee
