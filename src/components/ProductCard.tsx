@@ -29,6 +29,7 @@ interface ProductCardProps {
   showBadge?: boolean;
   badgeText?: string;
   compact?: boolean;
+  listView?: boolean;
   selectable?: boolean;
   selected?: boolean;
   onToggle?: (product: Product) => void;
@@ -40,6 +41,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   showBadge = false,
   badgeText = "MAIS VENDIDO",
   compact = false,
+  listView = false,
   selectable = false,
   selected = false,
   onToggle,
@@ -76,6 +78,78 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   }, [product.link]);
 
   const images = getProductImages(product);
+
+  if (listView) {
+    return (
+      <>
+        <Card 
+          id={`product-${product.id}`}
+          style={style}
+          className={`
+            overflow-hidden hover:shadow-xl transition-all duration-300 
+            bg-white border-0 shadow-lg group animate-fade-in cursor-pointer
+            ${selected ? 'ring-2 ring-blue-500' : ''}
+          `}
+          onClick={handleCardClick}
+        >
+          <CardContent className="p-3">
+            <div className="flex gap-3">
+              {/* Image */}
+              <div className="relative w-24 h-24 flex-shrink-0">
+                <LazyImage 
+                  src={product.imagem1} 
+                  alt={product.produto}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+                {product.video && (
+                  <div className="absolute top-1 right-1">
+                    <div className="bg-black/70 rounded-full p-1">
+                      <Play className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-gray-900 text-sm line-clamp-2 mb-2">
+                  {product.produto}
+                </h3>
+                
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-bold text-red-500 text-sm">
+                    Menos de {formatPrice(product.valor)}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                    <span className="text-xs text-gray-600">4.8</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <FavoriteButton productId={product.id} showText={false} />
+                  <Button 
+                    size="sm" 
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"
+                    onClick={handleBuyClick}
+                  >
+                    <ShoppingCart className="w-3 h-3 mr-1" />
+                    Comprar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <ProductDetailModal 
+          isOpen={isDetailModalOpen} 
+          onClose={() => setIsDetailModalOpen(false)} 
+          product={product} 
+        />
+      </>
+    );
+  }
 
   return (
     <>

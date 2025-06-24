@@ -64,7 +64,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                 <ShoppingCart className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">Achadinhos Shopee</h1>
+                <h1 className="text-lg font-bold">Achadinhos Online</h1>
                 <p className="text-xs text-orange-100">Ofertas Imperdíveis</p>
               </div>
             </div>
@@ -100,7 +100,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                         <ShoppingCart className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h2 className="text-lg font-bold">Achadinhos Shopee</h2>
+                        <h2 className="text-lg font-bold">Achadinhos Online</h2>
                         <p className="text-sm text-orange-100">Ofertas Imperdíveis</p>
                       </div>
                     </div>
@@ -146,7 +146,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                                 <ShoppingCart className="w-6 h-6 text-white" />
                               </div>
                               <DialogTitle className="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
-                                Achadinhos Shopee
+                                Achadinhos Online
                               </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 text-gray-700 text-sm">
@@ -163,7 +163,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                                 <div className="flex items-start gap-2">
                                   <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
                                   <p className="text-xs leading-relaxed">
-                                    Nosso app reúne cuidadosamente os <span className="font-semibold text-red-600">melhores achadinhos da Shopee</span>, oferecendo acesso aos produtos mais essenciais para o seu dia a dia.
+                                    Nosso app reúne cuidadosamente os <span className="font-semibold text-red-600">melhores achadinhos online</span>, oferecendo acesso aos produtos mais essenciais para o seu dia a dia.
                                   </p>
                                 </div>
                                 
