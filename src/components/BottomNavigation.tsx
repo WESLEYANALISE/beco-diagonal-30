@@ -51,7 +51,7 @@ export const BottomNavigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-magical-deepPurple/90 via-magical-mysticalPurple/90 to-magical-deepPurple/90 border-t border-magical-gold/30 backdrop-blur-xl shadow-2xl">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-magical-deepPurple/90 via-magical-mysticalPurple/90 to-magical-deepPurple/90 border-t border-magical-gold/30 backdrop-blur-xl shadow-2xl">
       <div className="flex items-center justify-around py-1 px-2 max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
