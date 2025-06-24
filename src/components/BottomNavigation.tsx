@@ -3,10 +3,17 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Book, Star, Wand2, Compass } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
+
+  // Only show on mobile and tablet, hide on desktop
+  if (!isMobile) {
+    return null;
+  }
 
   const navItems = [
     {
@@ -17,7 +24,7 @@ export const BottomNavigation = () => {
     },
     {
       icon: Book,
-      label: 'Casas',
+      label: 'Categorias',
       path: '/categorias',
       activeColor: 'from-magical-mysticalPurple to-magical-deepPurple'
     },
@@ -44,7 +51,7 @@ export const BottomNavigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-magical-deepPurple/60 via-magical-mysticalPurple/60 to-magical-deepPurple/60 border-t border-magical-gold/10 backdrop-blur-xl shadow-xl">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-magical-deepPurple/80 via-magical-mysticalPurple/80 to-magical-deepPurple/80 border-t border-magical-gold/20 backdrop-blur-xl shadow-2xl">
       <div className="flex items-center justify-around py-1 px-2 max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -58,8 +65,8 @@ export const BottomNavigation = () => {
               onClick={() => navigate(item.path)}
               className={`flex flex-col items-center gap-0.5 h-auto py-1 px-1.5 rounded-lg transition-all duration-300 ${
                 active 
-                  ? `bg-gradient-to-br ${item.activeColor} text-magical-midnight shadow-sm shadow-magical-gold/10 animate-magical-glow` 
-                  : 'text-magical-starlight/70 hover:bg-magical-gold/5 hover:text-magical-gold'
+                  ? `bg-gradient-to-br ${item.activeColor} text-magical-midnight shadow-sm shadow-magical-gold/20 animate-magical-glow` 
+                  : 'text-magical-starlight/80 hover:bg-magical-gold/10 hover:text-magical-gold'
               }`}
             >
               <Icon className={`${active ? 'w-4 h-4' : 'w-3.5 h-3.5'} transition-all duration-300`} />
@@ -71,10 +78,10 @@ export const BottomNavigation = () => {
         })}
       </div>
       
-      {/* Subtle magical sparkle effects - more discrete */}
-      <div className="absolute top-0 left-1/4 w-0.5 h-0.5 bg-magical-gold rounded-full animate-sparkle opacity-20"></div>
-      <div className="absolute top-1 right-1/3 w-0.5 h-0.5 bg-magical-silver rounded-full animate-sparkle opacity-15" style={{ animationDelay: '1s' }}></div>
-      <div className="absolute top-0 right-1/4 w-0.5 h-0.5 bg-magical-bronze rounded-full animate-sparkle opacity-10" style={{ animationDelay: '2s' }}></div>
+      {/* Subtle magical sparkle effects */}
+      <div className="absolute top-0 left-1/4 w-0.5 h-0.5 bg-magical-gold rounded-full animate-sparkle opacity-30"></div>
+      <div className="absolute top-1 right-1/3 w-0.5 h-0.5 bg-magical-silver rounded-full animate-sparkle opacity-25" style={{ animationDelay: '1s' }}></div>
+      <div className="absolute top-0 right-1/4 w-0.5 h-0.5 bg-magical-bronze rounded-full animate-sparkle opacity-20" style={{ animationDelay: '2s' }}></div>
     </div>
   );
 };

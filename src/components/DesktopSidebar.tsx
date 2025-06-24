@@ -27,7 +27,6 @@ export const DesktopSidebar = () => {
 
   const fetchTopProducts = async () => {
     try {
-      // Changed from 'SHOPEE' to 'HARRY POTTER'
       const { data, error } = await supabase
         .from('HARRY POTTER')
         .select('id, produto, valor, imagem1, link')
@@ -148,7 +147,7 @@ export const DesktopSidebar = () => {
                     </div>
                   </div>
 
-                  {/* Enhanced magical button */}
+                  {/* Enhanced magical button - agora ROXO */}
                   <Button 
                     size="sm"
                     className="w-full h-8 bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight text-xs font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-enchanted"

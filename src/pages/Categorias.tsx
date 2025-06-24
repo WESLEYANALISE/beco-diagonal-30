@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Book, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone, Zap } from 'lucide-react';
+import { Book, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone, Zap, Crown, Wand2, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
@@ -24,7 +24,7 @@ const Categorias = () => {
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
-        .from('SHOPEE')
+        .from('HARRY POTTER')
         .select('categoria')
         .not('categoria', 'is', null);
 
@@ -56,24 +56,15 @@ const Categorias = () => {
 
   const getCategoryIcon = (category: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
-      'Beleza e Cuidados Pessoais': Sparkles,
-      'Casa e Decoração': Home,
-      'Diversão e Familia': Gamepad2,
-      'Estilo e Moda': Shirt,
-      'Tecnologia e Acessórios': Smartphone
+      'Itens Colecionáveis': Crown,
+      'Bonecas e Brinquedos de Pelúcia': Sparkles,
+      'Luminária': Wand2,
+      'Colares': Crown,
+      'Moletons e Suéteres': Shirt,
+      'Capinhas': Smartphone,
+      'Canecas': ShoppingCart
     };
     return iconMap[category] || Book;
-  };
-
-  const getCategoryName = (category: string) => {
-    const nameMap: Record<string, string> = {
-      'Beleza e Cuidados Pessoais': 'Poções e Unguentos',
-      'Casa e Decoração': 'Artefatos do Lar',
-      'Diversão e Familia': 'Entretenimento Mágico',
-      'Estilo e Moda': 'Vestes e Acessórios',
-      'Tecnologia e Acessórios': 'Artefatos Místicos'
-    };
-    return nameMap[category] || category;
   };
 
   const getCategoryGradient = (index: number) => {
@@ -122,7 +113,7 @@ const Categorias = () => {
               Explore por <span className="text-magical-gold animate-magical-glow">Categorias Mágicas</span>
             </h1>
             <p className="text-lg md:text-xl text-magical-starlight/90 mb-8 max-w-3xl mx-auto leading-relaxed font-enchanted">
-              Descubra artefatos mágicos organizados pelos mestres da magia
+              Descubra artefatos mágicos organizados pelos mestres da magia de Hogwarts
             </p>
           </div>
         </div>
@@ -134,7 +125,6 @@ const Categorias = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {categories.map((category, index) => {
               const IconComponent = getCategoryIcon(category.categoria);
-              const magicalName = getCategoryName(category.categoria);
               
               return (
                 <Card 
@@ -155,10 +145,10 @@ const Categorias = () => {
                         <IconComponent className="w-8 h-8 md:w-12 md:h-12 text-magical-starlight drop-shadow-lg" />
                       </div>
                       <h3 className="text-sm md:text-xl font-bold mb-1 md:mb-2 line-clamp-2 font-magical">
-                        {magicalName}
+                        {category.categoria}
                       </h3>
                       <p className="text-xs md:text-sm text-magical-starlight/80 font-enchanted">
-                        {category.count} artefatos
+                        {category.count} artefatos mágicos
                       </p>
                     </div>
                   </div>
@@ -171,7 +161,7 @@ const Categorias = () => {
                         handleCategoryClick(category.categoria);
                       }}
                     >
-                      Ver Artefatos
+                      Ver Artefatos Mágicos
                       <ArrowRight className="w-3 h-3 md:w-4 md:h-4 ml-1 md:ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                     </Button>
                   </CardContent>

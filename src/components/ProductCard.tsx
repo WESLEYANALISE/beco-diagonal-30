@@ -1,3 +1,4 @@
+
 import React, { useState, memo, useCallback } from 'react';
 import { Star, Play, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -131,7 +132,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
                 <div className="flex gap-2">
                   <FavoriteButton productId={product.id} showText={false} />
-                  <Button size="sm" className="flex-1 bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold text-xs border-0 shadow-md hover:shadow-lg transition-all duration-300" onClick={handleBuyClick}>
+                  <Button size="sm" className="flex-1 bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold text-xs border-0 shadow-md hover:shadow-lg transition-all duration-300 font-enchanted" onClick={handleBuyClick}>
                     <ShoppingCart className="w-3 h-3 mr-1" />
                     Comprar
                   </Button>
@@ -241,9 +242,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             
             <ProductPhotosModal images={images} productName={product.produto} productPrice={formatPrice(product.valor)} productLink={product.link} videoUrl={product.video} />
             
-            <Button size="sm" className={`w-full bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold text-xs hover:scale-105 transition-all duration-300 border-0 shadow-md hover:shadow-lg font-enchanted ${compact ? 'py-1' : ''}`} onClick={handleBuyClick}>
+            <Button size="sm" className={`w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold text-xs hover:scale-105 transition-all duration-300 border-0 shadow-md hover:shadow-lg font-enchanted ${compact ? 'py-1' : ''}`} onClick={handleBuyClick}>
               <ShoppingCart className="w-3 h-3 mr-1" />
-              Comprar na Shopee
+              Adquirir Relíquia
             </Button>
           </div>
         </CardContent>

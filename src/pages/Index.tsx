@@ -1,6 +1,7 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone, Wand2, Crown, Volume2, VolumeX } from 'lucide-react';
+import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone, Wand2, Crown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -40,7 +41,10 @@ interface Product {
 const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isPlaying, toggleMusic, isLoaded, hasPlayed } = useBackgroundMusic();
+  
+  // Initialize background music for the entire app - no manual control
+  useBackgroundMusic();
+  
   const categoryFromUrl = searchParams.get('categoria');
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -81,14 +85,17 @@ const Index = () => {
     const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
     return parseFloat(cleanPrice) || 0;
   }, []);
+
   useEffect(() => {
     fetchProducts();
   }, []);
+
   useEffect(() => {
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
     }
   }, [categoryFromUrl]);
+
   useEffect(() => {
     filterProducts();
   }, [selectedCategory, filteredProducts, searchTerm, sortBy, sortOrder]);
@@ -98,7 +105,7 @@ const Index = () => {
     applyPriceFilter();
   }, [products, priceFilter]);
 
-  // Auto-rotate featured products by category every 20 seconds (increased from 15 for performance)
+  // Auto-rotate featured products by category every 20 seconds
   useEffect(() => {
     if (categories.length > 0 && products.length > 0 && !categoryFromUrl) {
       const interval = setInterval(() => {
@@ -106,14 +113,14 @@ const Index = () => {
         setCurrentFeaturedCategory(randomCategory);
         const categoryProducts = products.filter(p => p.categoria === randomCategory);
         const shuffledProducts = shuffleArray(categoryProducts, true);
-        setFeaturedProducts(shuffledProducts.slice(0, 6)); // Reduced from 8 to 6
+        setFeaturedProducts(shuffledProducts.slice(0, 6));
       }, 20000);
       return () => clearInterval(interval);
     }
   }, [categories, products, categoryFromUrl, shuffleArray]);
+
   const fetchProducts = async () => {
     try {
-      // Changed from 'SHOPEE' to 'HARRY POTTER'
       const { data, error } = await supabase
         .from('HARRY POTTER')
         .select('*')
@@ -131,7 +138,7 @@ const Index = () => {
       setCategories(uniqueCategories);
 
       if (uniqueCategories.length > 0) {
-        setCurrentFeaturedCategory('Artefatos Mágicos de Hogwarts');
+        setCurrentFeaturedCategory(uniqueCategories[0]);
       }
     } catch (error) {
       console.error('Erro ao buscar artefatos mágicos:', error);
@@ -139,6 +146,7 @@ const Index = () => {
       setLoading(false);
     }
   };
+
   const applyPriceFilter = useCallback(() => {
     const filtered = products.filter(product => {
       const price = parsePrice(product.valor);
@@ -146,6 +154,7 @@ const Index = () => {
     });
     setFilteredProducts(filtered);
   }, [products, priceFilter, parsePrice]);
+
   const filterProducts = useCallback(() => {
     let filtered = filteredProducts;
     if (selectedCategory !== 'todas') {
@@ -174,15 +183,18 @@ const Index = () => {
   const handleSearch = useCallback((term: string) => {
     setSearchTerm(term);
   }, []);
+
   const handlePriceFilter = useCallback((min: number, max: number) => {
     setPriceFilter({
       min,
       max
     });
   }, []);
+
   const {
     trackProductClick
   } = useProductClicks();
+
   const handleProductClick = useCallback(async (productId: number) => {
     // Track the product click
     await trackProductClick(productId, 'product_view');
@@ -195,9 +207,11 @@ const Index = () => {
       setSearchTerm(''); // Clear search to hide preview
     }
   }, [trackProductClick]);
+
   const handleTabChange = useCallback((tab: 'featured' | 'ai') => {
     setShowingAI(tab === 'ai');
   }, []);
+
   const handleProductToggle = useCallback((product: Product) => {
     setSelectedProducts(prev => {
       const isSelected = prev.some(p => p.id === product.id);
@@ -211,11 +225,13 @@ const Index = () => {
       }
     });
   }, []);
+
   const handleAnalyze = useCallback(() => {
     if (selectedProducts.length > 0) {
       setShowAnalysisModal(true);
     }
   }, [selectedProducts.length]);
+
   const analyzeProducts = async (products: Product[]): Promise<string> => {
     try {
       const {
@@ -260,6 +276,7 @@ const Index = () => {
   const productsWithVideos = useMemo(() => {
     return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== ''), false).slice(0, 8);
   }, [filteredProducts, shuffleArray]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20 relative">
@@ -279,19 +296,6 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20 relative overflow-hidden">
       {/* Magical background particles */}
       <MagicalParticles />
-      
-      {/* Music control button - only show if hasn't played yet */}
-      {isLoaded && !hasPlayed && (
-        <div className="fixed top-4 right-4 z-50">
-          <Button
-            size="sm"
-            onClick={toggleMusic}
-            className="bg-magical-gold/20 hover:bg-magical-gold/30 text-magical-starlight border border-magical-gold/30 backdrop-blur-sm transition-all duration-300 hover:scale-110"
-          >
-            {isPlaying ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </Button>
-        </div>
-      )}
 
       {/* Enhanced magical background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -311,7 +315,7 @@ const Index = () => {
       {/* Novidades Carousel */}
       <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
       
-      {/* Category Quick Access Buttons */}
+      {/* Category Quick Access Buttons - usando categorias REAIS da tabela */}
       <section className="px-4 py-2 animate-fade-in">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -326,15 +330,6 @@ const Index = () => {
             </Button>
             {categories.slice(0, 6).map(category => {
               const IconComponent = getCategoryIcon(category);
-              const magicalCategoryNames: Record<string, string> = {
-                'Itens Colecionáveis': 'Relíquias Ancestrais',
-                'Bonecas e Brinquedos de Pelúcia': 'Criaturas Encantadas',
-                'Luminária': 'Luzes Místicas',
-                'Colares': 'Joias dos Fundadores',
-                'Moletons e Suéteres': 'Vestes de Hogwarts',
-                'Capinhas': 'Escudos Protetores',
-                'Canecas': 'Cálices Mágicos'
-              };
               return (
                 <Button 
                   key={category} 
@@ -344,7 +339,7 @@ const Index = () => {
                   className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted shadow-md hover:shadow-magical-gold/20"
                 >
                   <IconComponent className="w-4 h-4" />
-                  {magicalCategoryNames[category] || category}
+                  {category}
                 </Button>
               );
             })}
@@ -362,15 +357,7 @@ const Index = () => {
       {!showingAI && categories.slice(0, 4).map((category, index) => {
         const categoryProducts = getCategoryProducts(category);
         const IconComponent = getCategoryIcon(category);
-        const magicalCategoryNames: Record<string, string> = {
-          'Itens Colecionáveis': 'Relíquias Ancestrais',
-          'Bonecas e Brinquedos de Pelúcia': 'Criaturas Encantadas',
-          'Luminária': 'Luzes Místicas',
-          'Colares': 'Joias dos Fundadores',
-          'Moletons e Suéteres': 'Vestes de Hogwarts',
-          'Capinhas': 'Escudos Protetores',
-          'Canecas': 'Cálices Mágicos'
-        };
+        
         if (categoryProducts.length === 0) return null;
         return (
           <section 
@@ -385,7 +372,7 @@ const Index = () => {
                     <IconComponent className="w-4 h-4 text-magical-gold" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-magical-starlight font-magical">{magicalCategoryNames[category] || category}</h3>
+                    <h3 className="text-base font-bold text-magical-starlight font-magical">{category}</h3>
                   </div>
                 </div>
                 <Button 
@@ -440,7 +427,7 @@ const Index = () => {
                   ⚡ Relíquias Lendárias de Hogwarts
                 </h2>
                 <p className="text-base text-magical-starlight/80 animate-slide-in-right font-enchanted">
-                  {currentFeaturedCategory && currentFeaturedCategory !== 'Artefatos Mágicos de Hogwarts' ? `Os tesouros mais procurados em ${currentFeaturedCategory}` : 'Os artefatos favoritos dos bruxos mais poderosos'}
+                  {currentFeaturedCategory ? `Os tesouros mais procurados em ${currentFeaturedCategory}` : 'Os artefatos favoritos dos bruxos mais poderosos'}
                 </p>
               </div>
             )}

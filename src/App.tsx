@@ -17,7 +17,7 @@ import Explorar from "./pages/Explorar";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  // Initialize background music for the entire app
+  // Initialize background music for the entire app - no manual control
   useBackgroundMusic();
 
   return (

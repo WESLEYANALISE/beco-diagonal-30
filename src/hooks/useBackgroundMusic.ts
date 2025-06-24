@@ -15,6 +15,10 @@ export const useBackgroundMusic = () => {
     
     audio.addEventListener('canplaythrough', () => {
       setIsLoaded(true);
+      // Auto-play immediately when loaded - only if hasn't played yet
+      if (!hasPlayed) {
+        audio.play().catch(console.log);
+      }
     });
 
     audio.addEventListener('play', () => setIsPlaying(true));
@@ -26,17 +30,17 @@ export const useBackgroundMusic = () => {
     
     audioRef.current = audio;
 
-    // Auto-play when loaded (with user interaction) - only if hasn't played yet
+    // Try to play immediately on load
     const playAudio = () => {
-      if (audio && isLoaded && !hasPlayed) {
+      if (audio && !hasPlayed) {
         audio.play().catch(console.log);
       }
     };
 
-    // Try to play after first user interaction
+    // Auto-play on first user interaction if not already playing
     const handleUserInteraction = () => {
-      if (!hasPlayed) {
-        playAudio();
+      if (!hasPlayed && audioRef.current) {
+        audioRef.current.play().catch(console.log);
         document.removeEventListener('click', handleUserInteraction);
         document.removeEventListener('keydown', handleUserInteraction);
       }
@@ -44,6 +48,9 @@ export const useBackgroundMusic = () => {
 
     document.addEventListener('click', handleUserInteraction);
     document.addEventListener('keydown', handleUserInteraction);
+
+    // Try to play immediately
+    playAudio();
 
     return () => {
       if (audioRef.current) {
@@ -53,17 +60,7 @@ export const useBackgroundMusic = () => {
       document.removeEventListener('click', handleUserInteraction);
       document.removeEventListener('keydown', handleUserInteraction);
     };
-  }, [isLoaded, hasPlayed]);
+  }, [hasPlayed]);
 
-  const toggleMusic = () => {
-    if (audioRef.current && !hasPlayed) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch(console.log);
-      }
-    }
-  };
-
-  return { isPlaying, toggleMusic, isLoaded, hasPlayed };
+  return { isPlaying, isLoaded, hasPlayed };
 };
