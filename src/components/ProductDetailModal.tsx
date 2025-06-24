@@ -78,14 +78,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-white">
-          {/* Header com botão de fechar mais visível */}
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 flex items-center justify-between">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-white border-0">
+          {/* Header com botão de fechar fixo */}
+          <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center justify-between z-50">
             <div className="flex-1 min-w-0 pr-4">
-              <h2 className="text-base md:text-lg font-bold line-clamp-1">
+              <h2 className="text-base md:text-lg font-bold line-clamp-2">
                 {product.produto}
               </h2>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-2">
                 <Badge className="bg-white/20 text-white border-white/30 text-xs">
                   {product.categoria}
                 </Badge>
@@ -99,16 +99,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               onClick={onClose}
               variant="ghost" 
               size="sm"
-              className="text-white hover:bg-red-500/80 bg-red-500/60 border border-white/50 rounded-full w-10 h-10 p-0 flex-shrink-0 transition-all duration-300 hover:scale-110"
+              className="text-white hover:bg-red-500/80 bg-red-500/60 border border-white/50 rounded-full w-12 h-12 p-0 flex-shrink-0 transition-all duration-300 hover:scale-110"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </Button>
           </div>
 
           {/* Layout em grid compacto */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 overflow-y-auto max-h-[calc(90vh-100px)]">
             {/* Galeria à esquerda */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
                 <Carousel className="w-full h-full">
                   <CarouselContent>
@@ -134,9 +134,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 {product.video && (
                   <Button
                     onClick={() => setIsVideoOpen(true)}
-                    className="absolute bottom-3 right-3 bg-red-500 hover:bg-red-600 rounded-full p-2"
+                    className="absolute bottom-4 right-4 bg-red-500 hover:bg-red-600 rounded-full p-3"
                   >
-                    <Play className="w-4 h-4 text-white" />
+                    <Play className="w-5 h-5 text-white" />
                   </Button>
                 )}
               </div>
@@ -146,7 +146,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 {getProductImages().map((image, index) => (
                   <button
                     key={index}
-                    className="flex-shrink-0 w-12 h-12 rounded border-2 border-gray-200 hover:border-purple-500 overflow-hidden transition-colors"
+                    className="flex-shrink-0 w-16 h-16 rounded border-2 border-gray-200 hover:border-purple-500 overflow-hidden transition-colors"
                     onClick={() => handleImageClick(index)}
                   >
                     <img
@@ -160,54 +160,54 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
 
             {/* Informações à direita */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Preço */}
               <div>
-                <div className="text-2xl font-bold text-red-500 mb-1">
+                <div className="text-3xl font-bold text-red-500 mb-2">
                   Menos de {formatPrice(product.valor)}
                 </div>
-                <div className="text-xs text-gray-600 mb-3">
+                <div className="text-sm text-gray-600 mb-4">
                   Frete grátis para todo o Brasil
                 </div>
                 
-                {/* Botões de ação movidos para baixo do preço */}
-                <div className="flex gap-2 mb-4">
+                {/* Botões de ação */}
+                <div className="flex gap-3 mb-6">
                   <Button
                     variant="outline" 
-                    size="sm"
-                    className="flex-1 border-red-200 text-red-600 hover:bg-red-50 h-9"
+                    size="default"
+                    className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
                   >
-                    <Heart className="w-4 h-4 mr-2" />
+                    <Heart className="w-5 h-5 mr-2" />
                     Favoritar
                   </Button>
                   <Button
                     onClick={handleBuyClick}
-                    size="sm"
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold h-9"
+                    size="default"
+                    className="flex-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
                   >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    <ShoppingCart className="w-5 h-5 mr-2" />
                     Comprar na Shopee
                   </Button>
                 </div>
               </div>
 
-              {/* Tabs compactas */}
+              {/* Tabs */}
               <Tabs defaultValue="description" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 h-8">
-                  <TabsTrigger value="description" className="text-xs">Descrição</TabsTrigger>
-                  <TabsTrigger value="uso" className="text-xs">Como usar</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="description">Descrição</TabsTrigger>
+                  <TabsTrigger value="uso">Como usar</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="description" className="mt-3">
+                <TabsContent value="description" className="mt-4">
                   <Card>
-                    <CardContent className="p-3">
-                      <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-gray-700 leading-relaxed mb-4">
                         {generateProductDescription()}
                       </p>
                       
                       <div>
-                        <h4 className="font-medium mb-2 text-sm">Características:</h4>
-                        <ul className="text-xs text-gray-600 space-y-1">
+                        <h4 className="font-medium mb-3">Características:</h4>
+                        <ul className="text-sm text-gray-600 space-y-2">
                           <li>• Alta qualidade e durabilidade</li>
                           <li>• Design moderno e funcional</li>
                           <li>• Fácil de usar no dia a dia</li>
@@ -218,20 +218,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="uso" className="mt-3">
+                <TabsContent value="uso" className="mt-4">
                   <Card>
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Lightbulb className="w-4 h-4 text-yellow-500" />
-                        <h3 className="font-semibold text-sm">Como usar</h3>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Lightbulb className="w-5 h-5 text-yellow-500" />
+                        <h3 className="font-semibold">Como usar</h3>
                       </div>
                       
-                      {product.uso ? (
-                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-200">
+                      {product.uso && product.uso.trim() !== '' ? (
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
                           <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{product.uso}</p>
                         </div>
                       ) : (
-                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                           <p className="text-sm text-gray-600 text-center">
                             Informações de uso não disponíveis para este produto.
                           </p>
