@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, ShoppingCart, Filter, Grid, List } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, Filter, Grid } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { FavoriteButton } from '@/components/FavoriteButton';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { SubcategoryCard } from '@/components/SubcategoryCard';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
+import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -46,7 +47,6 @@ const CategoriaLista = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [subcategoryGroups, setSubcategoryGroups] = useState<SubcategoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -55,8 +55,7 @@ const CategoriaLista = () => {
   
   const {
     showSuccess,
-    showError,
-    showLoading
+    showError
   } = useToastNotifications();
 
   useEffect(() => {
@@ -73,7 +72,6 @@ const CategoriaLista = () => {
 
   const fetchProducts = async () => {
     try {
-      showLoading("Carregando produtos");
       let query = supabase.from('SHOPEE').select('*');
       
       if (tipo === 'categoria' && categoria && categoria !== 'todas') {
@@ -95,10 +93,10 @@ const CategoriaLista = () => {
       }
       
       setProducts(filteredData);
-      showSuccess("Produtos carregados com sucesso!");
+      showSuccess("Produtos carregados!");
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
-      showError("Erro ao carregar produtos", "Tente novamente em alguns instantes");
+      showError("Erro ao carregar produtos");
     } finally {
       setLoading(false);
     }
@@ -217,136 +215,78 @@ const CategoriaLista = () => {
   };
 
   const renderProductCard = (product: Product, index: number) => (
-    viewMode === 'grid' ? (
-      <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleProductClick(product)}>
-        <CardContent className="p-0">
-          <div className="aspect-square relative">
-            <OptimizedImage 
-              src={product.imagem1} 
-              alt={product.produto} 
-              className="w-full h-full" 
-            />
-            <div className="absolute top-2 right-2">
-              <FavoriteButton productId={product.id} size="sm" />
+    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleProductClick(product)}>
+      <CardContent className="p-0">
+        <div className="aspect-square relative">
+          <OptimizedImage 
+            src={product.imagem1} 
+            alt={product.produto} 
+            className="w-full h-full" 
+          />
+          <div className="absolute top-2 right-2">
+            <FavoriteButton productId={product.id} size="sm" />
+          </div>
+          {tipo === 'mais-vendidos' && index < 3 && (
+            <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
+              TOP {index + 1}
+            </Badge>
+          )}
+        </div>
+        
+        <div className="p-3">
+          <h3 className="font-medium text-gray-900 text-sm line-clamp-3 leading-relaxed mb-3 min-h-[3.75rem]">
+            {product.produto}
+          </h3>
+          
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-bold text-red-500 text-sm">
+              {formatPrice(product.valor)}
             </div>
-            {tipo === 'mais-vendidos' && index < 3 && (
-              <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
-                TOP {index + 1}
-              </Badge>
-            )}
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 text-yellow-400 fill-current" />
+              <span className="text-xs text-gray-600">4.8</span>
+            </div>
           </div>
           
-          <div className="p-3">
-            <h3 className="font-medium text-gray-900 text-sm line-clamp-3 leading-relaxed mb-3 min-h-[3.75rem]">
-              {product.produto}
-            </h3>
-            
-            <div className="flex items-center justify-between mb-3">
-              <div className="font-bold text-red-500 text-sm">
-                {formatPrice(product.valor)}
-              </div>
-              <div className="flex items-center gap-1">
-                <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                <span className="text-xs text-gray-600">4.8</span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <ProductPhotosModal 
-                images={getProductImages(product)} 
-                productName={product.produto} 
-                productPrice={formatPrice(product.valor)} 
-                productLink={product.link}
-                videoUrl={product.video}
-              />
-              <Button 
-                size="sm" 
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"  
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(product.link, '_blank');
-                }}
-              >
-                <ShoppingCart className="w-3 h-3 mr-1" />
-                Comprar na Shopee
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <ProductPhotosModal 
+              images={getProductImages(product)} 
+              productName={product.produto} 
+              productPrice={formatPrice(product.valor)} 
+              productLink={product.link}
+              videoUrl={product.video}
+            />
+            <Button 
+              size="sm" 
+              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"  
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(product.link, '_blank');
+              }}
+            >
+              <ShoppingCart className="w-3 h-3 mr-1" />
+              Comprar na Shopee
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-    ) : (
-      <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleProductClick(product)}>
-        <CardContent className="p-0">
-          <div className="flex">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
-              <OptimizedImage 
-                src={product.imagem1} 
-                alt={product.produto} 
-                className="w-full h-full" 
-              />
-            </div>
-            
-            <div className="flex-1 p-3 sm:p-4 min-w-0">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0 mr-3">
-                  {tipo === 'mais-vendidos' && index < 3 && (
-                    <Badge className="bg-red-500 text-white text-xs mb-2">
-                      TOP {index + 1}
-                    </Badge>
-                  )}
-                  <h3 className="font-medium text-gray-900 text-sm line-clamp-3 leading-relaxed min-h-[3.75rem]">
-                    {product.produto}
-                  </h3>
-                </div>
-                <FavoriteButton productId={product.id} />
-              </div>
-              
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-bold text-red-500 text-sm">
-                  {formatPrice(product.valor)}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                  <span className="text-xs text-gray-600">4.8</span>
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <ProductPhotosModal 
-                  images={getProductImages(product)} 
-                  productName={product.produto} 
-                  productPrice={formatPrice(product.valor)} 
-                  productLink={product.link}
-                  videoUrl={product.video}
-                />
-                <Button 
-                  size="sm" 
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs flex-1" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(product.link, '_blank');
-                  }}
-                >
-                  <ShoppingCart className="w-3 h-3 mr-1" />
-                  Comprar na Shopee
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    )
+        </div>
+      </CardContent>
+    </Card>
   );
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse space-y-4">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="h-24 bg-gray-200 rounded-lg"></div>
-            ))}
+        <div className="flex">
+          <div className="flex-1 container mx-auto px-4 py-8">
+            <div className="animate-pulse space-y-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="h-24 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+          <div className="hidden lg:block">
+            <DesktopSidebar />
           </div>
         </div>
       </div>
@@ -357,137 +297,135 @@ const CategoriaLista = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      {/* Header da página */}
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center gap-2 sm:gap-4 mb-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate(getBackPath())} 
-              className="text-red-500 hover:text-red-600 p-1 sm:p-2"
-            >
-              <ArrowLeft className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Voltar</span>
-            </Button>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{getTitle()}</h1>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">{getSubtitle()}</p>
+      <div className="flex">
+        {/* Main Content */}
+        <div className="flex-1">
+          {/* Header da página */}
+          <div className="bg-white border-b sticky top-0 z-10">
+            <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+              <div className="flex items-center gap-2 sm:gap-4 mb-3">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate(getBackPath())} 
+                  className="text-red-500 hover:text-red-600 p-1 sm:p-2"
+                >
+                  <ArrowLeft className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Voltar</span>
+                </Button>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{getTitle()}</h1>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{getSubtitle()}</p>
+                </div>
+              </div>
+
+              {/* Controles de visualização e filtros - apenas para lista de subcategoria */}
+              {(tipo === 'subcategoria' || tipo === 'mais-vendidos') && (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="p-2"
+                    >
+                      <Grid className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
+                      <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="nome">Nome</SelectItem>
+                        <SelectItem value="preco">Preço</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="px-2 sm:px-3"
+                    >
+                      {sortOrder === 'asc' ? '↑' : '↓'}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Controles de visualização e filtros - apenas para lista de subcategoria */}
-          {(tipo === 'subcategoria' || tipo === 'mais-vendidos') && (
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="p-2"
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="p-2"
-                >
-                  <Grid className="w-4 h-4" />
-                </Button>
+          {/* Content */}
+          <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+            {tipo === 'categoria' && !subcategoria ? (
+              // Enhanced subcategories grid
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                    Subcategorias
+                  </h2>
+                  <p className="text-gray-600 mb-6">
+                    Encontre exatamente o que procura em {subcategoryGroups.length} subcategorias
+                  </p>
+                </div>
+                
+                {subcategoryGroups.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                      <ShoppingCart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+                      Nenhuma subcategoria encontrada
+                    </h2>
+                    <p className="text-gray-600">
+                      Esta categoria ainda não possui subcategorias
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                    {subcategoryGroups.map((group, index) => (
+                      <SubcategoryCard
+                        key={group.subcategoria}
+                        subcategoria={group.subcategoria}
+                        productCount={group.products.length}
+                        sampleImage={group.sampleImage}
+                        gradient={getCategoryGradient(index)}
+                        onClick={() => handleSubcategoryClick(group.subcategoria)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-
-              <div className="flex items-center gap-2">
-                <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
-                  <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nome">Nome</SelectItem>
-                    <SelectItem value="preco">Preço</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="px-2 sm:px-3"
-                >
-                  {sortOrder === 'asc' ? '↑' : '↓'}
-                </Button>
-              </div>
-            </div>
-          )}
+            ) : (
+              // Show filtered products grid only
+              <>
+                {filteredProducts.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                      <ShoppingCart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+                      Nenhum produto encontrado
+                    </h2>
+                    <p className="text-gray-600">
+                      Não há produtos disponíveis nesta {tipo === 'subcategoria' ? 'subcategoria' : 'categoria'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                    {filteredProducts.map((product, index) => renderProductCard(product, index))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
-        {tipo === 'categoria' && !subcategoria ? (
-          // Enhanced subcategories grid
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                Subcategorias
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Encontre exatamente o que procura em {subcategoryGroups.length} subcategorias
-              </p>
-            </div>
-            
-            {subcategoryGroups.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <ShoppingCart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-                  Nenhuma subcategoria encontrada
-                </h2>
-                <p className="text-gray-600">
-                  Esta categoria ainda não possui subcategorias
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-                {subcategoryGroups.map((group, index) => (
-                  <SubcategoryCard
-                    key={group.subcategoria}
-                    subcategoria={group.subcategoria}
-                    productCount={group.products.length}
-                    sampleImage={group.sampleImage}
-                    gradient={getCategoryGradient(index)}
-                    onClick={() => handleSubcategoryClick(group.subcategoria)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          // Show filtered products list
-          <>
-            {filteredProducts.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <ShoppingCart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-                  Nenhum produto encontrado
-                </h2>
-                <p className="text-gray-600">
-                  Não há produtos disponíveis nesta {tipo === 'subcategoria' ? 'subcategoria' : 'categoria'}
-                </p>
-              </div>
-            ) : (
-              <div className={viewMode === 'grid' ? 
-                "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4" : 
-                "space-y-2 sm:space-y-3"
-              }>
-                {filteredProducts.map((product, index) => renderProductCard(product, index))}
-              </div>
-            )}
-          </>
-        )}
+        {/* Desktop Sidebar - only show on large screens */}
+        <div className="hidden lg:block">
+          <DesktopSidebar />
+        </div>
       </div>
 
       {/* Product Detail Modal */}

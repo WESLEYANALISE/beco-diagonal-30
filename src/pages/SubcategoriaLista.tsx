@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart, ArrowRight } from 'lucide-react';
@@ -26,8 +25,7 @@ const SubcategoriaLista = () => {
   
   const {
     showSuccess,
-    showError,
-    showLoading
+    showError
   } = useToastNotifications();
 
   useEffect(() => {
@@ -36,8 +34,6 @@ const SubcategoriaLista = () => {
 
   const fetchSubcategories = async () => {
     try {
-      showLoading("Carregando subcategorias");
-      
       const { data, error } = await supabase
         .from('SHOPEE')
         .select('subcategoria, imagem1')
@@ -63,10 +59,10 @@ const SubcategoriaLista = () => {
       }));
 
       setSubcategories(subcategoryStats);
-      showSuccess("Subcategorias carregadas com sucesso!");
+      showSuccess("Subcategorias carregadas!");
     } catch (error) {
       console.error('Erro ao buscar subcategorias:', error);
-      showError("Erro ao carregar subcategorias", "Tente novamente em alguns instantes");
+      showError("Erro ao carregar subcategorias");
     } finally {
       setLoading(false);
     }
