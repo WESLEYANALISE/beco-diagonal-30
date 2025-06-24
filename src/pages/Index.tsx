@@ -11,14 +11,11 @@ import { ProductSelector } from '@/components/ProductSelector';
 import { AIAnalysisModal } from '@/components/AIAnalysisModal';
 import { HeroSection } from '@/components/HeroSection';
 import { TabNavigation } from '@/components/TabNavigation';
+import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
 import { VideoCarouselHome } from '@/components/VideoCarouselHome';
-import { ProductDetailModal } from '@/components/ProductDetailModal';
-import { OptimizedProductCard } from '@/components/OptimizedProductCard';
-import { useOptimizedProducts } from '@/hooks/useOptimizedProducts';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { supabase } from "@/integrations/supabase/client";
-
 interface Product {
   id: number;
   produto: string;
@@ -32,24 +29,16 @@ interface Product {
   link: string;
   categoria: string;
 }
-
 const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const categoryFromUrl = searchParams.get('categoria');
-  
-  // Usar hook otimizado
-  const { 
-    products, 
-    productsWithVideos, 
-    categories, 
-    loading, 
-    getProductsByCategory 
-  } = useOptimizedProducts();
-
+  const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [currentFeaturedCategory, setCurrentFeaturedCategory] = useState<string>('');
+  const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,8 +48,6 @@ const Index = () => {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showProductModal, setShowProductModal] = useState(false);
   const [priceFilter, setPriceFilter] = useState<{
     min: number;
     max: number;
@@ -84,26 +71,14 @@ const Index = () => {
     const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
     return parseFloat(cleanPrice) || 0;
   };
-
-  // Memoized filtered products
-  const memoizedFilteredProducts = useMemo(() => {
-    return products.filter(product => {
-      const price = parsePrice(product.valor);
-      return price >= priceFilter.min && price <= priceFilter.max;
-    });
-  }, [products, priceFilter]);
-
-  // Update filtered products when memoized version changes
   useEffect(() => {
-    setFilteredProducts(memoizedFilteredProducts);
-  }, [memoizedFilteredProducts]);
-
+    fetchProducts();
+  }, []);
   useEffect(() => {
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
     }
   }, [categoryFromUrl]);
-
   useEffect(() => {
     filterProducts();
   }, [selectedCategory, filteredProducts, searchTerm, sortBy, sortOrder]);
@@ -126,7 +101,34 @@ const Index = () => {
       return () => clearInterval(interval);
     }
   }, [categories, products, categoryFromUrl]);
+  const fetchProducts = async () => {
+    try {
+      const {
+        data,
+        error
+      } = await supabase.from('SHOPEE').select('*').order('id');
+      if (error) throw error;
 
+      // SEMPRE randomizar produtos a cada carregamento
+      let processedProducts = shuffleArray(data || []);
+      setProducts(processedProducts);
+
+      // Set initial featured products (first 8 randomizados)
+      const initialFeatured = shuffleArray(processedProducts).slice(0, 8);
+      setFeaturedProducts(initialFeatured);
+      const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
+      setCategories(uniqueCategories);
+
+      // Set initial featured category
+      if (uniqueCategories.length > 0) {
+        setCurrentFeaturedCategory('Todos os Produtos');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   const applyPriceFilter = () => {
     const filtered = products.filter(product => {
       const price = parsePrice(product.valor);
@@ -134,7 +136,6 @@ const Index = () => {
     });
     setFilteredProducts(filtered);
   };
-
   const filterProducts = () => {
     let filtered = filteredProducts;
     if (selectedCategory !== 'todas') {
@@ -158,21 +159,18 @@ const Index = () => {
     });
     setDisplayedProducts(filtered);
   };
-
   const handleSearch = (term: string) => {
     setSearchTerm(term);
   };
-
   const handlePriceFilter = (min: number, max: number) => {
     setPriceFilter({
       min,
       max
     });
   };
-
   const { trackProductClick } = useProductClicks();
 
-  const handleProductClick = useCallback(async (productId: number) => {
+  const handleProductClick = async (productId: number) => {
     // Track the product click
     await trackProductClick(productId, 'product_view');
     
@@ -184,22 +182,10 @@ const Index = () => {
       });
       setSearchTerm(''); // Clear search to hide preview
     }
-  }, [trackProductClick]);
-
-  const handleProductSelect = useCallback((product: Product) => {
-    setSelectedProduct(product);
-    setShowProductModal(true);
-  }, []);
-
-  const handleBuyProduct = useCallback(async (product: Product) => {
-    await trackProductClick(product.id, 'buy_click');
-    window.open(product.link, '_blank');
-  }, [trackProductClick]);
-
+  };
   const handleTabChange = (tab: 'featured' | 'ai') => {
     setShowingAI(tab === 'ai');
   };
-
   const handleProductToggle = (product: Product) => {
     setSelectedProducts(prev => {
       const isSelected = prev.some(p => p.id === product.id);
@@ -213,13 +199,11 @@ const Index = () => {
       }
     });
   };
-
   const handleAnalyze = () => {
     if (selectedProducts.length > 0) {
       setShowAnalysisModal(true);
     }
   };
-
   const analyzeProducts = async (products: Product[]): Promise<string> => {
     try {
       const {
@@ -241,7 +225,6 @@ const Index = () => {
       throw error;
     }
   };
-
   const getCategoryIcon = (category: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
       'Beleza e Cuidados Pessoais': Sparkles,
@@ -252,7 +235,6 @@ const Index = () => {
     };
     return iconMap[category] || ShoppingCart;
   };
-
   const getCategoryProducts = (category: string, limit: number = 12) => {
     const categoryProducts = filteredProducts.filter(p => p.categoria === category);
     const actualLimit = category === 'Diversão e Familia' ? 12 : limit;
@@ -261,9 +243,12 @@ const Index = () => {
     return shuffleArray(categoryProducts).slice(0, actualLimit);
   };
 
+  // Add filtered products with videos for the video carousel
+  const productsWithVideos = useMemo(() => {
+    return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== '')).slice(0, 12);
+  }, [filteredProducts]);
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+    return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
         <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
@@ -271,24 +256,13 @@ const Index = () => {
             <ProductGrid loading={true} products={[]} />
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+  return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
       {/* Search Preview */}
-      {searchTerm && (
-        <SearchPreview 
-          searchTerm={searchTerm} 
-          products={filteredProducts.filter(p => 
-            p.produto.toLowerCase().includes(searchTerm.toLowerCase())
-          ).slice(0, 5)} 
-          onProductClick={handleProductClick} 
-        />
-      )}
+      {searchTerm && <SearchPreview searchTerm={searchTerm} products={filteredProducts.filter(p => p.produto.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)} onProductClick={handleProductClick} />}
 
       {/* Novidades Carousel */}
       <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
@@ -317,25 +291,17 @@ const Index = () => {
 
       {/* Video Carousel - Strategic placement after hero */}
       {!showingAI && productsWithVideos.length > 0 && (
-        <VideoCarouselHome 
-          products={productsWithVideos} 
-          onProductSelect={handleProductSelect}
-        />
+        <VideoCarouselHome products={productsWithVideos} />
       )}
 
       {/* Category Product Carousels - show all categories when not in AI mode */}
       {!showingAI && categories.map((category, index) => {
-        const categoryProducts = getCategoryProducts(category);
-        const IconComponent = getCategoryIcon(category);
-        
-        if (categoryProducts.length === 0) return null;
-        
-        return (
-          <section 
-            key={category} 
-            style={{ animationDelay: `${index * 0.1}s` }} 
-            className="md:px-6 py-4 animate-fade-in px-[6px]"
-          >
+      const categoryProducts = getCategoryProducts(category);
+      const IconComponent = getCategoryIcon(category);
+      if (categoryProducts.length === 0) return null;
+      return <section key={category} style={{
+        animationDelay: `${index * 0.1}s`
+      }} className="md:px-6 py-4 animate-fade-in px-[6px]">
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -355,27 +321,16 @@ const Index = () => {
               
               <Carousel className="w-full">
                 <CarouselContent className="-ml-2 md:-ml-3">
-                  {categoryProducts.map(product => (
-                    <CarouselItem 
-                      key={product.id} 
-                      className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6"
-                    >
-                      <OptimizedProductCard 
-                        product={product} 
-                        onViewProduct={handleProductSelect}
-                        onBuyProduct={handleBuyProduct}
-                        compact={true} 
-                      />
-                    </CarouselItem>
-                  ))}
+                  {categoryProducts.map(product => <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
+                      <ProductCard product={product} compact={true} />
+                    </CarouselItem>)}
                 </CarouselContent>
                 <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
                 <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
               </Carousel>
             </div>
-          </section>
-        );
-      })}
+          </section>;
+    })}
 
       {/* Featured Products Carousel with Toggle */}
       <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
@@ -423,7 +378,7 @@ const Index = () => {
                   {featuredProducts.map((product, index) => <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in" style={{
                 animationDelay: `${index * 0.1}s`
               }}>
-                      <OptimizedProductCard product={product} showBadge={true} badgeText="MAIS VENDIDO" compact={false} onViewProduct={handleProductSelect} onBuyProduct={handleBuyProduct} />
+                      <ProductCard product={product} showBadge={true} badgeText="MAIS VENDIDO" compact={false} />
                     </CarouselItem>)}
                 </CarouselContent>
                 <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
@@ -544,24 +499,8 @@ const Index = () => {
           </div>
         </section>}
 
-      {/* Product Detail Modal */}
-      {selectedProduct && (
-        <ProductDetailModal
-          isOpen={showProductModal}
-          onClose={() => setShowProductModal(false)}
-          product={selectedProduct}
-        />
-      )}
-
       {/* AI Analysis Modal */}
-      <AIAnalysisModal 
-        isOpen={showAnalysisModal} 
-        onClose={() => setShowAnalysisModal(false)} 
-        selectedProducts={selectedProducts} 
-        onAnalyze={analyzeProducts} 
-      />
-    </div>
-  );
+      <AIAnalysisModal isOpen={showAnalysisModal} onClose={() => setShowAnalysisModal(false)} selectedProducts={selectedProducts} onAnalyze={analyzeProducts} />
+    </div>;
 };
-
 export default Index;
