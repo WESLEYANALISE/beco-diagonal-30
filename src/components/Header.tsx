@@ -206,10 +206,10 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
           </div>
         </div>
 
-        {/* Search Bar - Always visible at top */}
+        {/* Search Bar - Responsive sizing */}
         {location.pathname === '/' && (
           <div className="px-4 pb-3">
-            <div className="relative w-full">
+            <div className="relative max-w-md md:max-w-sm mx-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5" />
               <Input
                 placeholder="Buscar produtos..."
@@ -235,6 +235,11 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
               <span className="text-xs font-medium truncate max-w-full">
                 {item.label}
               </span>
+              {item.path === '/favoritos' && favoritesCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 w-5 h-5 text-xs p-0 flex items-center justify-center bg-red-500 border-white">
+                  {favoritesCount}
+                </Badge>
+              )}
             </button>
           ))}
         </div>
