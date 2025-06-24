@@ -11,14 +11,11 @@ import { ProductSelector } from '@/components/ProductSelector';
 import { AIAnalysisModal } from '@/components/AIAnalysisModal';
 import { HeroSection } from '@/components/HeroSection';
 import { TabNavigation } from '@/components/TabNavigation';
-import { OptimizedProductCard } from '@/components/OptimizedProductCard';
+import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
 import { VideoCarouselHome } from '@/components/VideoCarouselHome';
-import { ProductDetailModal } from '@/components/ProductDetailModal';
-import { useOptimizedProducts } from '@/hooks/useOptimizedProducts';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { supabase } from "@/integrations/supabase/client";
-
 interface Product {
   id: number;
   produto: string;
@@ -32,25 +29,16 @@ interface Product {
   link: string;
   categoria: string;
 }
-
 const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const categoryFromUrl = searchParams.get('categoria');
-  
-  // Use optimized hook for products
-  const { 
-    products, 
-    loading, 
-    categories, 
-    getProductsByCategory, 
-    getProductsWithVideos,
-    shuffleProducts 
-  } = useOptimizedProducts();
-
+  const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [currentFeaturedCategory, setCurrentFeaturedCategory] = useState<string>('');
+  const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,8 +48,6 @@ const Index = () => {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const [priceFilter, setPriceFilter] = useState<{
     min: number;
     max: number;
@@ -70,18 +56,29 @@ const Index = () => {
     max: 1000
   });
 
+  // Function to shuffle array - sempre randomizar
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   // Parse price from string to number
-  const parsePrice = useCallback((priceString: string): number => {
+  const parsePrice = (priceString: string): number => {
     const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
     return parseFloat(cleanPrice) || 0;
+  };
+  useEffect(() => {
+    fetchProducts();
   }, []);
-
   useEffect(() => {
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
     }
   }, [categoryFromUrl]);
-
   useEffect(() => {
     filterProducts();
   }, [selectedCategory, filteredProducts, searchTerm, sortBy, sortOrder]);
@@ -97,45 +94,58 @@ const Index = () => {
       const interval = setInterval(() => {
         const randomCategory = categories[Math.floor(Math.random() * categories.length)];
         setCurrentFeaturedCategory(randomCategory);
-        const categoryProducts = getProductsByCategory(randomCategory);
-        const shuffledProducts = shuffleProducts(categoryProducts);
+        const categoryProducts = products.filter(p => p.categoria === randomCategory);
+        const shuffledProducts = shuffleArray(categoryProducts);
         setFeaturedProducts(shuffledProducts.slice(0, 8));
       }, 15000);
       return () => clearInterval(interval);
     }
-  }, [categories, products, categoryFromUrl, getProductsByCategory, shuffleProducts]);
+  }, [categories, products, categoryFromUrl]);
+  const fetchProducts = async () => {
+    try {
+      const {
+        data,
+        error
+      } = await supabase.from('SHOPEE').select('*').order('id');
+      if (error) throw error;
 
-  // Initial featured products setup
-  useEffect(() => {
-    if (products.length > 0) {
-      const initialFeatured = shuffleProducts(products).slice(0, 8);
+      // SEMPRE randomizar produtos a cada carregamento
+      let processedProducts = shuffleArray(data || []);
+      setProducts(processedProducts);
+
+      // Set initial featured products (first 8 randomizados)
+      const initialFeatured = shuffleArray(processedProducts).slice(0, 8);
       setFeaturedProducts(initialFeatured);
-      if (categories.length > 0) {
+      const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
+      setCategories(uniqueCategories);
+
+      // Set initial featured category
+      if (uniqueCategories.length > 0) {
         setCurrentFeaturedCategory('Todos os Produtos');
       }
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [products, categories.length, shuffleProducts]);
-
-  const applyPriceFilter = useCallback(() => {
+  };
+  const applyPriceFilter = () => {
     const filtered = products.filter(product => {
       const price = parsePrice(product.valor);
       return price >= priceFilter.min && price <= priceFilter.max;
     });
     setFilteredProducts(filtered);
-  }, [products, priceFilter, parsePrice]);
-
-  const filterProducts = useCallback(() => {
+  };
+  const filterProducts = () => {
     let filtered = filteredProducts;
     if (selectedCategory !== 'todas') {
-      filtered = getProductsByCategory(selectedCategory);
+      filtered = filtered.filter(product => product.categoria === selectedCategory);
     }
     if (searchTerm.trim()) {
-      filtered = filtered.filter(product => 
-        product.produto.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(product => product.produto.toLowerCase().includes(searchTerm.toLowerCase()));
     }
 
-    // Apply sorting
+    // Aplicar ordenação
     filtered.sort((a, b) => {
       if (sortBy === 'nome') {
         const comparison = a.produto.localeCompare(b.produto);
@@ -148,39 +158,35 @@ const Index = () => {
       }
     });
     setDisplayedProducts(filtered);
-  }, [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder, getProductsByCategory, parsePrice]);
-
-  const handleSearch = useCallback((term: string) => {
+  };
+  const handleSearch = (term: string) => {
     setSearchTerm(term);
-  }, []);
-
-  const handlePriceFilter = useCallback((min: number, max: number) => {
-    setPriceFilter({ min, max });
-  }, []);
-
+  };
+  const handlePriceFilter = (min: number, max: number) => {
+    setPriceFilter({
+      min,
+      max
+    });
+  };
   const { trackProductClick } = useProductClicks();
 
-  const handleProductClick = useCallback(async (product: Product) => {
-    await trackProductClick(product.id, 'product_view');
-    setSelectedProduct(product);
-    setShowDetailModal(true);
-  }, [trackProductClick]);
-
-  const handleBuyProduct = useCallback(async (product: Product) => {
-    await trackProductClick(product.id, 'buy_click');
-    window.open(product.link, '_blank');
-  }, [trackProductClick]);
-
-  const handleCloseModal = useCallback(() => {
-    setShowDetailModal(false);
-    setSelectedProduct(null);
-  }, []);
-
-  const handleTabChange = useCallback((tab: 'featured' | 'ai') => {
+  const handleProductClick = async (productId: number) => {
+    // Track the product click
+    await trackProductClick(productId, 'product_view');
+    
+    const productElement = document.getElementById(`product-${productId}`);
+    if (productElement) {
+      productElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+      setSearchTerm(''); // Clear search to hide preview
+    }
+  };
+  const handleTabChange = (tab: 'featured' | 'ai') => {
     setShowingAI(tab === 'ai');
-  }, []);
-
-  const handleProductToggle = useCallback((product: Product) => {
+  };
+  const handleProductToggle = (product: Product) => {
     setSelectedProducts(prev => {
       const isSelected = prev.some(p => p.id === product.id);
       if (isSelected) {
@@ -192,14 +198,12 @@ const Index = () => {
         return [...prev, product];
       }
     });
-  }, []);
-
-  const handleAnalyze = useCallback(() => {
+  };
+  const handleAnalyze = () => {
     if (selectedProducts.length > 0) {
       setShowAnalysisModal(true);
     }
-  }, [selectedProducts.length]);
-
+  };
   const analyzeProducts = async (products: Product[]): Promise<string> => {
     try {
       const {
@@ -221,8 +225,7 @@ const Index = () => {
       throw error;
     }
   };
-
-  const getCategoryIcon = useCallback((category: string) => {
+  const getCategoryIcon = (category: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
       'Beleza e Cuidados Pessoais': Sparkles,
       'Casa e Decoração': Home,
@@ -231,22 +234,21 @@ const Index = () => {
       'Tecnologia e Acessórios': Smartphone
     };
     return iconMap[category] || ShoppingCart;
-  }, []);
-
-  const getCategoryProducts = useCallback((category: string, limit: number = 12) => {
-    const categoryProducts = getProductsByCategory(category);
+  };
+  const getCategoryProducts = (category: string, limit: number = 12) => {
+    const categoryProducts = filteredProducts.filter(p => p.categoria === category);
     const actualLimit = category === 'Diversão e Familia' ? 12 : limit;
-    return shuffleProducts(categoryProducts).slice(0, actualLimit);
-  }, [getProductsByCategory, shuffleProducts]);
 
-  // Memoized products with videos for the video carousel
+    // Randomizar produtos da categoria também
+    return shuffleArray(categoryProducts).slice(0, actualLimit);
+  };
+
+  // Add filtered products with videos for the video carousel
   const productsWithVideos = useMemo(() => {
-    return shuffleProducts(getProductsWithVideos()).slice(0, 12);
-  }, [getProductsWithVideos, shuffleProducts]);
-
+    return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== '')).slice(0, 12);
+  }, [filteredProducts]);
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+    return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
         <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
@@ -254,24 +256,13 @@ const Index = () => {
             <ProductGrid loading={true} products={[]} />
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+  return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
       {/* Search Preview */}
-      {searchTerm && (
-        <SearchPreview 
-          searchTerm={searchTerm} 
-          products={filteredProducts.filter(p => 
-            p.produto.toLowerCase().includes(searchTerm.toLowerCase())
-          ).slice(0, 5)} 
-          onProductClick={handleProductClick} 
-        />
-      )}
+      {searchTerm && <SearchPreview searchTerm={searchTerm} products={filteredProducts.filter(p => p.produto.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)} onProductClick={handleProductClick} />}
 
       {/* Novidades Carousel */}
       <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
@@ -280,30 +271,17 @@ const Index = () => {
       <section className="px-4 py-2 animate-fade-in">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} 
-              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
-            >
+            <Button size="sm" variant="outline" onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2">
               <ShoppingCart className="w-4 h-4" />
               Todas
             </Button>
             {categories.slice(0, 8).map(category => {
-              const IconComponent = getCategoryIcon(category);
-              return (
-                <Button 
-                  key={category} 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
-                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
-                >
+            const IconComponent = getCategoryIcon(category);
+            return <Button key={category} size="sm" variant="outline" onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2">
                   <IconComponent className="w-4 h-4" />
                   {category}
-                </Button>
-              );
-            })}
+                </Button>;
+          })}
           </div>
         </div>
       </section>
@@ -318,16 +296,12 @@ const Index = () => {
 
       {/* Category Product Carousels - show all categories when not in AI mode */}
       {!showingAI && categories.map((category, index) => {
-        const categoryProducts = getCategoryProducts(category);
-        const IconComponent = getCategoryIcon(category);
-        if (categoryProducts.length === 0) return null;
-        
-        return (
-          <section 
-            key={category}
-            style={{ animationDelay: `${index * 0.1}s` }}
-            className="md:px-6 py-4 animate-fade-in px-[6px]"
-          >
+      const categoryProducts = getCategoryProducts(category);
+      const IconComponent = getCategoryIcon(category);
+      if (categoryProducts.length === 0) return null;
+      return <section key={category} style={{
+        animationDelay: `${index * 0.1}s`
+      }} className="md:px-6 py-4 animate-fade-in px-[6px]">
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -339,12 +313,7 @@ const Index = () => {
                     <p className="text-xs text-white/70">{categoryProducts.length} produtos</p>
                   </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs px-3 py-1 h-auto"
-                >
+                <Button size="sm" variant="outline" onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs px-3 py-1 h-auto">
                   Ver Todos
                   <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
@@ -352,27 +321,16 @@ const Index = () => {
               
               <Carousel className="w-full">
                 <CarouselContent className="-ml-2 md:-ml-3">
-                  {categoryProducts.map(product => (
-                    <CarouselItem 
-                      key={product.id} 
-                      className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6"
-                    >
-                      <OptimizedProductCard 
-                        product={product} 
-                        compact={true}
-                        onProductClick={handleProductClick}
-                        onBuyClick={handleBuyProduct}
-                      />
-                    </CarouselItem>
-                  ))}
+                  {categoryProducts.map(product => <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
+                      <ProductCard product={product} compact={true} />
+                    </CarouselItem>)}
                 </CarouselContent>
                 <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
                 <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
               </Carousel>
             </div>
-          </section>
-        );
-      })}
+          </section>;
+    })}
 
       {/* Featured Products Carousel with Toggle */}
       <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
@@ -380,8 +338,7 @@ const Index = () => {
           <div className="text-center mb-8">
             <TabNavigation showingAI={showingAI} onTabChange={handleTabChange} />
             
-            {showingAI ? (
-              <div className="prose prose-invert max-w-none">
+            {showingAI ? <div className="prose prose-invert max-w-none">
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
                   🤖 Me Ajuda Escolher
                 </h2>
@@ -389,24 +346,17 @@ const Index = () => {
                   <p><strong>Selecione até 5 produtos</strong> e nossa <strong>IA</strong> irá te ajudar a decidir qual é melhor</p>
                   <p className="text-sm">✨ <em>Análise personalizada baseada em suas necessidades</em></p>
                 </div>
-              </div>
-            ) : (
-              <div>
+              </div> : <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
                   🔥 Mais Vendidos
                 </h2>
                 <p className="text-base text-white/80 animate-slide-in-right">
-                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' 
-                    ? `Os favoritos em ${currentFeaturedCategory}` 
-                    : 'Os produtos favoritos dos nossos clientes'
-                  }
+                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' ? `Os favoritos em ${currentFeaturedCategory}` : 'Os produtos favoritos dos nossos clientes'}
                 </p>
-              </div>
-            )}
+              </div>}
           </div>
 
-          {showingAI ? (
-            <>
+          {showingAI ? <>
               <div className="max-w-md mx-auto mb-6 animate-scale-in">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900">
@@ -414,59 +364,34 @@ const Index = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-white border-gray-300 z-50">
                     <SelectItem value="todas">Todas as Categorias</SelectItem>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
+                    {categories.map(category => <SelectItem key={category} value={category}>
                         {category}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               
-              <ProductSelector 
-                products={displayedProducts} 
-                selectedProducts={selectedProducts} 
-                onProductToggle={handleProductToggle} 
-                onAnalyze={handleAnalyze} 
-                onQuestionnaireChange={setQuestionnaireAnswers} 
-              />
-            </>
-          ) : (
-            <>
+              <ProductSelector products={displayedProducts} selectedProducts={selectedProducts} onProductToggle={handleProductToggle} onAnalyze={handleAnalyze} onQuestionnaireChange={setQuestionnaireAnswers} />
+            </> : <>
               <Carousel className="w-full animate-scale-in mb-6">
                 <CarouselContent className="-ml-2 md:-ml-3">
-                  {featuredProducts.map((product, index) => (
-                    <CarouselItem 
-                      key={product.id} 
-                      className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <OptimizedProductCard 
-                        product={product} 
-                        showBadge={true} 
-                        badgeText="MAIS VENDIDO" 
-                        compact={false}
-                        onProductClick={handleProductClick}
-                        onBuyClick={handleBuyProduct}
-                      />
-                    </CarouselItem>
-                  ))}
+                  {featuredProducts.map((product, index) => <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in" style={{
+                animationDelay: `${index * 0.1}s`
+              }}>
+                      <ProductCard product={product} showBadge={true} badgeText="MAIS VENDIDO" compact={false} />
+                    </CarouselItem>)}
                 </CarouselContent>
                 <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
                 <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
               </Carousel>
               
               <div className="text-center animate-fade-in">
-                <Button 
-                  onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} 
-                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-                >
+                <Button onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105">
                   Ver Mais Produtos
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
-            </>
-          )}
+            </>}
         </div>
       </section>
 
@@ -516,11 +441,9 @@ const Index = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-300 z-50">
                   <SelectItem value="todas">Todas as Categorias</SelectItem>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>
+                  {categories.map(category => <SelectItem key={category} value={category}>
                       {category}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -576,24 +499,8 @@ const Index = () => {
           </div>
         </section>}
 
-      {/* Product Detail Modal */}
-      {selectedProduct && (
-        <ProductDetailModal
-          isOpen={showDetailModal}
-          onClose={handleCloseModal}
-          product={selectedProduct}
-        />
-      )}
-
       {/* AI Analysis Modal */}
-      <AIAnalysisModal 
-        isOpen={showAnalysisModal} 
-        onClose={() => setShowAnalysisModal(false)} 
-        selectedProducts={selectedProducts} 
-        onAnalyze={analyzeProducts} 
-      />
-    </div>
-  );
+      <AIAnalysisModal isOpen={showAnalysisModal} onClose={() => setShowAnalysisModal(false)} selectedProducts={selectedProducts} onAnalyze={analyzeProducts} />
+    </div>;
 };
-
 export default Index;
