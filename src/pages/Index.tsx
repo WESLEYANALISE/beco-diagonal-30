@@ -229,6 +229,7 @@ const Index = () => {
       throw error;
     }
   };
+
   const getCategoryIcon = useCallback((category: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
       'Beleza e Cuidados Pessoais': Sparkles,
@@ -239,6 +240,7 @@ const Index = () => {
     };
     return iconMap[category] || ShoppingCart;
   }, []);
+
   const getCategoryProducts = useCallback((category: string, limit: number = 8) => {
     const categoryProducts = filteredProducts.filter(p => p.categoria === category);
     const actualLimit = category === 'Diversão e Familia' ? 8 : limit; // Reduced from 12 to 8
@@ -252,17 +254,31 @@ const Index = () => {
     return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== ''), false).slice(0, 8); // Reduced from 12 to 8
   }, [filteredProducts, shuffleArray]);
   if (loading) {
-    return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
         <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-white/20 rounded-2xl animate-shimmer"></div>
+            <div className="h-32 bg-magical-gold/20 rounded-2xl animate-shimmer backdrop-blur-sm border border-magical-gold/30"></div>
             <ProductGrid loading={true} products={[]} />
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20 relative overflow-hidden">
+      {/* Magical background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 w-1 h-1 bg-magical-gold rounded-full animate-sparkle opacity-40"></div>
+        <div className="absolute top-32 right-20 w-1.5 h-1.5 bg-magical-bronze rounded-full animate-sparkle opacity-30" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-64 left-1/4 w-1 h-1 bg-magical-silver rounded-full animate-sparkle opacity-50" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-96 right-1/3 w-2 h-2 bg-magical-gold rounded-full animate-sparkle opacity-20" style={{animationDelay: '3s'}}></div>
+        <div className="absolute bottom-64 left-20 w-1.5 h-1.5 bg-magical-bronze rounded-full animate-sparkle opacity-40" style={{animationDelay: '4s'}}></div>
+        <div className="absolute bottom-32 right-10 w-1 h-1 bg-magical-silver rounded-full animate-sparkle opacity-60" style={{animationDelay: '5s'}}></div>
+      </div>
+      
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
       {/* Search Preview */}
@@ -275,17 +291,37 @@ const Index = () => {
       <section className="px-4 py-2 animate-fade-in">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <Button size="sm" variant="outline" onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} 
+              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted"
+            >
               <ShoppingCart className="w-4 h-4" />
-              Todas
+              Todos os Artefatos
             </Button>
             {categories.slice(0, 6).map(category => {
-            const IconComponent = getCategoryIcon(category);
-            return <Button key={category} size="sm" variant="outline" onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2">
+              const IconComponent = getCategoryIcon(category);
+              const magicalCategoryNames: Record<string, string> = {
+                'Beleza e Cuidados Pessoais': 'Poções de Beleza',
+                'Casa e Decoração': 'Lar das Bruxas',
+                'Diversão e Familia': 'Diversão Mágica',
+                'Estilo e Moda': 'Vestes Encantadas',
+                'Tecnologia e Acessórios': 'Artefatos Mágicos'
+              };
+              return (
+                <Button 
+                  key={category} 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted"
+                >
                   <IconComponent className="w-4 h-4" />
-                  {category}
-                </Button>;
-          })}
+                  {magicalCategoryNames[category] || category}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -298,24 +334,38 @@ const Index = () => {
 
       {/* Category Product Carousels - show top categories when not in AI mode */}
       {!showingAI && categories.slice(0, 4).map((category, index) => {
-      const categoryProducts = getCategoryProducts(category);
-      const IconComponent = getCategoryIcon(category);
-      if (categoryProducts.length === 0) return null;
-      return <section key={category} style={{
-        animationDelay: `${index * 0.1}s`
-      }} className="md:px-6 py-4 animate-fade-in px-[6px]">
+        const categoryProducts = getCategoryProducts(category);
+        const IconComponent = getCategoryIcon(category);
+        const magicalCategoryNames: Record<string, string> = {
+          'Beleza e Cuidados Pessoais': 'Poções de Beleza',
+          'Casa e Decoração': 'Lar das Bruxas',
+          'Diversão e Familia': 'Diversão Mágica',
+          'Estilo e Moda': 'Vestes Encantadas',
+          'Tecnologia e Acessórios': 'Artefatos Mágicos'
+        };
+        if (categoryProducts.length === 0) return null;
+        return (
+          <section 
+            key={category} 
+            style={{animationDelay: `${index * 0.1}s`}} 
+            className="md:px-6 py-4 animate-fade-in px-[6px]"
+          >
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <IconComponent className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-gradient-to-br from-magical-gold/30 to-magical-bronze/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-magical-gold/20">
+                    <IconComponent className="w-4 h-4 text-magical-gold" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-white">{category}</h3>
-                    
+                    <h3 className="text-base font-bold text-magical-starlight font-magical">{magicalCategoryNames[category] || category}</h3>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs px-3 py-1 h-auto">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30 text-xs px-3 py-1 h-auto font-enchanted"
+                >
                   Ver Todos
                   <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
@@ -323,99 +373,122 @@ const Index = () => {
               
               <Carousel className="w-full">
                 <CarouselContent className="-ml-2 md:-ml-3">
-                  {categoryProducts.map(product => <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
+                  {categoryProducts.map(product => (
+                    <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
                       <ProductCard product={product} compact={true} />
-                    </CarouselItem>)}
+                    </CarouselItem>
+                  ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
-                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
+                <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6" />
+                <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6" />
               </Carousel>
             </div>
-          </section>;
-    })}
+          </section>
+        );
+      })}
 
       {/* Featured Products Carousel with Toggle */}
-      <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
+      <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-gold/10 via-magical-bronze/10 to-magical-gold/10 backdrop-blur-sm animate-fade-in border-y border-magical-gold/20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
             <TabNavigation showingAI={showingAI} onTabChange={handleTabChange} />
             
-            {showingAI ? <div className="prose prose-invert max-w-none">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  🤖 Me Ajuda Escolher
+            {showingAI ? (
+              <div className="prose prose-invert max-w-none">
+                <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
+                  🔮 Oráculo Mágico
                 </h2>
-                <div className="text-base text-white/90 animate-slide-in-right space-y-2">
-                  <p><strong>Selecione até 5 produtos</strong> e nossa <strong>IA</strong> irá te ajudar a decidir qual é melhor</p>
-                  <p className="text-sm">✨ <em>Análise personalizada baseada em suas necessidades</em></p>
+                <div className="text-base text-magical-starlight/90 animate-slide-in-right space-y-2 font-enchanted">
+                  <p><strong>Selecione até 5 artefatos</strong> e nosso <strong>Oráculo</strong> irá te ajudar a decidir qual é mais poderoso</p>
+                  <p className="text-sm">✨ <em>Consulta personalizada baseada em suas necessidades mágicas</em></p>
                 </div>
-              </div> : <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  🔥 Mais Vendidos
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
+                  🏆 Artefatos Lendários
                 </h2>
-                <p className="text-base text-white/80 animate-slide-in-right">
-                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' ? `Os favoritos em ${currentFeaturedCategory}` : 'Os produtos favoritos dos nossos clientes'}
+                <p className="text-base text-magical-starlight/80 animate-slide-in-right font-enchanted">
+                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' ? `Os favoritos em ${currentFeaturedCategory}` : 'Os artefatos favoritos dos bruxos mais experientes'}
                 </p>
-              </div>}
+              </div>
+            )}
           </div>
 
-          {showingAI ? <>
+          {showingAI ? (
+            <>
               <div className="max-w-md mx-auto mb-6 animate-scale-in">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                    <SelectValue placeholder="Selecione uma categoria" />
+                  <SelectTrigger className="bg-magical-starlight border-magical-gold/30 text-magical-midnight font-enchanted">
+                    <SelectValue placeholder="Selecione uma escola de magia" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300 z-50">
-                    <SelectItem value="todas">Todas as Categorias</SelectItem>
-                    {categories.map(category => <SelectItem key={category} value={category}>
+                  <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
+                    <SelectItem value="todas">Todas as Escolas</SelectItem>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
                         {category}
-                      </SelectItem>)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               
-              <ProductSelector products={displayedProducts.slice(0, 20)} selectedProducts={selectedProducts} onProductToggle={handleProductToggle} onAnalyze={handleAnalyze} onQuestionnaireChange={setQuestionnaireAnswers} />
-            </> : <>
+              <ProductSelector 
+                products={displayedProducts.slice(0, 20)} 
+                selectedProducts={selectedProducts} 
+                onProductToggle={handleProductToggle} 
+                onAnalyze={handleAnalyze} 
+                onQuestionnaireChange={setQuestionnaireAnswers} 
+              />
+            </>
+          ) : (
+            <>
               <Carousel className="w-full animate-scale-in mb-6">
                 <CarouselContent className="-ml-2 md:-ml-3">
-                  {featuredProducts.map((product, index) => <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in" style={{
-                animationDelay: `${index * 0.1}s`
-              }}>
-                      <ProductCard product={product} showBadge={true} badgeText="MAIS VENDIDO" compact={false} />
-                    </CarouselItem>)}
+                  {featuredProducts.map((product, index) => (
+                    <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in" style={{animationDelay: `${index * 0.1}s`}}>
+                      <ProductCard product={product} showBadge={true} badgeText="LENDÁRIO" compact={false} />
+                    </CarouselItem>
+                  ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
+                <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30" />
+                <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30" />
               </Carousel>
               
               <div className="text-center animate-fade-in">
-                <Button onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105">
-                  Ver Mais Produtos
+                <Button 
+                  onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} 
+                  className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted"
+                >
+                  Ver Mais Artefatos
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
-            </>}
+            </>
+          )}
         </div>
       </section>
 
       {/* Category Filter and Products Grid - only show when not in AI mode */}
-      {!showingAI && <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
+      {!showingAI && (
+        <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div className="text-center flex-1">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  Explorar Produtos
+                <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
+                  Explorar Artefatos
                 </h2>
-                <p className="text-base text-white/80 mb-4 animate-slide-in-right">
-                  {searchTerm ? `Resultados para "${searchTerm}"` : 'Navegue por nossa coleção completa'}
+                <p className="text-base text-magical-starlight/80 mb-4 animate-slide-in-right font-enchanted">
+                  {searchTerm ? `Resultados para "${searchTerm}"` : 'Navegue por nossa coleção mágica completa'}
                 </p>
               </div>
               
               <div className="flex gap-2 animate-slide-in-right">
                 <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
-                  <SelectTrigger className="bg-white text-gray-900 border-0 w-32">
+                  <SelectTrigger className="bg-magical-starlight text-magical-midnight border-0 w-32 font-enchanted">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300 z-50">
+                  <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
                     <SelectItem value="nome">
                       <div className="flex items-center gap-2">
                         <SortAsc className="w-4 h-4" />
@@ -430,7 +503,12 @@ const Index = () => {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <Button size="sm" variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="bg-white text-gray-900 border-0 hover:bg-gray-100 transition-all duration-300 hover:scale-105">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} 
+                  className="bg-magical-starlight text-magical-midnight border-0 hover:bg-magical-silver/20 transition-all duration-300 hover:scale-105"
+                >
                   {sortOrder === 'asc' ? '↑' : '↓'}
                 </Button>
               </div>
@@ -438,71 +516,96 @@ const Index = () => {
 
             <div className="max-w-md mx-auto mb-6 animate-scale-in">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                  <SelectValue placeholder="Selecione uma categoria" />
+                <SelectTrigger className="bg-magical-starlight border-magical-gold/30 text-magical-midnight font-enchanted">
+                  <SelectValue placeholder="Selecione uma escola de magia" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300 z-50">
-                  <SelectItem value="todas">Todas as Categorias</SelectItem>
-                  {categories.map(category => <SelectItem key={category} value={category}>
+                <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
+                  <SelectItem value="todas">Todas as Escolas</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
                       {category}
-                    </SelectItem>)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <ProductGrid products={displayedProducts.slice(0, 20)} compact={true} />
 
-            {displayedProducts.length === 0 && <div className="text-center py-16 animate-fade-in">
-                <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
-                  <ShoppingCart className="w-16 h-16 text-white/50" />
+            {displayedProducts.length === 0 && (
+              <div className="text-center py-16 animate-fade-in">
+                <div className="w-32 h-32 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse border border-magical-gold/30">
+                  <ShoppingCart className="w-16 h-16 text-magical-gold/50" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  Nenhum produto encontrado
+                <h2 className="text-2xl font-bold text-magical-starlight mb-4 font-magical">
+                  Nenhum artefato encontrado
                 </h2>
-                <p className="text-white/80 mb-6">
-                  {searchTerm ? `Não encontramos produtos para "${searchTerm}"` : 'Não há produtos nesta categoria'}
+                <p className="text-magical-starlight/80 mb-6 font-enchanted">
+                  {searchTerm ? `Não encontramos artefatos para "${searchTerm}"` : 'Não há artefatos nesta escola de magia'}
                 </p>
-                {searchTerm && <Button onClick={() => setSearchTerm('')} className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105">
-                    Ver Todos os Produtos
-                  </Button>}
-              </div>}
+                {searchTerm && (
+                  <Button 
+                    onClick={() => setSearchTerm('')} 
+                    className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted"
+                  >
+                    Ver Todos os Artefatos
+                  </Button>
+                )}
+              </div>
+            )}
 
-            {displayedProducts.length > 20 && <div className="text-center mt-8 animate-fade-in">
-                <Button onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)} className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105">
-                  Ver Todos os {displayedProducts.length} Produtos
+            {displayedProducts.length > 20 && (
+              <div className="text-center mt-8 animate-fade-in">
+                <Button 
+                  onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)} 
+                  className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted"
+                >
+                  Ver Todos os {displayedProducts.length} Artefatos
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-              </div>}
+              </div>
+            )}
           </div>
-        </section>}
+        </section>
+      )}
 
       {/* CTA Section - only show when not in AI mode */}
-      {!showingAI && <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden animate-fade-in">
-          <div className="absolute inset-0 bg-black/10"></div>
+      {!showingAI && (
+        <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-darkBlue relative overflow-hidden animate-fade-in border-t border-magical-gold/20">
+          <div className="absolute inset-0 bg-magical-midnight/20"></div>
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <div className="space-y-6">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
-                <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-white animate-pulse" />
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-magical-gold/30 to-magical-bronze/30 rounded-3xl flex items-center justify-center mx-auto animate-levitate border border-magical-gold/20 backdrop-blur-sm">
+                <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-magical-gold animate-pulse" />
               </div>
-              <h2 className="text-2xl md:text-4xl font-bold mb-4 text-white animate-slide-in-left">
-                Não Perca Nenhuma Oferta!
+              <h2 className="text-2xl md:text-4xl font-bold mb-4 text-magical-starlight animate-slide-in-left font-magical">
+                Não Perca Nenhum Encantamento!
               </h2>
-              <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right">
-                Descubra os melhores produtos com preços incríveis na Shopee
+              <p className="text-magical-starlight/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right font-enchanted">
+                Descubra os melhores artefatos mágicos com preços encantados no mundo bruxo
               </p>
-              <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" onClick={() => window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          })}>
-                Explorar Produtos
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 font-enchanted" 
+                onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
+              >
+                Explorar Artefatos
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
           </div>
-        </section>}
+        </section>
+      )}
 
       {/* AI Analysis Modal */}
-      <AIAnalysisModal isOpen={showAnalysisModal} onClose={() => setShowAnalysisModal(false)} selectedProducts={selectedProducts} onAnalyze={analyzeProducts} />
-    </div>;
+      <AIAnalysisModal 
+        isOpen={showAnalysisModal} 
+        onClose={() => setShowAnalysisModal(false)} 
+        selectedProducts={selectedProducts} 
+        onAnalyze={analyzeProducts} 
+      />
+    </div>
+  );
 };
+
 export default Index;

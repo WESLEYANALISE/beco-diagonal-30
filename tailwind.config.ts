@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,26 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Magical Harry Potter color palette
+				magical: {
+					gold: '#D4AF37',
+					darkGold: '#B8860B',
+					bronze: '#CD7F32',
+					silver: '#C0C0C0',
+					darkBlue: '#1A237E',
+					mysticalPurple: '#4A148C',
+					deepPurple: '#2E1065',
+					emerald: '#50C878',
+					crimson: '#DC143C',
+					midnight: '#0F0F23',
+					starlight: '#F8F8FF'
 				}
+			},
+			fontFamily: {
+				'magical': ['Cinzel', 'serif'],
+				'enchanted': ['Playfair Display', 'serif'],
+				'sans': ['Inter', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +104,40 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'magical-glow': {
+					'0%, 100%': {
+						boxShadow: '0 0 5px #D4AF37, 0 0 10px #D4AF37, 0 0 15px #D4AF37'
+					},
+					'50%': {
+						boxShadow: '0 0 10px #D4AF37, 0 0 20px #D4AF37, 0 0 30px #D4AF37'
+					}
+				},
+				'sparkle': {
+					'0%, 100%': {
+						opacity: '0.3',
+						transform: 'scale(0.8)'
+					},
+					'50%': {
+						opacity: '1',
+						transform: 'scale(1.2)'
+					}
+				},
+				'levitate': {
+					'0%, 100%': {
+						transform: 'translateY(0px)'
+					},
+					'50%': {
+						transform: 'translateY(-10px)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'magical-glow': 'magical-glow 2s ease-in-out infinite',
+				'sparkle': 'sparkle 1.5s ease-in-out infinite',
+				'levitate': 'levitate 3s ease-in-out infinite'
 			}
 		}
 	},
