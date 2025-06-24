@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
+import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone, Wand2, Crown, Volume2, VolumeX } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,8 +14,11 @@ import { TabNavigation } from '@/components/TabNavigation';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
 import { VideoCarouselHome } from '@/components/VideoCarouselHome';
+import { MagicalParticles } from '@/components/MagicalParticles';
 import { useProductClicks } from '@/hooks/useProductClicks';
+import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { supabase } from "@/integrations/supabase/client";
+
 interface Product {
   id: number;
   produto: string;
@@ -30,9 +33,11 @@ interface Product {
   categoria: string;
   uso?: string;
 }
+
 const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { isPlaying, toggleMusic, isLoaded } = useBackgroundMusic();
   const categoryFromUrl = searchParams.get('categoria');
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -105,28 +110,28 @@ const Index = () => {
   }, [categories, products, categoryFromUrl, shuffleArray]);
   const fetchProducts = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('SHOPEE').select('*').order('id');
+      // Changed from 'SHOPEE' to 'HARRY POTTER'
+      const { data, error } = await supabase
+        .from('HARRY POTTER')
+        .select('*')
+        .order('id');
+      
       if (error) throw error;
 
-      // Only shuffle once on initial load for better performance
       let processedProducts = shuffleArray(data || [], true);
       setProducts(processedProducts);
 
-      // Set initial featured products
-      const initialFeatured = shuffleArray(processedProducts, true).slice(0, 6); // Reduced from 8 to 6
+      const initialFeatured = shuffleArray(processedProducts, true).slice(0, 6);
       setFeaturedProducts(initialFeatured);
+      
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
       setCategories(uniqueCategories);
 
-      // Set initial featured category
       if (uniqueCategories.length > 0) {
-        setCurrentFeaturedCategory('Todos os Produtos');
+        setCurrentFeaturedCategory('Todos os Artefatos Mágicos');
       }
     } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
+      console.error('Erro ao buscar artefatos mágicos:', error);
     } finally {
       setLoading(false);
     }
@@ -232,30 +237,29 @@ const Index = () => {
 
   const getCategoryIcon = useCallback((category: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
-      'Beleza e Cuidados Pessoais': Sparkles,
-      'Casa e Decoração': Home,
-      'Diversão e Familia': Gamepad2,
-      'Estilo e Moda': Shirt,
-      'Tecnologia e Acessórios': Smartphone
+      'Itens Colecionáveis': Crown,
+      'Bonecas e Brinquedos de Pelúcia': Sparkles,
+      'Luminária': Wand2,
+      'Colares': Crown,
+      'Moletons e Suéteres': Shirt,
+      'Capinhas': Smartphone
     };
     return iconMap[category] || ShoppingCart;
   }, []);
 
   const getCategoryProducts = useCallback((category: string, limit: number = 8) => {
     const categoryProducts = filteredProducts.filter(p => p.categoria === category);
-    const actualLimit = category === 'Diversão e Familia' ? 8 : limit; // Reduced from 12 to 8
-
-    // Only shuffle when necessary for better performance
-    return shuffleArray(categoryProducts, false).slice(0, actualLimit);
+    return shuffleArray(categoryProducts, false).slice(0, limit);
   }, [filteredProducts, shuffleArray]);
 
   // Memoize products with videos for better performance
   const productsWithVideos = useMemo(() => {
-    return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== ''), false).slice(0, 8); // Reduced from 12 to 8
+    return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== ''), false).slice(0, 8);
   }, [filteredProducts, shuffleArray]);
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
+      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20 relative">
+        <MagicalParticles />
         <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
@@ -269,14 +273,30 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20 relative overflow-hidden">
-      {/* Magical background elements */}
+      {/* Magical background particles */}
+      <MagicalParticles />
+      
+      {/* Music control button */}
+      {isLoaded && (
+        <div className="fixed top-4 right-4 z-50">
+          <Button
+            size="sm"
+            onClick={toggleMusic}
+            className="bg-magical-gold/20 hover:bg-magical-gold/30 text-magical-starlight border border-magical-gold/30 backdrop-blur-sm transition-all duration-300 hover:scale-110"
+          >
+            {isPlaying ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </Button>
+        </div>
+      )}
+
+      {/* Enhanced magical background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 w-1 h-1 bg-magical-gold rounded-full animate-sparkle opacity-40"></div>
-        <div className="absolute top-32 right-20 w-1.5 h-1.5 bg-magical-bronze rounded-full animate-sparkle opacity-30" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-64 left-1/4 w-1 h-1 bg-magical-silver rounded-full animate-sparkle opacity-50" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-96 right-1/3 w-2 h-2 bg-magical-gold rounded-full animate-sparkle opacity-20" style={{animationDelay: '3s'}}></div>
-        <div className="absolute bottom-64 left-20 w-1.5 h-1.5 bg-magical-bronze rounded-full animate-sparkle opacity-40" style={{animationDelay: '4s'}}></div>
-        <div className="absolute bottom-32 right-10 w-1 h-1 bg-magical-silver rounded-full animate-sparkle opacity-60" style={{animationDelay: '5s'}}></div>
+        <div className="absolute top-10 left-10 w-2 h-2 bg-magical-gold rounded-full animate-magical-glow opacity-60"></div>
+        <div className="absolute top-32 right-20 w-3 h-3 bg-magical-bronze rounded-full animate-sparkle opacity-40" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-64 left-1/4 w-1.5 h-1.5 bg-magical-silver rounded-full animate-levitate opacity-70" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-96 right-1/3 w-4 h-4 bg-magical-gold rounded-full animate-magical-glow opacity-30" style={{animationDelay: '3s'}}></div>
+        <div className="absolute bottom-64 left-20 w-2.5 h-2.5 bg-magical-bronze rounded-full animate-sparkle opacity-50" style={{animationDelay: '4s'}}></div>
+        <div className="absolute bottom-32 right-10 w-1.5 h-1.5 bg-magical-silver rounded-full animate-levitate opacity-80" style={{animationDelay: '5s'}}></div>
       </div>
       
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
@@ -295,19 +315,20 @@ const Index = () => {
               size="sm" 
               variant="outline" 
               onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} 
-              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted"
+              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/30 text-magical-starlight border-magical-gold/50 hover:bg-magical-gold/40 flex items-center gap-2 font-enchanted shadow-lg hover:shadow-magical-gold/20"
             >
-              <ShoppingCart className="w-4 h-4" />
-              Todos os Artefatos
+              <Wand2 className="w-4 h-4" />
+              Todos os Artefatos Mágicos
             </Button>
             {categories.slice(0, 6).map(category => {
               const IconComponent = getCategoryIcon(category);
               const magicalCategoryNames: Record<string, string> = {
-                'Beleza e Cuidados Pessoais': 'Poções de Beleza',
-                'Casa e Decoração': 'Lar das Bruxas',
-                'Diversão e Familia': 'Diversão Mágica',
-                'Estilo e Moda': 'Vestes Encantadas',
-                'Tecnologia e Acessórios': 'Artefatos Mágicos'
+                'Itens Colecionáveis': 'Relíquias Ancestrais',
+                'Bonecas e Brinquedos de Pelúcia': 'Criaturas Encantadas',
+                'Luminária': 'Luzes Místicas',
+                'Colares': 'Joias dos Fundadores',
+                'Moletons e Suéteres': 'Vestes de Hogwarts',
+                'Capinhas': 'Escudos Protetores'
               };
               return (
                 <Button 
@@ -315,7 +336,7 @@ const Index = () => {
                   size="sm" 
                   variant="outline" 
                   onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
-                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted"
+                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted shadow-md hover:shadow-magical-gold/20"
                 >
                   <IconComponent className="w-4 h-4" />
                   {magicalCategoryNames[category] || category}
@@ -337,11 +358,12 @@ const Index = () => {
         const categoryProducts = getCategoryProducts(category);
         const IconComponent = getCategoryIcon(category);
         const magicalCategoryNames: Record<string, string> = {
-          'Beleza e Cuidados Pessoais': 'Poções de Beleza',
-          'Casa e Decoração': 'Lar das Bruxas',
-          'Diversão e Familia': 'Diversão Mágica',
-          'Estilo e Moda': 'Vestes Encantadas',
-          'Tecnologia e Acessórios': 'Artefatos Mágicos'
+          'Itens Colecionáveis': 'Relíquias Ancestrais',
+          'Bonecas e Brinquedos de Pelúcia': 'Criaturas Encantadas',
+          'Luminária': 'Luzes Místicas',
+          'Colares': 'Joias dos Fundadores',
+          'Moletons e Suéteres': 'Vestes de Hogwarts',
+          'Capinhas': 'Escudos Protetores'
         };
         if (categoryProducts.length === 0) return null;
         return (
@@ -353,7 +375,7 @@ const Index = () => {
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-magical-gold/30 to-magical-bronze/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-magical-gold/20">
+                  <div className="w-8 h-8 bg-gradient-to-br from-magical-gold/40 to-magical-bronze/40 rounded-xl flex items-center justify-center backdrop-blur-sm border border-magical-gold/30 shadow-lg animate-magical-glow">
                     <IconComponent className="w-4 h-4 text-magical-gold" />
                   </div>
                   <div>
@@ -364,9 +386,9 @@ const Index = () => {
                   size="sm" 
                   variant="outline" 
                   onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
-                  className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30 text-xs px-3 py-1 h-auto font-enchanted"
+                  className="bg-magical-gold/30 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/40 text-xs px-3 py-1 h-auto font-enchanted shadow-md hover:shadow-magical-gold/20 transition-all duration-300 hover:scale-105"
                 >
-                  Ver Todos
+                  Explorar Coleção
                   <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
               </div>
@@ -379,8 +401,8 @@ const Index = () => {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6" />
-                <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6" />
+                <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6 shadow-lg" />
+                <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6 shadow-lg" />
               </Carousel>
             </div>
           </section>
@@ -388,7 +410,7 @@ const Index = () => {
       })}
 
       {/* Featured Products Carousel with Toggle */}
-      <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-gold/10 via-magical-bronze/10 to-magical-gold/10 backdrop-blur-sm animate-fade-in border-y border-magical-gold/20">
+      <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-gold/15 via-magical-bronze/15 to-magical-gold/15 backdrop-blur-sm animate-fade-in border-y border-magical-gold/30 shadow-2xl">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
             <TabNavigation showingAI={showingAI} onTabChange={handleTabChange} />
@@ -396,20 +418,20 @@ const Index = () => {
             {showingAI ? (
               <div className="prose prose-invert max-w-none">
                 <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
-                  🔮 Oráculo Mágico
+                  🔮 Oráculo das Relíquias
                 </h2>
                 <div className="text-base text-magical-starlight/90 animate-slide-in-right space-y-2 font-enchanted">
-                  <p><strong>Selecione até 5 artefatos</strong> e nosso <strong>Oráculo</strong> irá te ajudar a decidir qual é mais poderoso</p>
-                  <p className="text-sm">✨ <em>Consulta personalizada baseada em suas necessidades mágicas</em></p>
+                  <p><strong>Selecione até 5 artefatos mágicos</strong> e nosso <strong>Oráculo</strong> revelará qual possui o poder mais adequado para você</p>
+                  <p className="text-sm">✨ <em>Consulta baseada na magia ancestral de Hogwarts</em></p>
                 </div>
               </div>
             ) : (
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
-                  🏆 Artefatos Lendários
+                  ⚡ Relíquias Lendárias de Hogwarts
                 </h2>
                 <p className="text-base text-magical-starlight/80 animate-slide-in-right font-enchanted">
-                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' ? `Os favoritos em ${currentFeaturedCategory}` : 'Os artefatos favoritos dos bruxos mais experientes'}
+                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Artefatos Mágicos' ? `Os tesouros mais procurados em ${currentFeaturedCategory}` : 'Os artefatos favoritos dos bruxos mais poderosos'}
                 </p>
               </div>
             )}
@@ -419,11 +441,11 @@ const Index = () => {
             <>
               <div className="max-w-md mx-auto mb-6 animate-scale-in">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="bg-magical-starlight border-magical-gold/30 text-magical-midnight font-enchanted">
-                    <SelectValue placeholder="Selecione uma escola de magia" />
+                  <SelectTrigger className="bg-magical-starlight/90 border-magical-gold/40 text-magical-midnight font-enchanted shadow-lg">
+                    <SelectValue placeholder="Selecione uma Casa de Hogwarts" />
                   </SelectTrigger>
                   <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
-                    <SelectItem value="todas">Todas as Escolas</SelectItem>
+                    <SelectItem value="todas">Todas as Casas</SelectItem>
                     {categories.map(category => (
                       <SelectItem key={category} value={category}>
                         {category}
@@ -447,20 +469,20 @@ const Index = () => {
                 <CarouselContent className="-ml-2 md:-ml-3">
                   {featuredProducts.map((product, index) => (
                     <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in" style={{animationDelay: `${index * 0.1}s`}}>
-                      <ProductCard product={product} showBadge={true} badgeText="LENDÁRIO" compact={false} />
+                      <ProductCard product={product} showBadge={true} badgeText="RELÍQUIA" compact={false} />
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30" />
-                <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30" />
+                <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-xl" />
+                <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-xl" />
               </Carousel>
               
               <div className="text-center animate-fade-in">
                 <Button 
                   onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} 
-                  className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted"
+                  className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-2xl hover:shadow-magical-gold/30"
                 >
-                  Ver Mais Artefatos
+                  Explorar Mais Relíquias
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -476,16 +498,16 @@ const Index = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="text-center flex-1">
                 <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
-                  Explorar Artefatos
+                  🏰 Explorar Relíquias Mágicas
                 </h2>
                 <p className="text-base text-magical-starlight/80 mb-4 animate-slide-in-right font-enchanted">
-                  {searchTerm ? `Resultados para "${searchTerm}"` : 'Navegue por nossa coleção mágica completa'}
+                  {searchTerm ? `Artefatos encontrados para "${searchTerm}"` : 'Navegue por nossa coleção completa de relíquias ancestrais'}
                 </p>
               </div>
               
               <div className="flex gap-2 animate-slide-in-right">
                 <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
-                  <SelectTrigger className="bg-magical-starlight text-magical-midnight border-0 w-32 font-enchanted">
+                  <SelectTrigger className="bg-magical-starlight text-magical-midnight border-0 w-32 font-enchanted shadow-md">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
@@ -498,7 +520,7 @@ const Index = () => {
                     <SelectItem value="preco">
                       <div className="flex items-center gap-2">
                         <DollarSign className="w-4 h-4" />
-                        Preço
+                        Valor
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -507,7 +529,7 @@ const Index = () => {
                   size="sm" 
                   variant="outline" 
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} 
-                  className="bg-magical-starlight text-magical-midnight border-0 hover:bg-magical-silver/20 transition-all duration-300 hover:scale-105"
+                  className="bg-magical-starlight text-magical-midnight border-0 hover:bg-magical-silver/20 transition-all duration-300 hover:scale-105 shadow-md"
                 >
                   {sortOrder === 'asc' ? '↑' : '↓'}
                 </Button>
@@ -516,11 +538,11 @@ const Index = () => {
 
             <div className="max-w-md mx-auto mb-6 animate-scale-in">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="bg-magical-starlight border-magical-gold/30 text-magical-midnight font-enchanted">
-                  <SelectValue placeholder="Selecione uma escola de magia" />
+                <SelectTrigger className="bg-magical-starlight/90 border-magical-gold/40 text-magical-midnight font-enchanted shadow-lg">
+                  <SelectValue placeholder="Selecione uma Casa de Hogwarts" />
                 </SelectTrigger>
                 <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
-                  <SelectItem value="todas">Todas as Escolas</SelectItem>
+                  <SelectItem value="todas">Todas as Casas</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -534,21 +556,21 @@ const Index = () => {
 
             {displayedProducts.length === 0 && (
               <div className="text-center py-16 animate-fade-in">
-                <div className="w-32 h-32 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse border border-magical-gold/30">
-                  <ShoppingCart className="w-16 h-16 text-magical-gold/50" />
+                <div className="w-32 h-32 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-levitate border border-magical-gold/30 shadow-2xl">
+                  <Wand2 className="w-16 h-16 text-magical-gold/50" />
                 </div>
                 <h2 className="text-2xl font-bold text-magical-starlight mb-4 font-magical">
-                  Nenhum artefato encontrado
+                  Nenhuma relíquia encontrada
                 </h2>
                 <p className="text-magical-starlight/80 mb-6 font-enchanted">
-                  {searchTerm ? `Não encontramos artefatos para "${searchTerm}"` : 'Não há artefatos nesta escola de magia'}
+                  {searchTerm ? `Não encontramos relíquias para "${searchTerm}"` : 'Não há relíquias nesta Casa de Hogwarts'}
                 </p>
                 {searchTerm && (
                   <Button 
                     onClick={() => setSearchTerm('')} 
-                    className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted"
+                    className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-xl"
                   >
-                    Ver Todos os Artefatos
+                    Ver Todas as Relíquias
                   </Button>
                 )}
               </div>
@@ -558,9 +580,9 @@ const Index = () => {
               <div className="text-center mt-8 animate-fade-in">
                 <Button 
                   onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)} 
-                  className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted"
+                  className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-xl hover:shadow-magical-gold/30"
                 >
-                  Ver Todos os {displayedProducts.length} Artefatos
+                  Ver Todas as {displayedProducts.length} Relíquias
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -571,25 +593,25 @@ const Index = () => {
 
       {/* CTA Section - only show when not in AI mode */}
       {!showingAI && (
-        <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-darkBlue relative overflow-hidden animate-fade-in border-t border-magical-gold/20">
+        <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-darkBlue relative overflow-hidden animate-fade-in border-t border-magical-gold/30 shadow-2xl">
           <div className="absolute inset-0 bg-magical-midnight/20"></div>
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <div className="space-y-6">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-magical-gold/30 to-magical-bronze/30 rounded-3xl flex items-center justify-center mx-auto animate-levitate border border-magical-gold/20 backdrop-blur-sm">
-                <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-magical-gold animate-pulse" />
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-magical-gold/40 to-magical-bronze/40 rounded-3xl flex items-center justify-center mx-auto animate-levitate border border-magical-gold/30 backdrop-blur-sm shadow-2xl">
+                <Wand2 className="w-8 h-8 md:w-10 md:h-10 text-magical-gold animate-magical-glow" />
               </div>
               <h2 className="text-2xl md:text-4xl font-bold mb-4 text-magical-starlight animate-slide-in-left font-magical">
-                Não Perca Nenhum Encantamento!
+                ⚡ Não Perca Nenhuma Magia!
               </h2>
               <p className="text-magical-starlight/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right font-enchanted">
-                Descubra os melhores artefatos mágicos com preços encantados no mundo bruxo
+                Descubra as relíquias mais poderosas de Hogwarts com preços encantados
               </p>
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 font-enchanted" 
                 onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
               >
-                Explorar Artefatos
+                Explorar Relíquias Mágicas
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </div>

@@ -17,7 +17,7 @@ export const BottomNavigation = () => {
     },
     {
       icon: Book,
-      label: 'Categorias',
+      label: 'Casas',
       path: '/categorias',
       activeColor: 'from-magical-mysticalPurple to-magical-deepPurple'
     },
@@ -44,8 +44,8 @@ export const BottomNavigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-deepPurple border-t border-magical-gold/30 backdrop-blur-md">
-      <div className="flex items-center justify-around py-2 px-4 max-w-md mx-auto">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-magical-deepPurple/80 via-magical-mysticalPurple/80 to-magical-deepPurple/80 border-t border-magical-gold/20 backdrop-blur-xl shadow-2xl">
+      <div className="flex items-center justify-around py-1.5 px-3 max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -56,14 +56,14 @@ export const BottomNavigation = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 h-auto py-2 px-3 rounded-xl transition-all duration-300 ${
+              className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-2 rounded-lg transition-all duration-300 ${
                 active 
-                  ? `bg-gradient-to-br ${item.activeColor} text-magical-midnight shadow-lg shadow-magical-gold/20 animate-magical-glow` 
-                  : 'text-magical-starlight hover:bg-magical-gold/20 hover:text-magical-gold'
+                  ? `bg-gradient-to-br ${item.activeColor} text-magical-midnight shadow-md shadow-magical-gold/10 animate-magical-glow` 
+                  : 'text-magical-starlight/80 hover:bg-magical-gold/10 hover:text-magical-gold'
               }`}
             >
-              <Icon className={`${active ? 'w-5 h-5' : 'w-4 h-4'} transition-all duration-300`} />
-              <span className={`${active ? 'text-xs font-bold' : 'text-xs'} transition-all duration-300`}>
+              <Icon className={`${active ? 'w-4 h-4' : 'w-3.5 h-3.5'} transition-all duration-300`} />
+              <span className={`${active ? 'text-xs font-semibold' : 'text-xs'} transition-all duration-300 font-enchanted`}>
                 {item.label}
               </span>
             </Button>
@@ -71,10 +71,10 @@ export const BottomNavigation = () => {
         })}
       </div>
       
-      {/* Magical sparkle effects */}
-      <div className="absolute top-0 left-1/4 w-1 h-1 bg-magical-gold rounded-full animate-sparkle"></div>
-      <div className="absolute top-1 right-1/3 w-0.5 h-0.5 bg-magical-silver rounded-full animate-sparkle" style={{ animationDelay: '1s' }}></div>
-      <div className="absolute top-0 right-1/4 w-1 h-1 bg-magical-bronze rounded-full animate-sparkle" style={{ animationDelay: '2s' }}></div>
+      {/* Subtle magical sparkle effects */}
+      <div className="absolute top-0 left-1/4 w-0.5 h-0.5 bg-magical-gold rounded-full animate-sparkle opacity-30"></div>
+      <div className="absolute top-1 right-1/3 w-0.5 h-0.5 bg-magical-silver rounded-full animate-sparkle opacity-20" style={{ animationDelay: '1s' }}></div>
+      <div className="absolute top-0 right-1/4 w-0.5 h-0.5 bg-magical-bronze rounded-full animate-sparkle opacity-25" style={{ animationDelay: '2s' }}></div>
     </div>
   );
 };

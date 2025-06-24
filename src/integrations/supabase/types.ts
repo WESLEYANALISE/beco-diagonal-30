@@ -2533,6 +2533,60 @@ export type Database = {
           },
         ]
       }
+      "HARRY POTTER": {
+        Row: {
+          categoria: string | null
+          id: number
+          imagem1: string | null
+          imagem2: string | null
+          imagem3: string | null
+          imagem4: string | null
+          imagem5: string | null
+          imagem6: string | null
+          imagem7: string | null
+          link: string | null
+          produto: string | null
+          subcategoria: string | null
+          uso: string | null
+          valor: string | null
+          video: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          id?: number
+          imagem1?: string | null
+          imagem2?: string | null
+          imagem3?: string | null
+          imagem4?: string | null
+          imagem5?: string | null
+          imagem6?: string | null
+          imagem7?: string | null
+          link?: string | null
+          produto?: string | null
+          subcategoria?: string | null
+          uso?: string | null
+          valor?: string | null
+          video?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          id?: number
+          imagem1?: string | null
+          imagem2?: string | null
+          imagem3?: string | null
+          imagem4?: string | null
+          imagem5?: string | null
+          imagem6?: string | null
+          imagem7?: string | null
+          link?: string | null
+          produto?: string | null
+          subcategoria?: string | null
+          uso?: string | null
+          valor?: string | null
+          video?: string | null
+        }
+        Relationships: []
+      }
       jogos_alfabeto: {
         Row: {
           area_direito: string
