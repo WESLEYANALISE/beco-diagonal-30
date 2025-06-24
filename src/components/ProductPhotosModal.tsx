@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Images, ShoppingCart, Expand, Play, X } from 'lucide-react';
-import { ImageZoomModal } from '@/components/ImageZoomModal';
+import { Images, ShoppingCart, Play, X } from 'lucide-react';
 import { ProductVideoModal } from '@/components/ProductVideoModal';
 
 interface ProductPhotosModalProps {
@@ -22,14 +21,8 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
   videoUrl
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
-  const handleImageClick = (index: number) => {
-    setSelectedImageIndex(index);
-    setIsZoomOpen(true);
-  };
 
   const handleBuyClick = () => {
     window.open(productLink, '_blank');
@@ -38,6 +31,10 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
 
   const handleVideoClick = () => {
     setIsVideoOpen(true);
+  };
+
+  const handleImageSelect = (index: number) => {
+    setSelectedImageIndex(index);
   };
 
   return (
@@ -55,24 +52,23 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
             <span className="ml-1">({images.length})</span>
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-white">
-          {/* Header fixo com botão de fechar */}
-          <div className="bg-white border-b p-3 sm:p-4 sticky top-0 z-20 flex items-center justify-between">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden p-0 bg-white">
+          {/* Header com informações do produto */}
+          <div className="bg-white border-b p-4 sticky top-0 z-20 flex items-center justify-between">
             <div className="flex-1 min-w-0 pr-4">
-              <h3 className="text-sm sm:text-base lg:text-lg font-semibold line-clamp-2 text-gray-900">
+              <h3 className="text-lg font-semibold line-clamp-2 text-gray-900 mb-1">
                 {productName}
               </h3>
-              <p className="text-base sm:text-lg lg:text-xl font-bold text-red-500 mt-1">
+              <p className="text-xl font-bold text-red-500">
                 {productPrice}
               </p>
             </div>
             
-            {/* Botão de fechar prominente */}
             <Button
               onClick={() => setIsOpen(false)}
               variant="outline"
               size="sm"
-              className="flex-shrink-0 bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700 hover:border-red-300 transition-all duration-300"
+              className="flex-shrink-0 bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700 hover:border-red-300"
             >
               <X className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Fechar</span>
@@ -80,7 +76,7 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
           </div>
 
           {/* Botões de ação */}
-          <div className="px-3 sm:px-4 py-2 bg-gray-50 border-b flex gap-2 flex-wrap">
+          <div className="px-4 py-3 bg-gray-50 border-b flex gap-2 flex-wrap">
             {videoUrl && (
               <Button 
                 onClick={handleVideoClick}
@@ -102,49 +98,54 @@ export const ProductPhotosModal: React.FC<ProductPhotosModalProps> = ({
             </Button>
           </div>
           
-          {/* Grid de imagens com scroll melhorado */}
-          <div className="p-3 sm:p-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 180px)' }}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-              {images.map((image, index) => (
-                <div 
-                  key={index} 
-                  className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300" 
-                  onClick={() => handleImageClick(index)}
-                >
-                  <img 
-                    src={image} 
-                    alt={`${productName} - ${index + 1}`} 
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                  />
-                  
-                  {/* Overlay com efeito hover */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center gap-2">
-                      <Expand className="w-6 h-6 text-white drop-shadow-lg" />
-                      <span className="text-xs text-white font-medium bg-black/50 px-2 py-1 rounded">
-                        Ampliar
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Indicador de número da imagem */}
-                  <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded-md opacity-90">
-                    {index + 1}
-                  </div>
-                </div>
-              ))}
+          {/* Layout principal com imagem destacada e miniaturas */}
+          <div className="flex flex-col lg:flex-row overflow-y-auto" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+            {/* Imagem principal - mais apresentável */}
+            <div className="flex-1 p-4 bg-gray-50">
+              <div className="aspect-square max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+                <img 
+                  src={images[selectedImageIndex]} 
+                  alt={`${productName} - ${selectedImageIndex + 1}`} 
+                  className="w-full h-full object-cover transition-all duration-300"
+                />
+              </div>
+              
+              {/* Info da imagem selecionada */}
+              <div className="text-center mt-3">
+                <p className="text-sm text-gray-600">
+                  Imagem {selectedImageIndex + 1} de {images.length}
+                </p>
+              </div>
+            </div>
+
+            {/* Sidebar com miniaturas */}
+            <div className="lg:w-64 p-4 bg-white border-l">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">
+                Todas as Fotos
+              </h4>
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+                {images.map((image, index) => (
+                  <button
+                    key={index}
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                      index === selectedImageIndex 
+                        ? 'border-blue-500 ring-2 ring-blue-200 shadow-md' 
+                        : 'border-gray-200 hover:border-gray-400 hover:shadow-sm'
+                    }`}
+                    onClick={() => handleImageSelect(index)}
+                  >
+                    <img
+                      src={image}
+                      alt={`${productName} - ${index + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-
-      <ImageZoomModal
-        isOpen={isZoomOpen}
-        onClose={() => setIsZoomOpen(false)}
-        images={images}
-        currentIndex={selectedImageIndex}
-        productName={productName}
-      />
 
       {videoUrl && (
         <ProductVideoModal

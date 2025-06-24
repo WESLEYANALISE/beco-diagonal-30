@@ -70,7 +70,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   }, [product.link]);
   const images = getProductImages(product);
   if (listView) {
-    return <>
+    return (
+      <>
         <Card id={`product-${product.id}`} style={style} className={`
             overflow-hidden hover:shadow-xl transition-all duration-300 
             bg-white border-0 shadow-lg group animate-fade-in cursor-pointer
@@ -81,11 +82,13 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               {/* Image */}
               <div className="relative w-24 h-24 flex-shrink-0">
                 <LazyImage src={product.imagem1} alt={product.produto} className="w-full h-full object-cover rounded-lg" />
-                {product.video && <div className="absolute top-1 right-1">
+                {product.video && (
+                  <div className="absolute top-1 right-1">
                     <div className="bg-black/70 rounded-full p-1">
                       <Play className="w-3 h-3 text-white" />
                     </div>
-                  </div>}
+                  </div>
+                )}
               </div>
 
               {/* Content */}
@@ -117,9 +120,11 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         </Card>
 
         <ProductDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} product={product} />
-      </>;
+      </>
+    );
   }
-  return <>
+  return (
+    <>
       <Card id={`product-${product.id}`} style={style} className={`
           overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 
           bg-white border-0 shadow-lg group animate-fade-in cursor-pointer
@@ -128,42 +133,58 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         <div className="relative">
           <Carousel className="w-full">
             <CarouselContent>
-              {images.map((image, index) => <CarouselItem key={index}>
+              {images.map((image, index) => (
+                <CarouselItem key={index}>
                   <div className="aspect-square overflow-hidden">
                     <LazyImage src={image} alt={`${product.produto} - ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   </div>
-                </CarouselItem>)}
+                </CarouselItem>
+              ))}
             </CarouselContent>
             <CarouselPrevious className={`carousel-nav left-1 bg-white/90 hover:bg-white ${compact ? 'w-5 h-5' : 'w-6 h-6'}`} />
             <CarouselNext className={`carousel-nav right-1 bg-white/90 hover:bg-white ${compact ? 'w-5 h-5' : 'w-6 h-6'}`} />
           </Carousel>
           
-          {product.video && <div className={`absolute ${compact ? 'top-1 right-1' : 'top-2 right-2'}`}>
-              
-            </div>}
+          {product.video && (
+            <div className={`absolute ${compact ? 'top-1 right-1' : 'top-2 right-2'}`}>
+              {/* Video indicator */}
+            </div>
+          )}
           
-          {showBadge && <div className={`absolute ${compact ? 'top-1 left-1' : 'top-2 left-2'}`}>
+          {showBadge && (
+            <div className={`absolute ${compact ? 'top-1 left-1' : 'top-2 left-2'}`}>
               <Badge className="bg-red-500 text-white font-bold text-xs animate-bounce">
                 {badgeText}
               </Badge>
-            </div>}
+            </div>
+          )}
 
-          {product.categoria && !showBadge && compact && <div className="absolute bottom-1 left-1">
+          {product.categoria && !showBadge && compact && (
+            <div className="absolute bottom-1 left-1">
               <Badge variant="secondary" className="text-xs bg-white/90 px-1 py-0">
                 {product.categoria}
               </Badge>
-            </div>}
+            </div>
+          )}
 
-          {selectable && <div className="absolute top-2 left-2">
+          {selectable && (
+            <div className="absolute top-2 left-2">
               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selected ? 'bg-blue-500 border-blue-500' : 'bg-white border-gray-300'}`}>
                 {selected && <div className="w-2 h-2 bg-white rounded-full"></div>}
               </div>
-            </div>}
+            </div>
+          )}
 
-          {/* Favorite button - sempre presente no canto superior esquerdo se não houver badge ou seleção */}
-          {!showBadge && !selectable && <div className={`absolute ${compact ? 'top-1 left-1' : 'top-2 left-2'}`}>
-              <FavoriteButton productId={product.id} showText={false} />
-            </div>}
+          {/* Favorite button - versão melhorada para "Mais Vendidos" */}
+          {!showBadge && !selectable && (
+            <div className={`absolute ${compact ? 'top-1 left-1' : 'top-2 left-2'}`}>
+              <FavoriteButton 
+                productId={product.id} 
+                showText={false} 
+                enhanced={showBadge} // Usar versão melhorada se for "Mais Vendidos"
+              />
+            </div>
+          )}
         </div>
 
         <CardContent className={compact ? "p-2" : "p-3"}>
@@ -182,10 +203,15 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
           
           <div className="space-y-1">
-            {/* Sempre mostrar botão de favoritar no conteúdo do card se houver badge ou seleção */}
-            {(showBadge || selectable) && <div className="flex gap-1 mb-1">
-                <FavoriteButton productId={product.id} />
-              </div>}
+            {/* Botão de favoritar melhorado para produtos com badge */}
+            {(showBadge || selectable) && (
+              <div className="flex gap-1 mb-1">
+                <FavoriteButton 
+                  productId={product.id} 
+                  enhanced={showBadge} // Versão melhorada para "Mais Vendidos"
+                />
+              </div>
+            )}
             
             <ProductPhotosModal images={images} productName={product.produto} productPrice={formatPrice(product.valor)} productLink={product.link} videoUrl={product.video} />
             
@@ -198,7 +224,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
       </Card>
 
       <ProductDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} product={product} />
-    </>;
+    </>
+  );
 };
 export const ProductCard = memo(ProductCardComponent);
 ProductCard.displayName = 'ProductCard';

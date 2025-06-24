@@ -1,23 +1,30 @@
+
 import { Heart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useFavorites } from '@/hooks/useFavorites';
 import { useState } from 'react';
+
 interface FavoriteButtonProps {
   productId: number;
   size?: 'sm' | 'default';
   showText?: boolean;
+  enhanced?: boolean; // Nova prop para versão melhorada
 }
+
 export const FavoriteButton = ({
   productId,
   size = 'sm',
-  showText = true
+  showText = true,
+  enhanced = false
 }: FavoriteButtonProps) => {
   const {
     isFavorite,
     toggleFavorite
   } = useFavorites();
   const [isAnimating, setIsAnimating] = useState(false);
+  
   const favorite = isFavorite(productId);
+  
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -27,12 +34,68 @@ export const FavoriteButton = ({
     // Reset animation after a short delay
     setTimeout(() => setIsAnimating(false), 600);
   };
-  return <Button variant="outline" size={size} onClick={handleClick} className={`
-        ${favorite ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100' : 'bg-white/90 border-gray-200 hover:bg-gray-50'} 
+
+  if (enhanced) {
+    return (
+      <Button 
+        variant={favorite ? "default" : "outline"} 
+        size={size} 
+        onClick={handleClick} 
+        className={`
+          ${favorite 
+            ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-lg hover:from-red-600 hover:to-pink-600' 
+            : 'bg-white/95 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300'
+          } 
+          transition-all duration-300 hover:scale-110 shadow-md hover:shadow-lg
+          ${!showText ? 'px-3' : 'px-4'}
+          font-medium
+        `}
+      >
+        <Heart 
+          className={`
+            ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} 
+            transition-all duration-300 
+            ${favorite ? 'fill-current scale-110' : ''} 
+            ${isAnimating ? 'animate-bounce scale-125' : ''}
+            ${showText ? 'mr-2' : ''}
+          `} 
+        />
+        {showText && (
+          <span className="font-semibold">
+            {favorite ? 'Favoritado' : 'Favoritar'}
+          </span>
+        )}
+      </Button>
+    );
+  }
+
+  return (
+    <Button 
+      variant="outline" 
+      size={size} 
+      onClick={handleClick} 
+      className={`
+        ${favorite 
+          ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100' 
+          : 'bg-white/90 border-gray-200 hover:bg-gray-50'
+        } 
         hover:scale-105 transition-all duration-300 shadow-sm
         ${!showText ? 'px-2' : ''}
-      `}>
-      <Heart className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} transition-all duration-500 ${favorite ? 'fill-current text-red-500 scale-110' : ''} ${isAnimating ? 'animate-pulse scale-125' : ''}`} />
-      {showText}
-    </Button>;
+      `}
+    >
+      <Heart 
+        className={`
+          ${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} 
+          transition-all duration-500 
+          ${favorite ? 'fill-current text-red-500 scale-110' : ''} 
+          ${isAnimating ? 'animate-pulse scale-125' : ''}
+        `} 
+      />
+      {showText && (
+        <span className="ml-1 text-xs">
+          {favorite ? 'Favoritado' : 'Favoritar'}
+        </span>
+      )}
+    </Button>
+  );
 };
