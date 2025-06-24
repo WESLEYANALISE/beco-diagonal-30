@@ -1,5 +1,6 @@
+
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
-import { Heart, Share2, ShoppingCart, Play, Pause, Volume2, VolumeX, Images } from 'lucide-react';
+import { Heart, Share2, ShoppingCart, Volume2, VolumeX, Images } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from '@/components/FavoriteButton';
@@ -34,8 +35,6 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const [hasInteracted, setHasInteracted] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -46,13 +45,8 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   const isValidVideo = (url: string) => {
     if (!url || typeof url !== 'string') return false;
     
-    // Check if it's a valid MP4 URL
     const isMP4 = url.toLowerCase().includes('.mp4');
-    
-    // Check if URL is accessible (basic validation)
     const isValidURL = url.startsWith('http') && !url.includes('undefined') && !url.includes('null');
-    
-    // Check if it's not an image URL
     const isNotImage = !url.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/);
     
     return isMP4 && isValidURL && isNotImage;
@@ -81,14 +75,20 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         setIsPlaying(false);
         
         video.currentTime = 0;
-        video.muted = false; // Som automático ativado
-        setIsMuted(false);
         
-        // Load video and play when ready
+        // Start muted to avoid autoplay issues
+        video.muted = true;
+        setIsMuted(true);
+        
+        // Load video
         video.load();
         
-        const handleCanPlay = () => {
+        const handleCanPlayThrough = () => {
           setVideoLoaded(true);
+          // Try to play with sound first
+          video.muted = false;
+          setIsMuted(false);
+          
           const playPromise = video.play();
           
           if (playPromise !== undefined) {
@@ -96,8 +96,8 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
               setIsPlaying(true);
               setVideoError(false);
             }).catch((error) => {
-              console.error('Error playing video:', error);
-              // Se falhar com som, tenta sem som
+              console.log('Trying without sound due to autoplay policy');
+              // If fails with sound, try muted
               video.muted = true;
               setIsMuted(true);
               video.play().then(() => {
@@ -129,13 +129,13 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
           }
         };
         
-        video.addEventListener('canplay', handleCanPlay);
+        video.addEventListener('canplaythrough', handleCanPlayThrough);
         video.addEventListener('error', handleError);
         video.addEventListener('loadstart', handleLoadStart);
         video.addEventListener('ended', handleVideoEnded);
         
         return () => {
-          video.removeEventListener('canplay', handleCanPlay);
+          video.removeEventListener('canplaythrough', handleCanPlayThrough);
           video.removeEventListener('error', handleError);
           video.removeEventListener('loadstart', handleLoadStart);
           video.removeEventListener('ended', handleVideoEnded);
@@ -149,42 +149,13 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
     }
   }, [isActive, product.video, onVideoEnd]);
 
-  const togglePlay = useCallback(() => {
-    if (videoRef.current && !videoError && videoLoaded) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            setIsPlaying(true);
-          }).catch(() => {
-            setVideoError(true);
-          });
-        }
-      }
-    }
-  }, [isPlaying, videoError, videoLoaded]);
-
   const toggleMute = useCallback(() => {
-    if (videoRef.current && !videoError) {
+    if (videoRef.current && !videoError && videoLoaded) {
       const newMutedState = !isMuted;
       setIsMuted(newMutedState);
       videoRef.current.muted = newMutedState;
     }
-  }, [isMuted, videoError]);
-
-  const handleVideoClick = useCallback(() => {
-    if (!hasInteracted) {
-      setHasInteracted(true);
-    }
-    
-    togglePlay();
-    
-    setShowControls(true);
-    setTimeout(() => setShowControls(false), 2000);
-  }, [togglePlay, hasInteracted]);
+  }, [isMuted, videoError, videoLoaded]);
 
   const handleBuyClick = useCallback(() => {
     onBuy(product);
@@ -205,13 +176,15 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   const renderVideo = () => {
     if (!product.video || !isValidVideo(product.video)) {
       return (
-        <div className="w-full h-full flex items-center justify-center bg-gray-800">
-          <div className="text-center text-white">
-            <img 
-              src={product.imagem1} 
-              alt={product.produto} 
-              className="w-full h-full object-contain max-w-sm mx-auto rounded-lg mb-4" 
-            />
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+          <div className="text-center text-white p-4">
+            {product.imagem1 && (
+              <img 
+                src={product.imagem1} 
+                alt={product.produto} 
+                className="w-full h-auto max-h-96 object-contain mx-auto rounded-lg mb-4 shadow-xl" 
+              />
+            )}
             <p className="text-sm opacity-75">Vídeo não disponível</p>
           </div>
         </div>
@@ -220,13 +193,15 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
 
     if (videoError) {
       return (
-        <div className="w-full h-full flex items-center justify-center bg-gray-800">
-          <div className="text-center text-white">
-            <img 
-              src={product.imagem1} 
-              alt={product.produto} 
-              className="w-full h-full object-contain max-w-sm mx-auto rounded-lg mb-4" 
-            />
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+          <div className="text-center text-white p-4">
+            {product.imagem1 && (
+              <img 
+                src={product.imagem1} 
+                alt={product.produto} 
+                className="w-full h-auto max-h-96 object-contain mx-auto rounded-lg mb-4 shadow-xl" 
+              />
+            )}
             <p className="text-sm opacity-75">Erro ao carregar vídeo</p>
           </div>
         </div>
@@ -238,7 +213,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         <video
           ref={videoRef}
           src={product.video}
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover"
           loop
           muted={isMuted}
           playsInline
@@ -248,20 +223,22 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
             setVideoError(true);
           }}
           onLoadedData={() => {
-            setVideoLoaded(true);
+            console.log('Video loaded successfully');
           }}
         />
         
-        {/* Loading overlay */}
+        {/* Loading overlay with image preview */}
         {!videoLoaded && !videoError && (
-          <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-            <img 
-              src={product.imagem1} 
-              alt={product.produto} 
-              className="w-full h-full object-contain max-w-sm mx-auto rounded-lg opacity-50" 
-            />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+            {product.imagem1 && (
+              <img 
+                src={product.imagem1} 
+                alt={product.produto} 
+                className="w-full h-auto max-h-96 object-contain mx-auto opacity-60" 
+              />
+            )}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
             </div>
           </div>
         )}
@@ -273,22 +250,13 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
 
   return (
     <div className="relative w-full h-screen bg-black flex items-center justify-center overflow-hidden">
-      {/* Video Container */}
-      <div className="relative w-full h-full max-w-md mx-auto" onClick={handleVideoClick}>
+      {/* Video Container - Responsive */}
+      <div className="relative w-full h-full sm:max-w-md sm:mx-auto">
         {renderVideo()}
 
-        {/* Play/Pause Overlay */}
-        {showControls && !videoError && videoLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-black/30 rounded-full p-4 animate-fade-in">
-              {isPlaying ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white" />}
-            </div>
-          </div>
-        )}
-
-        {/* Audio Control */}
+        {/* Audio Control - Only if video is valid and loaded */}
         {product.video && isValidVideo(product.video) && !videoError && videoLoaded && (
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 z-10">
             <Button
               variant="ghost"
               size="sm"
@@ -296,16 +264,16 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
                 e.stopPropagation();
                 toggleMute();
               }}
-              className="bg-black/50 hover:bg-black/70 rounded-full p-3"
+              className="bg-black/50 hover:bg-black/70 rounded-full p-3 backdrop-blur-sm"
             >
               {isMuted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
             </Button>
           </div>
         )}
 
-        {/* Product Thumbnail - Discrete placement */}
+        {/* Product Thumbnail - Responsive positioning */}
         {productImages.length > 0 && (
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 z-10">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -313,7 +281,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
               }}
               className="group relative"
             >
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 hover:border-white/60 transition-all duration-200 bg-black/30">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-white/20 hover:border-white/60 transition-all duration-200 bg-black/30 backdrop-blur-sm">
                 <img
                   src={productImages[0]}
                   alt={product.produto}
@@ -321,8 +289,8 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
                 />
               </div>
               {productImages.length > 1 && (
-                <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                  <Images className="w-3 h-3" />
+                <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold">
+                  <Images className="w-2 h-2 sm:w-3 sm:h-3" />
                 </div>
               )}
             </button>
@@ -330,31 +298,31 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         )}
       </div>
 
-      {/* Product Info Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-        <div className="flex justify-between items-end max-w-md mx-auto">
-          <div className="flex-1 pr-4">
-            <Badge className="bg-orange-500 text-white mb-2">
+      {/* Product Info Overlay - Responsive */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
+        <div className="flex justify-between items-end max-w-md mx-auto gap-3">
+          <div className="flex-1 min-w-0">
+            <Badge className="bg-orange-500 text-white mb-2 text-xs">
               {product.categoria}
             </Badge>
-            <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
+            <h3 className="text-white font-bold text-base sm:text-lg mb-2 line-clamp-2 leading-tight">
               {product.produto}
             </h3>
-            <p className="text-orange-300 font-bold text-xl mb-4">
+            <p className="text-orange-300 font-bold text-lg sm:text-xl mb-3 sm:mb-4">
               Menos de {formatPrice(product.valor)}
             </p>
             <Button 
               onClick={handleBuyClick} 
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-6 py-3 rounded-full w-full"
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-full w-full text-sm sm:text-base"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
               Comprar na Shopee
             </Button>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-4">
-            <div className="bg-black/50 hover:bg-black/70 rounded-full p-3">
+          {/* Action Buttons - Responsive */}
+          <div className="flex flex-col gap-3 sm:gap-4 flex-shrink-0">
+            <div className="bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 backdrop-blur-sm">
               <FavoriteButton productId={product.id} showText={false} />
             </div>
           </div>
