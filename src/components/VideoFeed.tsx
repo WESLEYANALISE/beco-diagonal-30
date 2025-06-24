@@ -31,7 +31,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   onBuy
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false); // Changed to false for automatic audio
   const [showControls, setShowControls] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -55,21 +55,30 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         if (iframeRef.current) {
           const youtubeId = getYouTubeVideoId(product.video);
           if (youtubeId) {
-            iframeRef.current.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1&allow=autoplay`;
+            iframeRef.current.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1&allow=autoplay`;
           }
         }
         setIsPlaying(true);
       } else {
-        // Handle direct MP4 videos
+        // Handle direct MP4 videos with automatic audio
         if (videoRef.current) {
           videoRef.current.currentTime = 0;
-          videoRef.current.muted = isMuted;
+          videoRef.current.muted = false; // Start with audio enabled
           const playPromise = videoRef.current.play();
           if (playPromise !== undefined) {
             playPromise.then(() => {
               setIsPlaying(true);
             }).catch(() => {
-              setIsPlaying(false);
+              // If autoplay with audio fails, try muted
+              if (videoRef.current) {
+                videoRef.current.muted = true;
+                setIsMuted(true);
+                videoRef.current.play().then(() => {
+                  setIsPlaying(true);
+                }).catch(() => {
+                  setIsPlaying(false);
+                });
+              }
             });
           }
         }
@@ -80,7 +89,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         videoRef.current.pause();
       }
     }
-  }, [isActive, product.video, isMuted]);
+  }, [isActive, product.video]);
 
   const togglePlay = useCallback(() => {
     if (!isYouTubeVideo(product.video) && videoRef.current) {
@@ -95,32 +104,23 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   }, [isPlaying, product.video]);
 
   const toggleMute = useCallback(() => {
-    if (!hasInteracted) {
-      setHasInteracted(true);
-    }
-    
     setIsMuted(!isMuted);
     
     if (!isYouTubeVideo(product.video) && videoRef.current) {
       videoRef.current.muted = !isMuted;
     }
-  }, [isMuted, hasInteracted, product.video]);
+  }, [isMuted, product.video]);
 
   const handleVideoClick = useCallback(() => {
     if (!hasInteracted) {
       setHasInteracted(true);
-      // First interaction - unmute and continue playing
-      setIsMuted(false);
-      if (!isYouTubeVideo(product.video) && videoRef.current) {
-        videoRef.current.muted = false;
-      }
-    } else {
-      togglePlay();
     }
+    
+    togglePlay();
     
     setShowControls(true);
     setTimeout(() => setShowControls(false), 2000);
-  }, [togglePlay, hasInteracted, product.video]);
+  }, [togglePlay, hasInteracted]);
 
   const handleBuyClick = useCallback(() => {
     onBuy(product);
@@ -140,7 +140,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         return (
           <iframe 
             ref={iframeRef}
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=0&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1`}
             className="w-full h-full object-cover rounded-lg" 
             frameBorder="0" 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
@@ -161,6 +161,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         muted={isMuted}
         playsInline
         preload="metadata"
+        autoPlay={isActive}
         onError={() => {
           console.error('Error loading video:', product.video);
         }}

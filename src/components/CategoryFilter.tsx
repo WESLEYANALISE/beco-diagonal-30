@@ -1,7 +1,6 @@
 
 import React, { memo } from 'react';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 interface CategoryFilterProps {
   categories: string[];
@@ -18,8 +17,6 @@ const CategoryFilterComponent: React.FC<CategoryFilterProps> = ({
   productCounts,
   compact = false
 }) => {
-  const totalProducts = Object.values(productCounts).reduce((sum, count) => sum + count, 0);
-  
   // Split categories into two rows if compact
   const categoriesPerRow = compact ? Math.ceil((categories.length + 1) / 2) : categories.length + 1;
   const firstRowCategories = compact ? ['todas', ...categories.slice(0, categoriesPerRow - 1)] : ['todas', ...categories];
@@ -39,9 +36,6 @@ const CategoryFilterComponent: React.FC<CategoryFilterProps> = ({
       }`}
     >
       {isAll ? 'Todas' : category}
-      <Badge variant="secondary" className={`ml-1 bg-white/20 text-white ${compact ? 'text-xs px-1' : ''}`}>
-        {isAll ? totalProducts : (productCounts[category] || 0)}
-      </Badge>
     </Button>
   );
 

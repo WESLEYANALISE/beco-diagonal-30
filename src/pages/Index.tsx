@@ -13,6 +13,7 @@ import { HeroSection } from '@/components/HeroSection';
 import { TabNavigation } from '@/components/TabNavigation';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
+import { VideoCarouselHome } from '@/components/VideoCarouselHome';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -250,6 +251,11 @@ const Index = () => {
     return shuffleArray(categoryProducts).slice(0, actualLimit);
   };
 
+  // Add filtered products with videos for the video carousel
+  const productsWithVideos = useMemo(() => {
+    return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== '')).slice(0, 12);
+  }, [filteredProducts]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
@@ -319,6 +325,11 @@ const Index = () => {
 
       {/* Hero Section */}
       <HeroSection productsCount={filteredProducts.length} />
+
+      {/* Video Carousel - Strategic placement after hero */}
+      {!showingAI && productsWithVideos.length > 0 && (
+        <VideoCarouselHome products={productsWithVideos} />
+      )}
 
       {/* Category Product Carousels - show all categories when not in AI mode */}
       {!showingAI && categories.map((category, index) => {
