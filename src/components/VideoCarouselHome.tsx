@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useNavigate } from 'react-router-dom';
 import { useProductClicks } from '@/hooks/useProductClicks';
+import { ProductDetailModal } from '@/components/ProductDetailModal';
 
 interface Product {
   id: number;
@@ -19,6 +20,7 @@ interface Product {
   imagem5: string;
   link: string;
   categoria: string;
+  uso?: string;
   click_count?: number;
 }
 
@@ -28,7 +30,7 @@ interface VideoCarouselHomeProps {
 
 interface VideoThumbnailProps {
   product: Product;
-  onWatchVideo: (productId: number) => void;
+  onWatchVideo: (product: Product) => void;
   onBuyProduct: (product: Product) => void;
   formatPrice: (price: string) => string;
 }
@@ -146,7 +148,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
         {/* Video Overlay */}
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
-            onClick={() => onWatchVideo(product.id)}
+            onClick={() => onWatchVideo(product)}
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-full p-4"
             size="sm"
           >
@@ -189,7 +191,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
         
         <div className="flex gap-2">
           <Button
-            onClick={() => onWatchVideo(product.id)}
+            onClick={() => onWatchVideo(product)}
             variant="outline"
             size="sm"
             className="flex-1 border-orange-500 text-orange-600 hover:bg-orange-50"
@@ -218,6 +220,7 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
   const { trackProductClick, getMostClickedProducts } = useProductClicks();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Load most clicked products on mount
   useEffect(() => {
@@ -242,12 +245,12 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
     loadFeaturedProducts();
   }, [getMostClickedProducts, fallbackProducts]);
 
-  const handleWatchVideo = async (productId: number) => {
+  const handleWatchVideo = async (product: Product) => {
     // Track the click
-    await trackProductClick(productId, 'video_view');
+    await trackProductClick(product.id, 'video_view');
     
-    // Navigate to Explorar page with the specific product
-    navigate(`/explorar?video=${productId}`);
+    // Open product detail modal
+    setSelectedProduct(product);
   };
 
   const handleBuyProduct = async (product: Product) => {
@@ -284,52 +287,63 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
   if (featuredProducts.length === 0) return null;
 
   return (
-    <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 backdrop-blur-sm px-0">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-            🏆 Produtos em Destaque
-          </h2>
-          <p className="text-base text-white/80 animate-slide-in-right">
-            Os produtos mais visualizados pelos usuários
-          </p>
-        </div>
+    <>
+      <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 backdrop-blur-sm px-0">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
+              🏆 Produtos em Destaque
+            </h2>
+            <p className="text-base text-white/80 animate-slide-in-right">
+              Os produtos mais visualizados pelos usuários
+            </p>
+          </div>
 
-        <Carousel className="w-full animate-scale-in">
-          <CarouselContent className="-ml-2 md:-ml-3">
-            {featuredProducts.map((product, index) => (
-              <CarouselItem
-                key={product.id}
-                className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <VideoThumbnail
-                  product={product}
-                  onWatchVideo={handleWatchVideo}
-                  onBuyProduct={handleBuyProduct}
-                  formatPrice={formatPrice}
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-          <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
-        </Carousel>
+          <Carousel className="w-full animate-scale-in">
+            <CarouselContent className="-ml-2 md:-ml-3">
+              {featuredProducts.map((product, index) => (
+                <CarouselItem
+                  key={product.id}
+                  className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <VideoThumbnail
+                    product={product}
+                    onWatchVideo={handleWatchVideo}
+                    onBuyProduct={handleBuyProduct}
+                    formatPrice={formatPrice}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
+            <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
+          </Carousel>
 
-        <div className="text-center mt-6 animate-fade-in">
-          <Button
-            onClick={async () => {
-              // Track exploration click
-              await trackProductClick(0, 'explore_products');
-              navigate('/explorar');
-            }}
-            className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-          >
-            Explorar Produtos
-            <Play className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="text-center mt-6 animate-fade-in">
+            <Button
+              onClick={async () => {
+                // Track exploration click
+                await trackProductClick(0, 'explore_products');
+                navigate('/explorar');
+              }}
+              className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+            >
+              Explorar Produtos
+              <Play className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Product Detail Modal */}
+      {selectedProduct && (
+        <ProductDetailModal
+          isOpen={!!selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          product={selectedProduct}
+        />
+      )}
+    </>
   );
 };
