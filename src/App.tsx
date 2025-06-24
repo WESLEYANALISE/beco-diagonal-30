@@ -1,11 +1,15 @@
 
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { navItems } from "./nav-items";
 import Index from "./pages/Index";
-import Explorar from "./pages/Explorar";
+import Categorias from "./pages/Categorias";
+import Favoritos from "./pages/Favoritos";
+import Novos from "./pages/Novos";
+import CategoriaLista from "./pages/CategoriaLista";
+import SubcategoriaLista from "./pages/SubcategoriaLista";
 
 const queryClient = new QueryClient();
 
@@ -13,13 +17,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
+      <Sonner />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/explorar" element={<Explorar />} />
-          {navItems.map(({ to, page }) => (
-            <Route key={to} path={to} element={page} />
-          ))}
+          <Route path="/categorias" element={<Categorias />} />
+          <Route path="/favoritos" element={<Favoritos />} />
+          <Route path="/novos" element={<Novos />} />
+          <Route path="/categoria-lista" element={<CategoriaLista />} />
+          <Route path="/subcategoria-lista" element={<SubcategoriaLista />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
