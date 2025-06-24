@@ -1,8 +1,10 @@
+
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { Heart, Share2, ShoppingCart, Play, Pause } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from '@/components/FavoriteButton';
+
 interface Product {
   id: number;
   produto: string;
@@ -16,11 +18,13 @@ interface Product {
   link: string;
   categoria: string;
 }
+
 interface VideoFeedProps {
   product: Product;
   isActive: boolean;
   onBuy: (product: Product) => void;
 }
+
 const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   product,
   isActive,
@@ -29,6 +33,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+
   useEffect(() => {
     if (videoRef.current) {
       if (isActive && product.video) {
@@ -40,6 +45,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
       }
     }
   }, [isActive, product.video]);
+
   const togglePlay = useCallback(() => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -51,44 +57,63 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
       }
     }
   }, [isPlaying]);
+
   const handleVideoClick = useCallback(() => {
     togglePlay();
     setShowControls(true);
     setTimeout(() => setShowControls(false), 2000);
   }, [togglePlay]);
+
   const handleBuyClick = useCallback(() => {
     onBuy(product);
   }, [product, onBuy]);
+
   const formatPrice = useCallback((price: string) => {
     if (price.includes('R$')) {
       return price;
     }
     return `R$ ${price}`;
   }, []);
+
   const getYouTubeVideoId = (url: string) => {
     const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
     const match = url.match(regExp);
     return match && match[7].length === 11 ? match[7] : null;
   };
+
   const youtubeId = getYouTubeVideoId(product.video || '');
-  return <div className="relative w-full h-screen bg-black flex items-center justify-center overflow-hidden">
+
+  return (
+    <div className="relative w-full h-screen bg-black flex items-center justify-center overflow-hidden">
       {/* Video Container */}
       <div className="relative w-full h-full max-w-md mx-auto" onClick={handleVideoClick}>
-        {product.video && youtubeId ? <iframe src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=0&controls=0&rel=0&loop=1&playlist=${youtubeId}`} className="w-full h-full object-cover rounded-lg" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /> : <div className="w-full h-full flex items-center justify-center">
+        {product.video && youtubeId ? (
+          <iframe 
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=0&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1`}
+            className="w-full h-full object-cover rounded-lg" 
+            frameBorder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowFullScreen
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
             <img src={product.imagem1} alt={product.produto} className="w-full h-full object-contain" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="bg-black/50 rounded-full p-4">
                 <Play className="w-12 h-12 text-white" />
               </div>
             </div>
-          </div>}
+          </div>
+        )}
 
         {/* Play/Pause Overlay */}
-        {showControls && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        {showControls && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="bg-black/30 rounded-full p-4 animate-fade-in">
               {isPlaying ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white" />}
             </div>
-          </div>}
+          </div>
+        )}
       </div>
 
       {/* Product Info Overlay */}
@@ -104,7 +129,10 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
             <p className="text-orange-300 font-bold text-xl mb-4">
               Menos de {formatPrice(product.valor)}
             </p>
-            <Button onClick={handleBuyClick} className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-6 py-3 rounded-full w-full">
+            <Button 
+              onClick={handleBuyClick} 
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-6 py-3 rounded-full w-full"
+            >
               <ShoppingCart className="w-4 h-4 mr-2" />
               Comprar na Shopee
             </Button>
@@ -115,11 +143,12 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
             <div className="bg-black/50 hover:bg-black/70 rounded-full p-3">
               <FavoriteButton productId={product.id} showText={false} />
             </div>
-            
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export const VideoFeed = memo(VideoFeedComponent);
 VideoFeed.displayName = 'VideoFeed';

@@ -3,7 +3,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowLeft, Grid2X2, LayoutList, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VideoFeed } from '@/components/VideoFeed';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { ProductGrid } from '@/components/ProductGrid';
@@ -217,17 +216,18 @@ const Explorar = () => {
           </div>
         </div>
 
-        {/* Category Filter */}
+        {/* Category Filter - Compact for video mode */}
         <CategoryFilter
           categories={categories}
           selectedCategory={selectedCategory}
           onCategoryChange={handleCategoryChange}
           productCounts={productCounts}
+          compact={viewMode === 'video'}
         />
       </div>
 
       {/* Content */}
-      <div className={viewMode === 'video' ? 'pt-0' : 'pt-32'}>
+      <div className={viewMode === 'video' ? 'pt-0' : 'pt-40'}>
         {viewMode === 'video' ? (
           <div className="relative">
             {videoProducts.length > 0 ? (

@@ -2,61 +2,87 @@
 import React, { memo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CategoryFilterProps {
   categories: string[];
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
   productCounts: Record<string, number>;
+  compact?: boolean;
 }
 
 const CategoryFilterComponent: React.FC<CategoryFilterProps> = ({
   categories,
   selectedCategory,
   onCategoryChange,
-  productCounts
+  productCounts,
+  compact = false
 }) => {
+  const totalProducts = Object.values(productCounts).reduce((sum, count) => sum + count, 0);
+  
+  // Split categories into two rows if compact
+  const categoriesPerRow = compact ? Math.ceil((categories.length + 1) / 2) : categories.length + 1;
+  const firstRowCategories = compact ? ['todas', ...categories.slice(0, categoriesPerRow - 1)] : ['todas', ...categories];
+  const secondRowCategories = compact ? categories.slice(categoriesPerRow - 1) : [];
+
+  const CategoryButton = ({ category, isAll = false }: { category: string; isAll?: boolean }) => (
+    <Button
+      variant={selectedCategory === category ? 'default' : 'outline'}
+      size={compact ? "sm" : "sm"}
+      onClick={() => onCategoryChange(category)}
+      className={`whitespace-nowrap transition-all duration-300 ${
+        compact ? 'text-xs px-2 py-1 h-7' : ''
+      } ${
+        selectedCategory === category 
+          ? 'bg-orange-500 text-white hover:bg-orange-600' 
+          : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
+      }`}
+    >
+      {isAll ? 'Todas' : category}
+      <Badge variant="secondary" className={`ml-1 bg-white/20 text-white ${compact ? 'text-xs px-1' : ''}`}>
+        {isAll ? totalProducts : (productCounts[category] || 0)}
+      </Badge>
+    </Button>
+  );
+
+  if (compact) {
+    return (
+      <div className="bg-black/80 backdrop-blur-sm p-3 space-y-2">
+        {/* First row */}
+        <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1 min-w-max">
+            {firstRowCategories.map(category => (
+              <CategoryButton 
+                key={category} 
+                category={category} 
+                isAll={category === 'todas'} 
+              />
+            ))}
+          </div>
+        </div>
+        
+        {/* Second row */}
+        {secondRowCategories.length > 0 && (
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-1 min-w-max">
+              {secondRowCategories.map(category => (
+                <CategoryButton key={category} category={category} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="bg-black/80 backdrop-blur-sm">
-      <ScrollArea className="w-full">
-        <div className="flex gap-2 p-4 overflow-x-auto">
-          <Button
-            variant={selectedCategory === 'todas' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onCategoryChange('todas')}
-            className={`whitespace-nowrap transition-all duration-300 ${
-              selectedCategory === 'todas' 
-                ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
-            }`}
-          >
-            Todas
-            <Badge variant="secondary" className="ml-2 bg-white/20 text-white">
-              {Object.values(productCounts).reduce((sum, count) => sum + count, 0)}
-            </Badge>
-          </Button>
-          
-          {categories.map(category => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onCategoryChange(category)}
-              className={`whitespace-nowrap transition-all duration-300 ${
-                selectedCategory === category 
-                  ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                  : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
-              }`}
-            >
-              {category}
-              <Badge variant="secondary" className="ml-2 bg-white/20 text-white">
-                {productCounts[category] || 0}
-              </Badge>
-            </Button>
-          ))}
-        </div>
-      </ScrollArea>
+      <div className="flex gap-2 p-4 overflow-x-auto">
+        <CategoryButton category="todas" isAll />
+        {categories.map(category => (
+          <CategoryButton key={category} category={category} />
+        ))}
+      </div>
     </div>
   );
 };
