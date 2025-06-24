@@ -130,6 +130,36 @@ const Explorar = () => {
     setCurrentVideoIndex(0);
   }, []);
 
+  // Função para avançar automaticamente para próxima categoria quando vídeo termina
+  const handleVideoEnd = useCallback(() => {
+    console.log('Video ended, checking for next video or category');
+    
+    // Se há mais vídeos na categoria atual, avança
+    if (currentVideoIndex < filteredProducts.length - 1) {
+      setCurrentVideoIndex(prev => prev + 1);
+      return;
+    }
+    
+    // Se acabaram os vídeos da categoria atual, vai para próxima categoria
+    const currentCategoryIndex = categories.findIndex(cat => cat === selectedCategory);
+    
+    if (selectedCategory === 'todas') {
+      // Se está em "todas", vai para primeira categoria específica
+      if (categories.length > 0) {
+        setSelectedCategory(categories[0]);
+        setCurrentVideoIndex(0);
+      }
+    } else if (currentCategoryIndex < categories.length - 1) {
+      // Vai para próxima categoria
+      setSelectedCategory(categories[currentCategoryIndex + 1]);
+      setCurrentVideoIndex(0);
+    } else {
+      // Se é a última categoria, volta para "todas"
+      setSelectedCategory('todas');
+      setCurrentVideoIndex(0);
+    }
+  }, [currentVideoIndex, filteredProducts.length, categories, selectedCategory]);
+
   // Handle scroll for video feed
   useEffect(() => {
     if (viewMode === 'video') {
@@ -269,6 +299,7 @@ const Explorar = () => {
                       product={product}
                       isActive={index === currentVideoIndex}
                       onBuy={handleBuyProduct}
+                      onVideoEnd={handleVideoEnd}
                     />
                   </div>
                 ))}

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { Heart, Share2, ShoppingCart, Play, Pause, Volume2, VolumeX, Images } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -24,15 +23,17 @@ interface VideoFeedProps {
   product: Product;
   isActive: boolean;
   onBuy: (product: Product) => void;
+  onVideoEnd?: () => void;
 }
 
 const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   product,
   isActive,
-  onBuy
+  onBuy,
+  onVideoEnd
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [videoError, setVideoError] = useState(false);
@@ -80,8 +81,8 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         setIsPlaying(false);
         
         video.currentTime = 0;
-        video.muted = true;
-        setIsMuted(true);
+        video.muted = false; // Som automático ativado
+        setIsMuted(false);
         
         // Load video and play when ready
         video.load();
@@ -96,8 +97,16 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
               setVideoError(false);
             }).catch((error) => {
               console.error('Error playing video:', error);
-              setVideoError(true);
-              setIsPlaying(false);
+              // Se falhar com som, tenta sem som
+              video.muted = true;
+              setIsMuted(true);
+              video.play().then(() => {
+                setIsPlaying(true);
+                setVideoError(false);
+              }).catch(() => {
+                setVideoError(true);
+                setIsPlaying(false);
+              });
             });
           }
         };
@@ -112,15 +121,24 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         const handleLoadStart = () => {
           setVideoLoaded(false);
         };
+
+        const handleVideoEnded = () => {
+          console.log('Video ended, calling onVideoEnd');
+          if (onVideoEnd) {
+            onVideoEnd();
+          }
+        };
         
         video.addEventListener('canplay', handleCanPlay);
         video.addEventListener('error', handleError);
         video.addEventListener('loadstart', handleLoadStart);
+        video.addEventListener('ended', handleVideoEnded);
         
         return () => {
           video.removeEventListener('canplay', handleCanPlay);
           video.removeEventListener('error', handleError);
           video.removeEventListener('loadstart', handleLoadStart);
+          video.removeEventListener('ended', handleVideoEnded);
         };
       }
     } else {
@@ -129,7 +147,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         videoRef.current.pause();
       }
     }
-  }, [isActive, product.video]);
+  }, [isActive, product.video, onVideoEnd]);
 
   const togglePlay = useCallback(() => {
     if (videoRef.current && !videoError && videoLoaded) {
