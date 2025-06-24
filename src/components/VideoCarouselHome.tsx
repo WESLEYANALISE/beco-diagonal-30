@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -24,11 +23,12 @@ interface Product {
 
 interface VideoCarouselHomeProps {
   products: Product[];
+  onProductSelect?: (product: Product) => void;
 }
 
 interface VideoThumbnailProps {
   product: Product;
-  onWatchVideo: (productId: number) => void;
+  onWatchVideo: (product: Product) => void;
   onBuyProduct: (product: Product) => void;
   formatPrice: (price: string) => string;
 }
@@ -146,7 +146,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
         {/* Video Overlay */}
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
-            onClick={() => onWatchVideo(product.id)}
+            onClick={() => onWatchVideo(product)}
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-full p-4"
             size="sm"
           >
@@ -189,7 +189,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
         
         <div className="flex gap-2">
           <Button
-            onClick={() => onWatchVideo(product.id)}
+            onClick={() => onWatchVideo(product)}
             variant="outline"
             size="sm"
             className="flex-1 border-orange-500 text-orange-600 hover:bg-orange-50"
@@ -212,7 +212,8 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
 };
 
 export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
-  products: fallbackProducts
+  products: fallbackProducts,
+  onProductSelect
 }) => {
   const navigate = useNavigate();
   const { trackProductClick, getMostClickedProducts } = useProductClicks();
@@ -242,12 +243,16 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
     loadFeaturedProducts();
   }, [getMostClickedProducts, fallbackProducts]);
 
-  const handleWatchVideo = async (productId: number) => {
+  const handleWatchVideo = async (product: Product) => {
     // Track the click
-    await trackProductClick(productId, 'video_view');
+    await trackProductClick(product.id, 'video_view');
     
-    // Navigate to Explorar page with the specific product
-    navigate(`/explorar?video=${productId}`);
+    // Call parent callback if provided, otherwise navigate
+    if (onProductSelect) {
+      onProductSelect(product);
+    } else {
+      navigate(`/explorar?video=${product.id}`);
+    }
   };
 
   const handleBuyProduct = async (product: Product) => {
