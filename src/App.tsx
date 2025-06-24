@@ -10,6 +10,7 @@ import Favoritos from "./pages/Favoritos";
 import Novos from "./pages/Novos";
 import CategoriaLista from "./pages/CategoriaLista";
 import SubcategoriaLista from "./pages/SubcategoriaLista";
+import Explorar from "./pages/Explorar";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/novos" element={<Novos />} />
           <Route path="/categoria-lista" element={<CategoriaLista />} />
           <Route path="/subcategoria-lista" element={<SubcategoriaLista />} />
+          <Route path="/explorar" element={<Explorar />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

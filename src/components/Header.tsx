@@ -27,6 +27,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
     { path: '/categorias', label: 'Categorias', icon: Grid3X3 },
     { path: '/favoritos', label: 'Favoritos', icon: Heart },
     { path: '/novos', label: 'Novidades', icon: Sparkles },
+    { path: '/explorar', label: 'Explorar', icon: Search },
   ];
 
   const handleNavigation = (path: string) => {
@@ -206,10 +207,10 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
           </div>
         </div>
 
-        {/* Search Bar - Always visible at top */}
+        {/* Search Bar - Always visible at top - Smaller on desktop */}
         {location.pathname === '/' && (
           <div className="px-4 pb-3">
-            <div className="relative w-full">
+            <div className="relative w-full max-w-md mx-auto md:max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5" />
               <Input
                 placeholder="Buscar produtos..."
@@ -224,7 +225,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
 
       {/* Bottom Navigation for Mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-red-500 to-orange-500 border-t border-white/20 z-50 shadow-2xl">
-        <div className="grid grid-cols-4 gap-1 px-2 py-2">
+        <div className="grid grid-cols-5 gap-1 px-2 py-2">
           {navItems.map((item) => (
             <button
               key={item.path}
