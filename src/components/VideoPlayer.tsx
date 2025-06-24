@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 
 interface VideoPlayerProps {
   videoUrl: string;
-  thumbnail: string;
-  title: string;
+  thumbnail?: string;
+  title?: string;
+  autoPlay?: boolean;
+  className?: string;
 }
 
-export const VideoPlayer = ({ videoUrl, thumbnail, title }: VideoPlayerProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false); // Mudado para false - áudio ligado por padrão
+export const VideoPlayer = ({ videoUrl, thumbnail, title, autoPlay = false, className }: VideoPlayerProps) => {
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [isMuted, setIsMuted] = useState(false);
 
   const handlePlay = () => {
     setIsPlaying(true);
@@ -38,12 +40,12 @@ export const VideoPlayer = ({ videoUrl, thumbnail, title }: VideoPlayerProps) =>
 
   const youtubeId = getYouTubeVideoId(videoUrl);
 
-  if (!isPlaying) {
+  if (!isPlaying && !autoPlay) {
     return (
-      <div className="relative aspect-video overflow-hidden bg-black rounded-lg group cursor-pointer" onClick={handlePlay}>
+      <div className={`relative aspect-video overflow-hidden bg-black rounded-lg group cursor-pointer ${className || ''}`} onClick={handlePlay}>
         <img 
           src={thumbnail || `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`} 
-          alt={title}
+          alt={title || ''}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
             e.currentTarget.src = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=250&fit=crop";
@@ -59,10 +61,10 @@ export const VideoPlayer = ({ videoUrl, thumbnail, title }: VideoPlayerProps) =>
   }
 
   return (
-    <div className="relative aspect-video overflow-hidden bg-black rounded-lg">
+    <div className={`relative aspect-video overflow-hidden bg-black rounded-lg ${className || ''}`}>
       {youtubeId ? (
         <iframe
-          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&rel=0`}
+          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${autoPlay ? 1 : 0}&mute=${isMuted ? 1 : 0}&rel=0`}
           className="w-full h-full"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
