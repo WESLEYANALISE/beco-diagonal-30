@@ -42,6 +42,12 @@ const Explorar = () => {
     return shuffled;
   };
 
+  // Check if video is valid MP4
+  const isValidMP4Video = (url: string) => {
+    if (!url) return false;
+    return url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('mp4');
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -57,8 +63,11 @@ const Explorar = () => {
 
       if (error) throw error;
       
-      // Shuffle products to randomize the order
-      const shuffledProducts = shuffleArray(data || []);
+      // Filter only MP4 videos and shuffle products
+      const mp4Products = (data || []).filter(product => 
+        product.video && isValidMP4Video(product.video)
+      );
+      const shuffledProducts = shuffleArray(mp4Products);
       setProducts(shuffledProducts);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
@@ -67,14 +76,16 @@ const Explorar = () => {
     }
   };
 
-  // Memoized filtered products - only products with videos
+  // Memoized filtered products - only products with valid MP4 videos
   const filteredProducts = useMemo(() => {
-    const productsWithVideos = products.filter(product => product.video && product.video.trim() !== '');
+    const productsWithValidVideos = products.filter(product => 
+      product.video && isValidMP4Video(product.video)
+    );
     
     if (selectedCategory === 'todas') {
-      return productsWithVideos;
+      return productsWithValidVideos;
     }
-    return productsWithVideos.filter(product => product.categoria === selectedCategory);
+    return productsWithValidVideos.filter(product => product.categoria === selectedCategory);
   }, [products, selectedCategory]);
 
   // Memoized categories and counts - only from products with videos
@@ -249,7 +260,7 @@ const Explorar = () => {
             ) : (
               <div className="h-screen flex items-center justify-center text-white">
                 <div className="text-center">
-                  <p className="text-xl mb-4">Nenhum vídeo encontrado nesta categoria</p>
+                  <p className="text-xl mb-4">Nenhum vídeo MP4 encontrado nesta categoria</p>
                   <Button onClick={() => setViewMode('grid')} className="bg-orange-500 hover:bg-orange-600">
                     Ver em Grade
                   </Button>
