@@ -1,14 +1,12 @@
-
 import React from 'react';
 import { Gift, TrendingUp, Star, Zap } from 'lucide-react';
-
 interface HeroSectionProps {
   productsCount: number;
 }
-
-export const HeroSection: React.FC<HeroSectionProps> = ({ productsCount }) => {
-  return (
-    <section className="px-4 md:px-6 py-6 md:py-12 animate-fade-in">
+export const HeroSection: React.FC<HeroSectionProps> = ({
+  productsCount
+}) => {
+  return <section className="px-4 md:px-6 py-6 md:py-12 animate-fade-in">
       <div className="max-w-7xl mx-auto">
         <div className="text-center space-y-4 md:space-y-6 mb-8">
           <div className="animate-fade-in-scale">
@@ -16,7 +14,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ productsCount }) => {
               <Gift className="w-8 h-8 md:w-10 md:h-10 text-white animate-pulse" />
             </div>
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight animate-slide-in-left">
-              Achadinhos <span className="text-yellow-300 animate-pulse">Shopee</span>
+              Achadinhos <span className="text-yellow-300 animate-pulse">Online</span>
             </h1>
             <p className="text-base md:text-lg text-white/90 mb-6 max-w-2xl mx-auto leading-relaxed animate-slide-in-right">
               Os melhores produtos com os menores preços! Descubra ofertas incríveis e promoções imperdíveis.
@@ -48,6 +46,5 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ productsCount }) => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
