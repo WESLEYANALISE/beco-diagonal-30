@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +31,7 @@ interface ProductDetailModalProps {
   product: Product;
 }
 
-export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
+export const ProductDetailModal: React.FC<ProductDetailModalProps> = memo(({
   isOpen,
   onClose,
   product
@@ -122,6 +122,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             src={image}
                             alt={`${product.produto} - ${index + 1}`}
                             className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
                           />
                         </div>
                       </CarouselItem>
@@ -153,6 +154,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       src={image}
                       alt={`Miniatura ${index + 1}`}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </button>
                 ))}
@@ -267,4 +269,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       )}
     </>
   );
-};
+});
+
+ProductDetailModal.displayName = 'ProductDetailModal';
