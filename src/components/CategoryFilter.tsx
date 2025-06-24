@@ -31,17 +31,17 @@ const CategoryFilterComponent: React.FC<CategoryFilterProps> = ({
         compact ? 'text-xs px-2 py-1 h-7' : ''
       } ${
         selectedCategory === category 
-          ? 'bg-orange-500 text-white hover:bg-orange-600' 
-          : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
+          ? 'bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze border-0 shadow-lg animate-magical-glow' 
+          : 'bg-magical-deepPurple/60 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/20 hover:text-magical-gold backdrop-blur-sm'
       }`}
     >
-      {isAll ? 'Todas' : category}
+      {isAll ? 'Todas as Categorias' : category}
     </Button>
   );
 
   if (compact) {
     return (
-      <div className="bg-black/80 backdrop-blur-sm p-3 space-y-2">
+      <div className="bg-gradient-to-r from-magical-midnight/90 via-magical-deepPurple/90 to-magical-midnight/90 backdrop-blur-md border-b border-magical-gold/20 p-3 space-y-2">
         {/* First row */}
         <div className="flex gap-1 overflow-x-auto scrollbar-hide">
           <div className="flex gap-1 min-w-max">
@@ -70,7 +70,7 @@ const CategoryFilterComponent: React.FC<CategoryFilterProps> = ({
   }
 
   return (
-    <div className="bg-black/80 backdrop-blur-sm">
+    <div className="bg-gradient-to-r from-magical-midnight/90 via-magical-deepPurple/90 to-magical-midnight/90 backdrop-blur-md border-b border-magical-gold/20">
       <div className="flex gap-2 p-4 overflow-x-auto">
         <CategoryButton category="todas" isAll />
         {categories.map(category => (

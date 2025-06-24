@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Heart, ShoppingCart, Play, Star, ArrowLeft, Grid, List } from 'lucide-react';
+import { Heart, ShoppingCart, Play, Star, ArrowLeft, Grid, List, Book, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -85,14 +84,14 @@ const Favoritos = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-white/20 rounded-2xl"></div>
+            <div className="h-32 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="h-64 bg-white/20 rounded-2xl"></div>
+                <div key={i} className="h-64 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
               ))}
             </div>
           </div>
@@ -102,7 +101,7 @@ const Favoritos = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
@@ -111,28 +110,29 @@ const Favoritos = () => {
             variant="ghost"
             size="sm"
             onClick={() => navigate('/')}
-            className="text-white hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105"
+            className="text-magical-starlight hover:bg-magical-gold/20 rounded-xl transition-all duration-300 hover:scale-105 border border-magical-gold/30"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-white animate-slide-in-left">
-              💖 Meus Favoritos
+            <h1 className="text-2xl md:text-3xl font-bold text-magical-starlight animate-slide-in-left font-magical">
+              <Book className="inline w-6 h-6 mr-2 text-magical-gold animate-sparkle" />
+              Grimório Pessoal
             </h1>
-            <p className="text-white/80 animate-slide-in-right">
-              {products.length} {products.length === 1 ? 'produto favoritado' : 'produtos favoritados'}
+            <p className="text-magical-starlight/80 animate-slide-in-right font-enchanted">
+              {products.length} {products.length === 1 ? 'artefato guardado' : 'artefatos guardados'} na sua coleção mágica
             </p>
           </div>
           
-          {/* View Mode Toggle - Only show when there are products */}
+          {/* View Mode Toggle */}
           {products.length > 0 && (
             <div className="flex items-center gap-2">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
-                className="p-2 bg-white/20 border-white/30 hover:bg-white/30 text-white"
+                className="p-2 bg-magical-gold/20 border-magical-gold/30 hover:bg-magical-gold/30 text-magical-starlight"
               >
                 <Grid className="w-4 h-4" />
               </Button>
@@ -140,7 +140,7 @@ const Favoritos = () => {
                 variant={viewMode === 'list' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className="p-2 bg-white/20 border-white/30 hover:bg-white/30 text-white"
+                className="p-2 bg-magical-gold/20 border-magical-gold/30 hover:bg-magical-gold/30 text-magical-starlight"
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -150,20 +150,21 @@ const Favoritos = () => {
 
         {products.length === 0 ? (
           <div className="text-center py-16 animate-fade-in">
-            <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
-              <Heart className="w-16 h-16 text-white/50" />
+            <div className="w-32 h-32 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-levitate border border-magical-gold/30">
+              <Book className="w-16 h-16 text-magical-gold/50" />
+              <Sparkles className="w-6 h-6 text-magical-gold absolute top-4 right-4 animate-sparkle" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Nenhum favorito ainda
+            <h2 className="text-2xl font-bold text-magical-starlight mb-4 font-magical">
+              Seu grimório está vazio
             </h2>
-            <p className="text-white/80 mb-6">
-              Adicione produtos aos seus favoritos para vê-los aqui
+            <p className="text-magical-starlight/80 mb-6 font-enchanted">
+              Adicione artefatos mágicos à sua coleção pessoal para vê-los aqui
             </p>
             <Button
               onClick={() => navigate('/')}
-              className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold transition-all duration-300 hover:scale-105 font-enchanted"
             >
-              Explorar Produtos
+              Explorar Artefatos Mágicos
             </Button>
           </div>
         ) : (
@@ -177,7 +178,7 @@ const Favoritos = () => {
                 // Grid View - Compact cards
                 <Card 
                   key={product.id} 
-                  className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-0 shadow-lg group animate-fade-in cursor-pointer"
+                  className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group animate-fade-in cursor-pointer backdrop-blur-sm hover:shadow-magical-gold/20"
                   style={{ animationDelay: `${index * 0.1}s` }}
                   onClick={() => handleProductClick(product)}
                 >
@@ -197,14 +198,14 @@ const Favoritos = () => {
                           </CarouselItem>
                         ))}
                       </CarouselContent>
-                      <CarouselPrevious className="left-1 bg-white/90 hover:bg-white w-5 h-5" />
-                      <CarouselNext className="right-1 bg-white/90 hover:bg-white w-5 h-5" />
+                      <CarouselPrevious className="left-1 bg-magical-starlight/90 hover:bg-magical-starlight w-5 h-5 border border-magical-gold/30" />
+                      <CarouselNext className="right-1 bg-magical-starlight/90 hover:bg-magical-starlight w-5 h-5 border border-magical-gold/30" />
                     </Carousel>
                     
                     {product.video && (
                       <div className="absolute top-2 right-2">
-                        <div className="bg-red-500 rounded-full p-1 animate-pulse">
-                          <Play className="w-3 h-3 text-white" />
+                        <div className="bg-magical-crimson rounded-full p-1 animate-pulse border border-magical-gold/30">
+                          <Play className="w-3 h-3 text-magical-starlight" />
                         </div>
                       </div>
                     )}
@@ -214,7 +215,7 @@ const Favoritos = () => {
                         size="sm"
                         variant="ghost"
                         onClick={(e) => handleRemoveFavorite(product.id, e)}
-                        className="bg-red-500 hover:bg-red-600 text-white p-1 h-auto rounded-full transition-all duration-300 hover:scale-110"
+                        className="bg-magical-crimson hover:bg-magical-crimson/80 text-magical-starlight p-1 h-auto rounded-full transition-all duration-300 hover:scale-110 border border-magical-gold/30"
                       >
                         <Heart className="w-4 h-4 fill-current" />
                       </Button>
@@ -222,17 +223,17 @@ const Favoritos = () => {
                   </div>
 
                   <CardContent className="p-3">
-                    <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 text-sm leading-tight hover:text-red-600 transition-colors">
+                    <h3 className="font-medium text-magical-starlight mb-2 line-clamp-2 text-sm leading-tight hover:text-magical-gold transition-colors font-enchanted">
                       {product.produto}
                     </h3>
                     
                     <div className="flex items-center justify-between mb-2">
-                      <div className="font-bold text-red-500 text-sm">
+                      <div className="font-bold text-magical-gold text-sm font-magical">
                         Menos de {formatPrice(product.valor)}
                       </div>
                       <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                        <span className="text-xs text-gray-600">4.8</span>
+                        <Star className="w-3 h-3 text-magical-gold fill-current" />
+                        <span className="text-xs text-magical-starlight/80">4.8</span>
                       </div>
                     </div>
                     
@@ -246,23 +247,23 @@ const Favoritos = () => {
                       />
                       <Button
                         size="sm"
-                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs py-1 hover:scale-105 transition-all duration-300"
+                        className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold text-xs py-1 hover:scale-105 transition-all duration-300 font-enchanted"
                         onClick={(e) => {
                           e.stopPropagation();
                           window.open(product.link, '_blank');
                         }}
                       >
                         <ShoppingCart className="w-3 h-3 mr-1" />
-                        Comprar Agora
+                        Adquirir Agora
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               ) : (
-                // List View - Expanded cards
+                // List View - Expanded cards with magical theme
                 <Card 
                   key={product.id} 
-                  className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-white border-0 shadow-lg group animate-fade-in cursor-pointer"
+                  className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group animate-fade-in cursor-pointer backdrop-blur-sm hover:shadow-magical-gold/20"
                   style={{ animationDelay: `${index * 0.1}s` }}
                   onClick={() => handleProductClick(product)}
                 >
@@ -283,14 +284,14 @@ const Favoritos = () => {
                             </CarouselItem>
                           ))}
                         </CarouselContent>
-                        <CarouselPrevious className="left-2 bg-white/90 hover:bg-white w-6 h-6" />
-                        <CarouselNext className="right-2 bg-white/90 hover:bg-white w-6 h-6" />
+                        <CarouselPrevious className="left-2 bg-magical-starlight/90 hover:bg-magical-starlight w-6 h-6 border border-magical-gold/30" />
+                        <CarouselNext className="right-2 bg-magical-starlight/90 hover:bg-magical-starlight w-6 h-6 border border-magical-gold/30" />
                       </Carousel>
                       
                       {product.video && (
                         <div className="absolute top-2 right-2">
-                          <div className="bg-red-500 rounded-full p-1 animate-pulse">
-                            <Play className="w-3 h-3 text-white" />
+                          <div className="bg-magical-crimson rounded-full p-1 animate-pulse border border-magical-gold/30">
+                            <Play className="w-3 h-3 text-magical-starlight" />
                           </div>
                         </div>
                       )}
@@ -300,7 +301,7 @@ const Favoritos = () => {
                           size="sm"
                           variant="ghost"
                           onClick={(e) => handleRemoveFavorite(product.id, e)}
-                          className="bg-red-500 hover:bg-red-600 text-white p-1 h-auto rounded-full transition-all duration-300 hover:scale-110"
+                          className="bg-magical-crimson hover:bg-magical-crimson/80 text-magical-starlight p-1 h-auto rounded-full transition-all duration-300 hover:scale-110 border border-magical-gold/30"
                         >
                           <Heart className="w-4 h-4 fill-current" />
                         </Button>
@@ -311,25 +312,25 @@ const Favoritos = () => {
                       <div className="flex flex-col h-full">
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-lg hover:text-red-600 transition-colors">
+                            <h3 className="font-semibold text-magical-starlight mb-2 line-clamp-2 text-lg hover:text-magical-gold transition-colors font-enchanted">
                               {product.produto}
                             </h3>
                             <div className="flex items-center gap-1 ml-4">
-                              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                              <span className="text-sm text-gray-600">4.8</span>
+                              <Star className="w-4 h-4 text-magical-gold fill-current" />
+                              <span className="text-sm text-magical-starlight/80">4.8</span>
                             </div>
                           </div>
                           
                           {product.categoria && (
                             <div className="mb-3">
-                              <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                              <span className="inline-block bg-magical-gold/20 text-magical-starlight text-xs px-2 py-1 rounded-full border border-magical-gold/30">
                                 {product.categoria}
                               </span>
                             </div>
                           )}
                           
-                          <div className="text-xl font-bold text-red-500 mb-4">
-                            A partir de {formatPrice(product.valor)}
+                          <div className="text-xl font-bold text-magical-gold mb-4 font-magical">
+                            Menos de {formatPrice(product.valor)}
                           </div>
                         </div>
                         
@@ -342,14 +343,14 @@ const Favoritos = () => {
                             videoUrl={product.video}
                           />
                           <Button 
-                            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold hover:scale-105 transition-all duration-300 sm:w-auto w-full" 
+                            className="bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold hover:scale-105 transition-all duration-300 sm:w-auto w-full font-enchanted" 
                             onClick={(e) => {
                               e.stopPropagation();
                               window.open(product.link, '_blank');
                             }}
                           >
                             <ShoppingCart className="w-4 h-4 mr-2" />
-                            Comprar na Shopee
+                            Adquirir na Shopee
                           </Button>
                         </div>
                       </div>

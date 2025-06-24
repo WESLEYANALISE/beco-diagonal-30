@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Star, ShoppingCart, Play, Sparkles, Grid2X2, LayoutList } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, Play, Sparkles, Grid2X2, LayoutList, Wand2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,14 +78,14 @@ const Novos = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
         <Header onSearch={() => {}} onPriceFilter={() => {}} />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-white/20 rounded-2xl animate-shimmer"></div>
+            <div className="h-32 bg-magical-gold/20 rounded-2xl animate-magical-glow backdrop-blur-sm border border-magical-gold/30"></div>
             <div className="space-y-3">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="h-24 bg-white/20 rounded-2xl animate-shimmer"></div>
+                <div key={i} className="h-24 bg-magical-gold/20 rounded-2xl animate-magical-glow backdrop-blur-sm border border-magical-gold/30"></div>
               ))}
             </div>
           </div>
@@ -96,7 +95,7 @@ const Novos = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
       <Header onSearch={() => {}} onPriceFilter={() => {}} />
       
       <div className="container mx-auto px-4 py-8">
@@ -105,28 +104,29 @@ const Novos = () => {
             variant="ghost"
             size="sm"
             onClick={() => navigate('/')}
-            className="text-white hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-105"
+            className="text-magical-starlight hover:bg-magical-gold/20 rounded-xl transition-all duration-300 hover:scale-105 border border-magical-gold/30"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-white animate-slide-in-left">
-              ✨ Produtos Novos
+            <h1 className="text-2xl md:text-3xl font-bold text-magical-starlight animate-slide-in-left font-magical">
+              <Wand2 className="inline w-6 h-6 mr-2 text-magical-gold animate-sparkle" />
+              Artefatos Recém-Descobertos
             </h1>
-            <p className="text-white/80 animate-slide-in-right">
-              Os {products.length} produtos mais recentes da nossa loja
+            <p className="text-magical-starlight/80 animate-slide-in-right font-enchanted">
+              Os {products.length} artefatos mágicos mais novos da nossa coleção
             </p>
           </div>
           
-          {/* View Mode Toggle - Apenas para mobile/tablet */}
+          {/* View Mode Toggle */}
           {isMobile && (
             <div className="flex items-center gap-2">
               <Button
                 variant={viewMode === 'list' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className="p-2 bg-white/20 border-white/30 hover:bg-white/30 text-white"
+                className="p-2 bg-magical-gold/20 border-magical-gold/30 hover:bg-magical-gold/30 text-magical-starlight"
               >
                 <LayoutList className="w-4 h-4" />
               </Button>
@@ -134,7 +134,7 @@ const Novos = () => {
                 variant={viewMode === 'grid' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
-                className="p-2 bg-white/20 border-white/30 hover:bg-white/30 text-white"
+                className="p-2 bg-magical-gold/20 border-magical-gold/30 hover:bg-magical-gold/30 text-magical-starlight"
               >
                 <Grid2X2 className="w-4 h-4" />
               </Button>
@@ -144,20 +144,20 @@ const Novos = () => {
 
         {products.length === 0 ? (
           <div className="text-center py-16 animate-fade-in">
-            <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
-              <Sparkles className="w-16 h-16 text-white/50" />
+            <div className="w-32 h-32 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-levitate border border-magical-gold/30">
+              <Sparkles className="w-16 h-16 text-magical-gold/50" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Nenhum produto novo ainda
+            <h2 className="text-2xl font-bold text-magical-starlight mb-4 font-magical">
+              Nenhum artefato novo descoberto ainda
             </h2>
-            <p className="text-white/80 mb-6">
-              Novos produtos serão exibidos aqui em breve
+            <p className="text-magical-starlight/80 mb-6 font-enchanted">
+              Novos artefatos mágicos serão revelados aqui em breve
             </p>
             <Button
               onClick={() => navigate('/')}
-              className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold transition-all duration-300 hover:scale-105 font-enchanted"
             >
-              Explorar Produtos
+              Explorar Artefatos
             </Button>
           </div>
         ) : (
@@ -174,7 +174,7 @@ const Novos = () => {
                 {products.map((product, index) => (
                   <Card 
                     key={product.id} 
-                    className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-white border-0 shadow-lg group animate-fade-in cursor-pointer"
+                    className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group animate-fade-in cursor-pointer backdrop-blur-sm hover:shadow-magical-gold/20"
                     style={{ animationDelay: `${index * 0.1}s` }}
                     onClick={() => handleProductClick(product)}
                   >
@@ -194,20 +194,20 @@ const Novos = () => {
                               </CarouselItem>
                             ))}
                           </CarouselContent>
-                          <CarouselPrevious className="left-2 bg-white/90 hover:bg-white w-8 h-8 transition-all duration-300 hover:scale-110" />
-                          <CarouselNext className="right-2 bg-white/90 hover:bg-white w-8 h-8 transition-all duration-300 hover:scale-110" />
+                          <CarouselPrevious className="left-2 bg-magical-starlight/90 hover:bg-magical-starlight w-8 h-8 transition-all duration-300 hover:scale-110 border border-magical-gold/30" />
+                          <CarouselNext className="right-2 bg-magical-starlight/90 hover:bg-magical-starlight w-8 h-8 transition-all duration-300 hover:scale-110 border border-magical-gold/30" />
                         </Carousel>
                         
                         {product.video && (
                           <div className="absolute top-2 right-2">
-                            <div className="bg-red-500 rounded-full p-2 animate-pulse shadow-lg">
-                              <Play className="w-4 h-4 text-white" />
+                            <div className="bg-magical-crimson rounded-full p-2 animate-pulse shadow-lg border border-magical-gold/30">
+                              <Play className="w-4 h-4 text-magical-starlight" />
                             </div>
                           </div>
                         )}
                         
                         <div className="absolute top-2 left-2">
-                          <Badge className="bg-green-500 text-white font-bold text-xs animate-bounce shadow-lg">
+                          <Badge className="bg-gradient-to-r from-magical-emerald to-magical-gold text-magical-midnight font-bold text-xs animate-bounce shadow-lg border border-magical-gold/30">
                             NOVO
                           </Badge>
                         </div>
@@ -221,23 +221,23 @@ const Novos = () => {
                         <div className="flex flex-col h-full">
                           <div className="flex-1">
                             <div className="flex items-start justify-between mb-2">
-                              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-lg hover:text-red-600 transition-colors">
+                              <h3 className="font-semibold text-magical-starlight mb-2 line-clamp-2 text-lg hover:text-magical-gold transition-colors font-enchanted">
                                 {product.produto}
                               </h3>
                               <div className="flex items-center gap-1 ml-4">
-                                <Star className="w-4 h-4 text-yellow-400 fill-current animate-spin-slow" />
-                                <span className="text-sm text-gray-600">4.8</span>
+                                <Star className="w-4 h-4 text-magical-gold fill-current animate-sparkle" />
+                                <span className="text-sm text-magical-starlight/80">4.8</span>
                               </div>
                             </div>
                             
                             {product.categoria && (
-                              <Badge variant="secondary" className="mb-3 animate-fade-in">
+                              <Badge variant="secondary" className="mb-3 animate-fade-in bg-magical-gold/20 text-magical-starlight border border-magical-gold/30">
                                 {product.categoria}
                               </Badge>
                             )}
                             
-                            <div className="text-xl font-bold text-red-500 mb-4">
-                              A partir de {formatPrice(product.valor)}
+                            <div className="text-xl font-bold text-magical-gold mb-4 font-magical">
+                              Menos de {formatPrice(product.valor)}
                             </div>
                           </div>
                           
@@ -253,14 +253,14 @@ const Novos = () => {
                               />
                             </div>
                             <Button 
-                              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold hover:scale-105 transition-all duration-300 sm:w-auto w-full" 
+                              className="bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold hover:scale-105 transition-all duration-300 sm:w-auto w-full font-enchanted shadow-lg" 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 window.open(product.link, '_blank');
                               }}
                             >
                               <ShoppingCart className="w-4 h-4 mr-2" />
-                              Comprar na Shopee
+                              Adquirir na Shopee
                             </Button>
                           </div>
                         </div>
@@ -274,7 +274,7 @@ const Novos = () => {
         )}
       </div>
 
-      {/* Product Detail Modal with Tips */}
+      {/* Product Detail Modal */}
       {selectedProduct && (
         <ProductDetailModal 
           isOpen={isDetailModalOpen} 
