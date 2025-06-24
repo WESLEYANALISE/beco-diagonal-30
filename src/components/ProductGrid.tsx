@@ -49,6 +49,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
               variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('grid')}
+              className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30"
             >
               <Grid className="w-4 h-4" />
             </Button>
@@ -56,6 +57,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
               variant={viewMode === 'list' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('list')}
+              className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30"
             >
               <List className="w-4 h-4" />
             </Button>
@@ -66,7 +68,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
           ? 'space-y-4 px-4' 
           : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3'}`}>
           {Array.from({ length: 12 }).map((_, index) => (
-            <div key={index} className={`bg-white/20 rounded-2xl animate-pulse ${
+            <div key={index} className={`bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-2xl animate-pulse backdrop-blur-sm border border-magical-gold/20 ${
               viewMode === 'list' && isMobile ? 'h-32' : 'h-64'
             }`}></div>
           ))}
@@ -78,14 +80,14 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
   if (products.length === 0) {
     return (
       <div className="text-center py-16 animate-fade-in">
-        <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
-          <div className="w-16 h-16 text-white/50">📦</div>
+        <div className="w-32 h-32 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse border border-magical-gold/30">
+          <div className="w-16 h-16 text-magical-gold/50">📦</div>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-4">
-          Nenhum produto encontrado
+        <h2 className="text-2xl font-bold text-magical-starlight mb-4 font-magical">
+          Nenhum artefato encontrado
         </h2>
-        <p className="text-white/80">
-          Não há produtos disponíveis no momento
+        <p className="text-magical-starlight/80 font-enchanted">
+          Não há artefatos disponíveis no momento
         </p>
       </div>
     );
@@ -100,7 +102,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
             variant={viewMode === 'grid' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('grid')}
-            className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+            className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30"
           >
             <Grid className="w-4 h-4" />
           </Button>
@@ -108,7 +110,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
             variant={viewMode === 'list' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('list')}
-            className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+            className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30"
           >
             <List className="w-4 h-4" />
           </Button>
