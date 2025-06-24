@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Sparkles, Info, Star } from 'lucide-react';
@@ -56,7 +57,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
       {/* Desktop/Mobile Header */}
       <header className="bg-gradient-to-r from-red-500 via-orange-500 to-red-600 text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm">
         <div className="px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
               <div className="bg-white/20 rounded-2xl p-2 backdrop-blur-sm">
                 <ShoppingCart className="w-6 h-6 text-white" />
@@ -66,21 +67,6 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                 <p className="text-xs text-orange-100">Ofertas Imperdíveis</p>
               </div>
             </div>
-
-            {/* Desktop Search Bar - Smaller and centered */}
-            {location.pathname === '/' && (
-              <div className="hidden md:flex flex-1 max-w-md mx-4">
-                <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-4 h-4" />
-                  <Input
-                    placeholder="Buscar produtos..."
-                    value={searchTerm}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30 h-9"
-                  />
-                </div>
-              </div>
-            )}
 
             <div className="flex items-center space-x-2">
               {/* Desktop Navigation */}
@@ -220,9 +206,9 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
           </div>
         </div>
 
-        {/* Mobile Search Bar - Full width only on mobile */}
+        {/* Search Bar - Always visible at top */}
         {location.pathname === '/' && (
-          <div className="md:hidden px-4 pb-3">
+          <div className="px-4 pb-3">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5" />
               <Input

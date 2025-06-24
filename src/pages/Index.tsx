@@ -13,7 +13,6 @@ import { HeroSection } from '@/components/HeroSection';
 import { TabNavigation } from '@/components/TabNavigation';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
-import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -95,7 +94,7 @@ const Index = () => {
         
         const categoryProducts = products.filter(p => p.categoria === randomCategory);
         const shuffledProducts = shuffleArray(categoryProducts);
-        setFeaturedProducts(shuffledProducts.slice(0, 12)); // Aumentei para 12 no desktop
+        setFeaturedProducts(shuffledProducts.slice(0, 8));
       }, 15000);
 
       return () => clearInterval(interval);
@@ -116,9 +115,8 @@ const Index = () => {
       
       setProducts(processedProducts);
       
-      // Set initial featured products (12 para desktop, 8 para mobile)
-      const featuredCount = window.innerWidth >= 1024 ? 12 : 8;
-      const initialFeatured = shuffleArray(processedProducts).slice(0, featuredCount);
+      // Set initial featured products (first 8 randomizados)
+      const initialFeatured = shuffleArray(processedProducts).slice(0, 8);
       setFeaturedProducts(initialFeatured);
 
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
@@ -270,345 +268,334 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
-      {/* Layout com Sidebar para Desktop */}
-      <div className="flex w-full">
-        {/* Main Content */}
-        <div className="flex-1 lg:mr-80">
-          {/* Search Preview */}
-          {searchTerm && (
-            <SearchPreview 
-              searchTerm={searchTerm} 
-              products={filteredProducts.filter(p => 
-                p.produto.toLowerCase().includes(searchTerm.toLowerCase())
-              ).slice(0, 5)} 
-              onProductClick={handleProductClick}
-            />
-          )}
+      {/* Search Preview */}
+      {searchTerm && (
+        <SearchPreview 
+          searchTerm={searchTerm} 
+          products={filteredProducts.filter(p => 
+            p.produto.toLowerCase().includes(searchTerm.toLowerCase())
+          ).slice(0, 5)} 
+          onProductClick={handleProductClick}
+        />
+      )}
 
-          {/* Novidades Carousel */}
-          <CategoryCarousel 
-            products={filteredProducts}
-            onProductClick={handleProductClick}
-          />
-          
-          {/* Category Quick Access Buttons */}
-          <section className="px-4 py-2 animate-fade-in">
+      {/* Novidades Carousel */}
+      <CategoryCarousel 
+        products={filteredProducts}
+        onProductClick={handleProductClick}
+      />
+      
+      {/* Category Quick Access Buttons */}
+      <section className="px-4 py-2 animate-fade-in">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')}
+              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              Todas
+            </Button>
+            {categories.slice(0, 8).map(category => {
+              const IconComponent = getCategoryIcon(category);
+              return (
+                <Button
+                  key={category}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)}
+                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
+                >
+                  <IconComponent className="w-4 h-4" />
+                  {category}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Hero Section */}
+      <HeroSection productsCount={filteredProducts.length} />
+
+      {/* Category Product Carousels - show all categories when not in AI mode */}
+      {!showingAI && categories.map((category, index) => {
+        const categoryProducts = getCategoryProducts(category);
+        const IconComponent = getCategoryIcon(category);
+        
+        if (categoryProducts.length === 0) return null;
+        
+        return (
+          <section key={category} className="px-4 md:px-6 py-4 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
             <div className="max-w-7xl mx-auto">
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <IconComponent className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">{category}</h3>
+                    <p className="text-xs text-white/70">{categoryProducts.length} produtos</p>
+                  </div>
+                </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')}
-                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)}
+                  className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs px-3 py-1 h-auto"
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  Todas
+                  Ver Todos
+                  <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
-                {categories.slice(0, 8).map(category => {
-                  const IconComponent = getCategoryIcon(category);
-                  return (
-                    <Button
-                      key={category}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)}
-                      className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
+              </div>
+              
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-3">
+                  {categoryProducts.map((product) => (
+                    <CarouselItem 
+                      key={product.id} 
+                      className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6"
                     >
-                      <IconComponent className="w-4 h-4" />
+                      <ProductCard 
+                        product={product} 
+                        compact={true}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
+                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
+              </Carousel>
+            </div>
+          </section>
+        );
+      })}
+
+      {/* Featured Products Carousel with Toggle */}
+      <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <TabNavigation 
+              showingAI={showingAI}
+              onTabChange={handleTabChange}
+            />
+            
+            {showingAI ? (
+              <div className="prose prose-invert max-w-none">
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
+                  🤖 Me Ajuda Escolher
+                </h2>
+                <div className="text-base text-white/90 animate-slide-in-right space-y-2">
+                  <p><strong>Selecione até 5 produtos</strong> e nossa <strong>IA</strong> irá te ajudar a decidir qual é melhor</p>
+                  <p className="text-sm">✨ <em>Análise personalizada baseada em suas necessidades</em></p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
+                  🔥 Mais Vendidos
+                </h2>
+                <p className="text-base text-white/80 animate-slide-in-right">
+                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' 
+                    ? `Os favoritos em ${currentFeaturedCategory}` 
+                    : 'Os produtos favoritos dos nossos clientes'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {showingAI ? (
+            <>
+              <div className="max-w-md mx-auto mb-6 animate-scale-in">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-300 z-50">
+                    <SelectItem value="todas">Todas as Categorias</SelectItem>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <ProductSelector
+                products={displayedProducts}
+                selectedProducts={selectedProducts}
+                onProductToggle={handleProductToggle}
+                onAnalyze={handleAnalyze}
+                onQuestionnaireChange={setQuestionnaireAnswers}
+              />
+            </>
+          ) : (
+            <>
+              <Carousel className="w-full animate-scale-in mb-6">
+                <CarouselContent className="-ml-2 md:-ml-3">
+                  {featuredProducts.map((product, index) => (
+                    <CarouselItem 
+                      key={product.id} 
+                      className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <ProductCard 
+                        product={product} 
+                        showBadge={true}
+                        badgeText="MAIS VENDIDO"
+                        compact={false}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
+                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
+              </Carousel>
+              
+              <div className="text-center animate-fade-in">
+                <Button 
+                  onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')}
+                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+                >
+                  Ver Mais Produtos
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Category Filter and Products Grid - only show when not in AI mode */}
+      {!showingAI && (
+        <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="text-center flex-1">
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
+                  Explorar Produtos
+                </h2>
+                <p className="text-base text-white/80 mb-4 animate-slide-in-right">
+                  {searchTerm ? `Resultados para "${searchTerm}"` : 'Navegue por nossa coleção completa'}
+                </p>
+              </div>
+              
+              <div className="flex gap-2 animate-slide-in-right">
+                <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
+                  <SelectTrigger className="bg-white text-gray-900 border-0 w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-300 z-50">
+                    <SelectItem value="nome">
+                      <div className="flex items-center gap-2">
+                        <SortAsc className="w-4 h-4" />
+                        Nome
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="preco">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        Preço
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="bg-white text-gray-900 border-0 hover:bg-gray-100 transition-all duration-300 hover:scale-105"
+                >
+                  {sortOrder === 'asc' ? '↑' : '↓'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="max-w-md mx-auto mb-6 animate-scale-in">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-300 z-50">
+                  <SelectItem value="todas">Todas as Categorias</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
                       {category}
-                    </Button>
-                  );
-                })}
-              </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </section>
 
-          {/* Hero Section */}
-          <HeroSection productsCount={filteredProducts.length} />
+            <ProductGrid products={displayedProducts.slice(0, 24)} compact={true} />
 
-          {/* Category Product Carousels - show all categories when not in AI mode */}
-          {!showingAI && categories.map((category, index) => {
-            const categoryProducts = getCategoryProducts(category);
-            const IconComponent = getCategoryIcon(category);
-            
-            if (categoryProducts.length === 0) return null;
-            
-            return (
-              <section key={category} className="px-4 md:px-6 py-4 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                <div className="max-w-7xl mx-auto">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                        <IconComponent className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-bold text-white">{category}</h3>
-                        <p className="text-xs text-white/70">{categoryProducts.length} produtos</p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)}
-                      className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs px-3 py-1 h-auto"
-                    >
-                      Ver Todos
-                      <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
-                  </div>
-                  
-                  <Carousel className="w-full">
-                    <CarouselContent className="-ml-2 md:-ml-3">
-                      {categoryProducts.map((product) => (
-                        <CarouselItem 
-                          key={product.id} 
-                          className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6"
-                        >
-                          <ProductCard 
-                            product={product} 
-                            compact={true}
-                          />
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
-                    <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
-                  </Carousel>
+            {displayedProducts.length === 0 && (
+              <div className="text-center py-16 animate-fade-in">
+                <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
+                  <ShoppingCart className="w-16 h-16 text-white/50" />
                 </div>
-              </section>
-            );
-          })}
-
-          {/* Featured Products Carousel with Toggle */}
-          <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-8">
-                <TabNavigation 
-                  showingAI={showingAI}
-                  onTabChange={handleTabChange}
-                />
-                
-                {showingAI ? (
-                  <div className="prose prose-invert max-w-none">
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                      🤖 Me Ajuda Escolher
-                    </h2>
-                    <div className="text-base text-white/90 animate-slide-in-right space-y-2">
-                      <p><strong>Selecione até 5 produtos</strong> e nossa <strong>IA</strong> irá te ajudar a decidir qual é melhor</p>
-                      <p className="text-sm">✨ <em>Análise personalizada baseada em suas necessidades</em></p>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                      🔥 Mais Vendidos
-                    </h2>
-                    <p className="text-base text-white/80 animate-slide-in-right">
-                      {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' 
-                        ? `Os favoritos em ${currentFeaturedCategory}` 
-                        : 'Os produtos favoritos dos nossos clientes'}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {showingAI ? (
-                <>
-                  <div className="max-w-md mx-auto mb-6 animate-scale-in">
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300 z-50">
-                        <SelectItem value="todas">Todas as Categorias</SelectItem>
-                        {categories.map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <ProductSelector
-                    products={displayedProducts}
-                    selectedProducts={selectedProducts}
-                    onProductToggle={handleProductToggle}
-                    onAnalyze={handleAnalyze}
-                    onQuestionnaireChange={setQuestionnaireAnswers}
-                  />
-                </>
-              ) : (
-                <>
-                  <Carousel className="w-full animate-scale-in mb-6">
-                    <CarouselContent className="-ml-2 md:-ml-3">
-                      {featuredProducts.map((product, index) => (
-                        <CarouselItem 
-                          key={product.id} 
-                          className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
-                          <ProductCard 
-                            product={product} 
-                            showBadge={true}
-                            badgeText="MAIS VENDIDO"
-                            compact={false}
-                          />
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-                    <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
-                  </Carousel>
-                  
-                  <div className="text-center animate-fade-in">
-                    <Button 
-                      onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')}
-                      className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-                    >
-                      Ver Mais Produtos
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
-
-          {/* Category Filter and Products Grid - only show when not in AI mode */}
-          {!showingAI && (
-            <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
-              <div className="max-w-7xl mx-auto">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="text-center flex-1">
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                      Explorar Produtos
-                    </h2>
-                    <p className="text-base text-white/80 mb-4 animate-slide-in-right">
-                      {searchTerm ? `Resultados para "${searchTerm}"` : 'Navegue por nossa coleção completa'}
-                    </p>
-                  </div>
-                  
-                  <div className="flex gap-2 animate-slide-in-right">
-                    <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
-                      <SelectTrigger className="bg-white text-gray-900 border-0 w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300 z-50">
-                        <SelectItem value="nome">
-                          <div className="flex items-center gap-2">
-                            <SortAsc className="w-4 h-4" />
-                            Nome
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="preco">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4" />
-                            Preço
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                      className="bg-white text-gray-900 border-0 hover:bg-gray-100 transition-all duration-300 hover:scale-105"
-                    >
-                      {sortOrder === 'asc' ? '↑' : '↓'}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="max-w-md mx-auto mb-6 animate-scale-in">
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-300 z-50">
-                      <SelectItem value="todas">Todas as Categorias</SelectItem>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <ProductGrid products={displayedProducts.slice(0, 24)} compact={true} />
-
-                {displayedProducts.length === 0 && (
-                  <div className="text-center py-16 animate-fade-in">
-                    <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
-                      <ShoppingCart className="w-16 h-16 text-white/50" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white mb-4">
-                      Nenhum produto encontrado
-                    </h2>
-                    <p className="text-white/80 mb-6">
-                      {searchTerm ? `Não encontramos produtos para "${searchTerm}"` : 'Não há produtos nesta categoria'}
-                    </p>
-                    {searchTerm && (
-                      <Button 
-                        onClick={() => setSearchTerm('')} 
-                        className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-                      >
-                        Ver Todos os Produtos
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {displayedProducts.length > 24 && (
-                  <div className="text-center mt-8 animate-fade-in">
-                    <Button 
-                      onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)}
-                      className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-                    >
-                      Ver Todos os {displayedProducts.length} Produtos
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* CTA Section - only show when not in AI mode */}
-          {!showingAI && (
-            <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden animate-fade-in">
-              <div className="absolute inset-0 bg-black/10"></div>
-              <div className="max-w-4xl mx-auto text-center relative z-10">
-                <div className="space-y-6">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
-                    <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-white animate-pulse" />
-                  </div>
-                  <h2 className="text-2xl md:text-4xl font-bold mb-4 text-white animate-slide-in-left">
-                    Não Perca Nenhuma Oferta!
-                  </h2>
-                  <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right">
-                    Descubra os melhores produtos com preços incríveis na Shopee
-                  </p>
+                <h2 className="text-2xl font-bold text-white mb-4">
+                  Nenhum produto encontrado
+                </h2>
+                <p className="text-white/80 mb-6">
+                  {searchTerm ? `Não encontramos produtos para "${searchTerm}"` : 'Não há produtos nesta categoria'}
+                </p>
+                {searchTerm && (
                   <Button 
-                    size="lg" 
-                    className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    onClick={() => setSearchTerm('')} 
+                    className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
                   >
-                    Explorar Produtos
-                    <ArrowRight className="w-5 h-5 ml-2" />
+                    Ver Todos os Produtos
                   </Button>
-                </div>
+                )}
               </div>
-            </section>
-          )}
-        </div>
+            )}
 
-        {/* Desktop Sidebar - Only visible on desktop */}
-        <div className="hidden lg:block fixed right-0 top-0 h-full z-30">
-          <DesktopSidebar />
-        </div>
-      </div>
+            {displayedProducts.length > 24 && (
+              <div className="text-center mt-8 animate-fade-in">
+                <Button 
+                  onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)}
+                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+                >
+                  Ver Todos os {displayedProducts.length} Produtos
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* CTA Section - only show when not in AI mode */}
+      {!showingAI && (
+        <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden animate-fade-in">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="max-w-4xl mx-auto text-center relative z-10">
+            <div className="space-y-6">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
+                <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-white animate-pulse" />
+              </div>
+              <h2 className="text-2xl md:text-4xl font-bold mb-4 text-white animate-slide-in-left">
+                Não Perca Nenhuma Oferta!
+              </h2>
+              <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right">
+                Descubra os melhores produtos com preços incríveis na Shopee
+              </p>
+              <Button 
+                size="lg" 
+                className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              >
+                Explorar Produtos
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* AI Analysis Modal */}
       <AIAnalysisModal
