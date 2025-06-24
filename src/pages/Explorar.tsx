@@ -31,6 +31,7 @@ const Explorar = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('todas');
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'video' | 'grid' | 'list'>('video');
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Shuffle array function
   const shuffleArray = <T,>(array: T[]): T[] => {
@@ -46,16 +47,9 @@ const Explorar = () => {
   const isValidVideo = (url: string) => {
     if (!url || typeof url !== 'string') return false;
     
-    // Check if it's a valid MP4 URL
     const isMP4 = url.toLowerCase().includes('.mp4');
-    
-    // Check if URL is accessible (basic validation)
     const isValidURL = url.startsWith('http') && !url.includes('undefined') && !url.includes('null');
-    
-    // Check if it's not an image URL
     const isNotImage = !url.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/);
-    
-    // Check for common video hosting domains
     const hasValidDomain = url.includes('susercontent.com') || url.includes('shopee');
     
     return isMP4 && isValidURL && isNotImage && hasValidDomain;
@@ -76,7 +70,6 @@ const Explorar = () => {
 
       if (error) throw error;
       
-      // Filter only valid videos and shuffle products
       const validVideoProducts = (data || []).filter(product => 
         product.video && isValidVideo(product.video)
       );
@@ -92,7 +85,7 @@ const Explorar = () => {
     }
   };
 
-  // Memoized filtered products - only products with valid videos
+  // Memoized filtered products
   const filteredProducts = useMemo(() => {
     const productsWithValidVideos = products.filter(product => 
       product.video && isValidVideo(product.video)
@@ -104,7 +97,7 @@ const Explorar = () => {
     return productsWithValidVideos.filter(product => product.categoria === selectedCategory);
   }, [products, selectedCategory]);
 
-  // Memoized categories and counts - only from products with valid videos
+  // Memoized categories and counts
   const { categories, productCounts } = useMemo(() => {
     const productsWithVideos = products.filter(product => product.video && isValidVideo(product.video));
     const categoryMap = new Map<string, number>();
@@ -130,91 +123,108 @@ const Explorar = () => {
     setCurrentVideoIndex(0);
   }, []);
 
-  // Função para avançar automaticamente para próxima categoria quando vídeo termina
+  // Navigation function with debounce
+  const navigateToVideo = useCallback((newIndex: number) => {
+    if (isTransitioning || newIndex < 0 || newIndex >= filteredProducts.length) {
+      return;
+    }
+
+    setIsTransitioning(true);
+    setCurrentVideoIndex(newIndex);
+    
+    // Reset transition state after animation
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
+  }, [isTransitioning, filteredProducts.length]);
+
   const handleVideoEnd = useCallback(() => {
     console.log('Video ended, checking for next video or category');
     
-    // Se há mais vídeos na categoria atual, avança
     if (currentVideoIndex < filteredProducts.length - 1) {
-      setCurrentVideoIndex(prev => prev + 1);
+      navigateToVideo(currentVideoIndex + 1);
       return;
     }
     
-    // Se acabaram os vídeos da categoria atual, vai para próxima categoria
     const currentCategoryIndex = categories.findIndex(cat => cat === selectedCategory);
     
     if (selectedCategory === 'todas') {
-      // Se está em "todas", vai para primeira categoria específica
       if (categories.length > 0) {
         setSelectedCategory(categories[0]);
         setCurrentVideoIndex(0);
       }
     } else if (currentCategoryIndex < categories.length - 1) {
-      // Vai para próxima categoria
       setSelectedCategory(categories[currentCategoryIndex + 1]);
       setCurrentVideoIndex(0);
     } else {
-      // Se é a última categoria, volta para "todas"
       setSelectedCategory('todas');
       setCurrentVideoIndex(0);
     }
-  }, [currentVideoIndex, filteredProducts.length, categories, selectedCategory]);
+  }, [currentVideoIndex, filteredProducts.length, categories, selectedCategory, navigateToVideo]);
 
-  // Handle scroll for video feed
+  // Enhanced scroll and touch handling
   useEffect(() => {
-    if (viewMode === 'video') {
-      const handleScroll = (e: WheelEvent) => {
-        e.preventDefault();
-        if (e.deltaY > 0 && currentVideoIndex < filteredProducts.length - 1) {
-          setCurrentVideoIndex(prev => prev + 1);
-        } else if (e.deltaY < 0 && currentVideoIndex > 0) {
-          setCurrentVideoIndex(prev => prev - 1);
+    if (viewMode !== 'video') return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (isTransitioning) return;
+
+      if (e.deltaY > 0) {
+        navigateToVideo(currentVideoIndex + 1);
+      } else if (e.deltaY < 0) {
+        navigateToVideo(currentVideoIndex - 1);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isTransitioning) return;
+
+      if (e.key === 'ArrowDown') {
+        navigateToVideo(currentVideoIndex + 1);
+      } else if (e.key === 'ArrowUp') {
+        navigateToVideo(currentVideoIndex - 1);
+      }
+    };
+
+    let touchStartY = 0;
+    let touchStartTime = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (isTransitioning) return;
+
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndTime = Date.now();
+      const diffY = touchStartY - touchEndY;
+      const diffTime = touchEndTime - touchStartTime;
+
+      // Only trigger if it's a quick swipe (less than 300ms) and sufficient distance
+      if (diffTime < 300 && Math.abs(diffY) > 50) {
+        if (diffY > 0) {
+          navigateToVideo(currentVideoIndex + 1);
+        } else {
+          navigateToVideo(currentVideoIndex - 1);
         }
-      };
+      }
+    };
 
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'ArrowDown' && currentVideoIndex < filteredProducts.length - 1) {
-          setCurrentVideoIndex(prev => prev + 1);
-        } else if (e.key === 'ArrowUp' && currentVideoIndex > 0) {
-          setCurrentVideoIndex(prev => prev - 1);
-        }
-      };
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
-      const handleTouchStart = (e: TouchEvent) => {
-        const touch = e.touches[0];
-        const startY = touch.clientY;
-        
-        const handleTouchMove = (moveEvent: TouchEvent) => {
-          const moveTouch = moveEvent.touches[0];
-          const diffY = startY - moveTouch.clientY;
-          
-          if (Math.abs(diffY) > 50) {
-            if (diffY > 0 && currentVideoIndex < filteredProducts.length - 1) {
-              setCurrentVideoIndex(prev => prev + 1);
-            } else if (diffY < 0 && currentVideoIndex > 0) {
-              setCurrentVideoIndex(prev => prev - 1);
-            }
-            document.removeEventListener('touchmove', handleTouchMove);
-          }
-        };
-        
-        document.addEventListener('touchmove', handleTouchMove);
-        setTimeout(() => {
-          document.removeEventListener('touchmove', handleTouchMove);
-        }, 1000);
-      };
-
-      window.addEventListener('wheel', handleScroll, { passive: false });
-      window.addEventListener('keydown', handleKeyDown);
-      document.addEventListener('touchstart', handleTouchStart);
-
-      return () => {
-        window.removeEventListener('wheel', handleScroll);
-        window.removeEventListener('keydown', handleKeyDown);
-        document.removeEventListener('touchstart', handleTouchStart);
-      };
-    }
-  }, [viewMode, currentVideoIndex, filteredProducts.length]);
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [viewMode, currentVideoIndex, isTransitioning, navigateToVideo]);
 
   if (loading) {
     return (
@@ -223,6 +233,10 @@ const Explorar = () => {
       </div>
     );
   }
+
+  // Get current and next video for conditional rendering
+  const currentProduct = filteredProducts[currentVideoIndex];
+  const nextProduct = filteredProducts[currentVideoIndex + 1];
 
   return (
     <div className="min-h-screen bg-black">
@@ -271,7 +285,6 @@ const Explorar = () => {
           </div>
         </div>
 
-        {/* Category Filter - Compact for video mode */}
         <CategoryFilter
           categories={categories}
           selectedCategory={selectedCategory}
@@ -287,22 +300,30 @@ const Explorar = () => {
           <div className="relative">
             {filteredProducts.length > 0 ? (
               <div className="h-screen overflow-hidden">
-                {filteredProducts.map((product, index) => (
-                  <div
-                    key={product.id}
-                    className={`absolute inset-0 transition-transform duration-500 ${
-                      index === currentVideoIndex ? 'translate-y-0' : 
-                      index < currentVideoIndex ? '-translate-y-full' : 'translate-y-full'
-                    }`}
-                  >
+                {/* Render only current video */}
+                {currentProduct && (
+                  <div className="absolute inset-0">
                     <VideoFeed
-                      product={product}
-                      isActive={index === currentVideoIndex}
+                      key={currentProduct.id}
+                      product={currentProduct}
+                      isActive={true}
                       onBuy={handleBuyProduct}
                       onVideoEnd={handleVideoEnd}
                     />
                   </div>
-                ))}
+                )}
+                
+                {/* Pre-load next video (hidden) */}
+                {nextProduct && (
+                  <div className="absolute inset-0 opacity-0 pointer-events-none">
+                    <VideoFeed
+                      key={nextProduct.id}
+                      product={nextProduct}
+                      isActive={false}
+                      onBuy={handleBuyProduct}
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <div className="h-screen flex items-center justify-center text-white">
@@ -331,15 +352,19 @@ const Explorar = () => {
       {viewMode === 'video' && filteredProducts.length > 0 && (
         <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-40">
           <div className="flex flex-col gap-2">
-            {filteredProducts.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentVideoIndex(index)}
-                className={`w-1 h-8 rounded-full transition-all duration-300 ${
-                  index === currentVideoIndex ? 'bg-orange-500' : 'bg-white/30'
-                }`}
-              />
-            ))}
+            {filteredProducts.slice(Math.max(0, currentVideoIndex - 2), currentVideoIndex + 3).map((_, relativeIndex) => {
+              const actualIndex = Math.max(0, currentVideoIndex - 2) + relativeIndex;
+              return (
+                <button
+                  key={actualIndex}
+                  onClick={() => navigateToVideo(actualIndex)}
+                  disabled={isTransitioning}
+                  className={`w-1 h-8 rounded-full transition-all duration-300 ${
+                    actualIndex === currentVideoIndex ? 'bg-orange-500' : 'bg-white/30'
+                  } ${isTransitioning ? 'opacity-50' : ''}`}
+                />
+              );
+            })}
           </div>
         </div>
       )}

@@ -33,8 +33,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   onBuy,
   onVideoEnd
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -64,90 +63,79 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
     return images;
   };
 
+  // Reset video state when product changes
   useEffect(() => {
-    if (isActive && product.video && isValidVideo(product.video)) {
-      if (videoRef.current) {
-        const video = videoRef.current;
-        
-        // Reset video state
-        setVideoError(false);
-        setVideoLoaded(false);
-        setIsPlaying(false);
-        
-        video.currentTime = 0;
-        
-        // Start muted to avoid autoplay issues
+    setVideoError(false);
+    setVideoLoaded(false);
+    setIsMuted(true);
+  }, [product.id]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !product.video || !isValidVideo(product.video)) {
+      return;
+    }
+
+    const handleCanPlayThrough = () => {
+      setVideoLoaded(true);
+      if (isActive) {
+        // Start muted to comply with autoplay policies
         video.muted = true;
         setIsMuted(true);
         
-        // Load video
-        video.load();
-        
-        const handleCanPlayThrough = () => {
-          setVideoLoaded(true);
-          // Try to play with sound first
-          video.muted = false;
-          setIsMuted(false);
-          
-          const playPromise = video.play();
-          
-          if (playPromise !== undefined) {
-            playPromise.then(() => {
-              setIsPlaying(true);
-              setVideoError(false);
-            }).catch((error) => {
-              console.log('Trying without sound due to autoplay policy');
-              // If fails with sound, try muted
-              video.muted = true;
-              setIsMuted(true);
-              video.play().then(() => {
-                setIsPlaying(true);
-                setVideoError(false);
-              }).catch(() => {
-                setVideoError(true);
-                setIsPlaying(false);
-              });
-            });
-          }
-        };
-        
-        const handleError = (e: Event) => {
-          console.error('Video error:', e);
-          setVideoError(true);
-          setVideoLoaded(false);
-          setIsPlaying(false);
-        };
-        
-        const handleLoadStart = () => {
-          setVideoLoaded(false);
-        };
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            console.log('Autoplay failed:', error);
+            setVideoError(true);
+          });
+        }
+      }
+    };
+    
+    const handleError = () => {
+      console.error('Video error for:', product.video);
+      setVideoError(true);
+      setVideoLoaded(false);
+    };
 
-        const handleVideoEnded = () => {
-          console.log('Video ended, calling onVideoEnd');
-          if (onVideoEnd) {
-            onVideoEnd();
-          }
-        };
-        
-        video.addEventListener('canplaythrough', handleCanPlayThrough);
-        video.addEventListener('error', handleError);
-        video.addEventListener('loadstart', handleLoadStart);
-        video.addEventListener('ended', handleVideoEnded);
-        
-        return () => {
-          video.removeEventListener('canplaythrough', handleCanPlayThrough);
-          video.removeEventListener('error', handleError);
-          video.removeEventListener('loadstart', handleLoadStart);
-          video.removeEventListener('ended', handleVideoEnded);
-        };
+    const handleVideoEnded = () => {
+      if (onVideoEnd) {
+        onVideoEnd();
+      }
+    };
+    
+    video.addEventListener('canplaythrough', handleCanPlayThrough);
+    video.addEventListener('error', handleError);
+    video.addEventListener('ended', handleVideoEnded);
+    
+    // Load video
+    video.load();
+    
+    return () => {
+      video.removeEventListener('canplaythrough', handleCanPlayThrough);
+      video.removeEventListener('error', handleError);
+      video.removeEventListener('ended', handleVideoEnded);
+    };
+  }, [product.video, product.id]);
+
+  // Handle play/pause based on active state
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoLoaded) return;
+
+    if (isActive) {
+      video.currentTime = 0;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          setVideoError(true);
+        });
       }
     } else {
-      setIsPlaying(false);
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
+      video.pause();
     }
-  }, [isActive, product.video, onVideoEnd]);
+  }, [isActive, videoLoaded]);
 
   const toggleMute = useCallback(() => {
     if (videoRef.current && !videoError && videoLoaded) {
@@ -218,17 +206,10 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
           muted={isMuted}
           playsInline
           preload="metadata"
-          onError={() => {
-            console.error('Error loading video:', product.video);
-            setVideoError(true);
-          }}
-          onLoadedData={() => {
-            console.log('Video loaded successfully');
-          }}
         />
         
         {/* Loading overlay with image preview */}
-        {!videoLoaded && !videoError && (
+        {!videoLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
             {product.imagem1 && (
               <img 
