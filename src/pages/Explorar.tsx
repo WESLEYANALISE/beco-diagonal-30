@@ -51,16 +51,15 @@ const Explorar = () => {
       const { data, error } = await supabase
         .from('SHOPEE')
         .select('*')
+        .not('video', 'is', null)
+        .neq('video', '')
         .order('id');
 
       if (error) throw error;
       
-      // Shuffle products and prioritize those with videos for the video feed
+      // Shuffle products to randomize the order
       const shuffledProducts = shuffleArray(data || []);
-      const productsWithVideos = shuffledProducts.filter(p => p.video);
-      const productsWithoutVideos = shuffledProducts.filter(p => !p.video);
-      
-      setProducts([...productsWithVideos, ...productsWithoutVideos]);
+      setProducts(shuffledProducts);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     } finally {
@@ -68,18 +67,22 @@ const Explorar = () => {
     }
   };
 
-  // Memoized filtered products
+  // Memoized filtered products - only products with videos
   const filteredProducts = useMemo(() => {
+    const productsWithVideos = products.filter(product => product.video && product.video.trim() !== '');
+    
     if (selectedCategory === 'todas') {
-      return products;
+      return productsWithVideos;
     }
-    return products.filter(product => product.categoria === selectedCategory);
+    return productsWithVideos.filter(product => product.categoria === selectedCategory);
   }, [products, selectedCategory]);
 
-  // Memoized categories and counts
+  // Memoized categories and counts - only from products with videos
   const { categories, productCounts } = useMemo(() => {
+    const productsWithVideos = products.filter(product => product.video && product.video.trim() !== '');
     const categoryMap = new Map<string, number>();
-    products.forEach(product => {
+    
+    productsWithVideos.forEach(product => {
       if (product.categoria) {
         categoryMap.set(product.categoria, (categoryMap.get(product.categoria) || 0) + 1);
       }
@@ -90,11 +93,6 @@ const Explorar = () => {
       productCounts: Object.fromEntries(categoryMap)
     };
   }, [products]);
-
-  // Products with videos for video feed
-  const videoProducts = useMemo(() => {
-    return filteredProducts.filter(product => product.video);
-  }, [filteredProducts]);
 
   const handleBuyProduct = useCallback((product: Product) => {
     window.open(product.link, '_blank');
@@ -110,7 +108,7 @@ const Explorar = () => {
     if (viewMode === 'video') {
       const handleScroll = (e: WheelEvent) => {
         e.preventDefault();
-        if (e.deltaY > 0 && currentVideoIndex < videoProducts.length - 1) {
+        if (e.deltaY > 0 && currentVideoIndex < filteredProducts.length - 1) {
           setCurrentVideoIndex(prev => prev + 1);
         } else if (e.deltaY < 0 && currentVideoIndex > 0) {
           setCurrentVideoIndex(prev => prev - 1);
@@ -118,7 +116,7 @@ const Explorar = () => {
       };
 
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'ArrowDown' && currentVideoIndex < videoProducts.length - 1) {
+        if (e.key === 'ArrowDown' && currentVideoIndex < filteredProducts.length - 1) {
           setCurrentVideoIndex(prev => prev + 1);
         } else if (e.key === 'ArrowUp' && currentVideoIndex > 0) {
           setCurrentVideoIndex(prev => prev - 1);
@@ -134,7 +132,7 @@ const Explorar = () => {
           const diffY = startY - moveTouch.clientY;
           
           if (Math.abs(diffY) > 50) {
-            if (diffY > 0 && currentVideoIndex < videoProducts.length - 1) {
+            if (diffY > 0 && currentVideoIndex < filteredProducts.length - 1) {
               setCurrentVideoIndex(prev => prev + 1);
             } else if (diffY < 0 && currentVideoIndex > 0) {
               setCurrentVideoIndex(prev => prev - 1);
@@ -159,7 +157,7 @@ const Explorar = () => {
         document.removeEventListener('touchstart', handleTouchStart);
       };
     }
-  }, [viewMode, currentVideoIndex, videoProducts.length]);
+  }, [viewMode, currentVideoIndex, filteredProducts.length]);
 
   if (loading) {
     return (
@@ -230,9 +228,9 @@ const Explorar = () => {
       <div className={viewMode === 'video' ? 'pt-0' : 'pt-40'}>
         {viewMode === 'video' ? (
           <div className="relative">
-            {videoProducts.length > 0 ? (
+            {filteredProducts.length > 0 ? (
               <div className="h-screen overflow-hidden">
-                {videoProducts.map((product, index) => (
+                {filteredProducts.map((product, index) => (
                   <div
                     key={product.id}
                     className={`absolute inset-0 transition-transform duration-500 ${
@@ -272,10 +270,10 @@ const Explorar = () => {
       </div>
 
       {/* Video Navigation Indicator */}
-      {viewMode === 'video' && videoProducts.length > 0 && (
+      {viewMode === 'video' && filteredProducts.length > 0 && (
         <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-40">
           <div className="flex flex-col gap-2">
-            {videoProducts.map((_, index) => (
+            {filteredProducts.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentVideoIndex(index)}
