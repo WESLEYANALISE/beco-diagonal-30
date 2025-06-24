@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
-import { Heart, Share2, ShoppingCart, Play, Pause } from 'lucide-react';
+import { Heart, Share2, ShoppingCart, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from '@/components/FavoriteButton';
@@ -31,27 +31,59 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   onBuy
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [showControls, setShowControls] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // Check if video is YouTube or direct MP4
+  const isYouTubeVideo = (url: string) => {
+    return url.includes('youtube.com') || url.includes('youtu.be');
+  };
+
+  const getYouTubeVideoId = (url: string) => {
+    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const match = url.match(regExp);
+    return match && match[7].length === 11 ? match[7] : null;
+  };
+
   useEffect(() => {
     if (isActive && product.video) {
-      setIsPlaying(true);
-      // Para vídeos do YouTube, vamos recriar o iframe para forçar o autoplay
-      if (iframeRef.current) {
-        const youtubeId = getYouTubeVideoId(product.video);
-        if (youtubeId) {
-          iframeRef.current.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1&allow=autoplay`;
+      if (isYouTubeVideo(product.video)) {
+        // Handle YouTube videos
+        if (iframeRef.current) {
+          const youtubeId = getYouTubeVideoId(product.video);
+          if (youtubeId) {
+            iframeRef.current.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1&allow=autoplay`;
+          }
+        }
+        setIsPlaying(true);
+      } else {
+        // Handle direct MP4 videos
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0;
+          videoRef.current.muted = isMuted;
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              setIsPlaying(true);
+            }).catch(() => {
+              setIsPlaying(false);
+            });
+          }
         }
       }
     } else {
       setIsPlaying(false);
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
     }
-  }, [isActive, product.video]);
+  }, [isActive, product.video, isMuted]);
 
   const togglePlay = useCallback(() => {
-    if (videoRef.current) {
+    if (!isYouTubeVideo(product.video) && videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
         setIsPlaying(false);
@@ -60,13 +92,35 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         setIsPlaying(true);
       }
     }
-  }, [isPlaying]);
+  }, [isPlaying, product.video]);
+
+  const toggleMute = useCallback(() => {
+    if (!hasInteracted) {
+      setHasInteracted(true);
+    }
+    
+    setIsMuted(!isMuted);
+    
+    if (!isYouTubeVideo(product.video) && videoRef.current) {
+      videoRef.current.muted = !isMuted;
+    }
+  }, [isMuted, hasInteracted, product.video]);
 
   const handleVideoClick = useCallback(() => {
-    togglePlay();
+    if (!hasInteracted) {
+      setHasInteracted(true);
+      // First interaction - unmute and continue playing
+      setIsMuted(false);
+      if (!isYouTubeVideo(product.video) && videoRef.current) {
+        videoRef.current.muted = false;
+      }
+    } else {
+      togglePlay();
+    }
+    
     setShowControls(true);
     setTimeout(() => setShowControls(false), 2000);
-  }, [togglePlay]);
+  }, [togglePlay, hasInteracted, product.video]);
 
   const handleBuyClick = useCallback(() => {
     onBuy(product);
@@ -79,28 +133,47 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
     return `R$ ${price}`;
   }, []);
 
-  const getYouTubeVideoId = (url: string) => {
-    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-    const match = url.match(regExp);
-    return match && match[7].length === 11 ? match[7] : null;
-  };
-
-  const youtubeId = getYouTubeVideoId(product.video || '');
-
-  return (
-    <div className="relative w-full h-screen bg-black flex items-center justify-center overflow-hidden">
-      {/* Video Container */}
-      <div className="relative w-full h-full max-w-md mx-auto" onClick={handleVideoClick}>
-        {product.video && youtubeId ? (
+  const renderVideo = () => {
+    if (isYouTubeVideo(product.video)) {
+      const youtubeId = getYouTubeVideoId(product.video);
+      if (youtubeId) {
+        return (
           <iframe 
             ref={iframeRef}
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=0&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1`}
             className="w-full h-full object-cover rounded-lg" 
             frameBorder="0" 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" 
             allowFullScreen
             title={product.produto}
           />
+        );
+      }
+    }
+
+    // Direct video (MP4)
+    return (
+      <video
+        ref={videoRef}
+        src={product.video}
+        className="w-full h-full object-cover rounded-lg"
+        loop
+        muted={isMuted}
+        playsInline
+        preload="metadata"
+        onError={() => {
+          console.error('Error loading video:', product.video);
+        }}
+      />
+    );
+  };
+
+  return (
+    <div className="relative w-full h-screen bg-black flex items-center justify-center overflow-hidden">
+      {/* Video Container */}
+      <div className="relative w-full h-full max-w-md mx-auto" onClick={handleVideoClick}>
+        {product.video ? (
+          renderVideo()
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <img src={product.imagem1} alt={product.produto} className="w-full h-full object-contain" />
@@ -118,6 +191,23 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
             <div className="bg-black/30 rounded-full p-4 animate-fade-in">
               {isPlaying ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white" />}
             </div>
+          </div>
+        )}
+
+        {/* Audio Control */}
+        {product.video && !isYouTubeVideo(product.video) && (
+          <div className="absolute top-4 right-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMute();
+              }}
+              className="bg-black/50 hover:bg-black/70 rounded-full p-3"
+            >
+              {isMuted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
+            </Button>
           </div>
         )}
       </div>
