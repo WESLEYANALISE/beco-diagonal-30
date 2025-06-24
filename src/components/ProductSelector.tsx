@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Check, Sparkles, Search } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -49,10 +48,8 @@ export const ProductSelector = ({ products, selectedProducts, onProductToggle, o
     // Convert QuestionnaireAnswers to Record<string, string> format
     const answersRecord: Record<string, string> = {
       budget: answers.budget,
-      category: answers.category,
       purpose: answers.purpose,
       priority: answers.priority,
-      timeline: answers.timeline,
       customNeed: answers.customNeed
     };
     onQuestionnaireChange(answersRecord);
