@@ -1,4 +1,3 @@
-
 import React, { useState, memo, useCallback } from 'react';
 import { Star, Play, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -20,8 +19,11 @@ interface Product {
   imagem3: string;
   imagem4: string;
   imagem5: string;
+  imagem6?: string;
+  imagem7?: string;
   link: string;
   categoria: string;
+  subcategoria?: string;
 }
 
 interface ProductCardProps {
@@ -50,7 +52,15 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const getProductImages = useCallback((product: Product) => {
-    return [product.imagem1, product.imagem2, product.imagem3, product.imagem4, product.imagem5].filter(Boolean);
+    return [
+      product.imagem1, 
+      product.imagem2, 
+      product.imagem3, 
+      product.imagem4, 
+      product.imagem5,
+      product.imagem6,
+      product.imagem7
+    ].filter(Boolean);
   }, []);
 
   const formatPrice = useCallback((price: string) => {

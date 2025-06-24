@@ -29,15 +29,18 @@ interface Product {
   imagem3: string;
   imagem4: string;
   imagem5: string;
+  imagem6: string;
+  imagem7: string;
   link: string;
   categoria: string;
+  subcategoria: string;
   uso?: string;
 }
 
 const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isPlaying, toggleMusic, isLoaded } = useBackgroundMusic();
+  const { isPlaying, toggleMusic, isLoaded, hasPlayed } = useBackgroundMusic();
   const categoryFromUrl = searchParams.get('categoria');
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -128,7 +131,7 @@ const Index = () => {
       setCategories(uniqueCategories);
 
       if (uniqueCategories.length > 0) {
-        setCurrentFeaturedCategory('Todos os Artefatos Mágicos');
+        setCurrentFeaturedCategory('Artefatos Mágicos de Hogwarts');
       }
     } catch (error) {
       console.error('Erro ao buscar artefatos mágicos:', error);
@@ -242,7 +245,8 @@ const Index = () => {
       'Luminária': Wand2,
       'Colares': Crown,
       'Moletons e Suéteres': Shirt,
-      'Capinhas': Smartphone
+      'Capinhas': Smartphone,
+      'Canecas': ShoppingCart
     };
     return iconMap[category] || ShoppingCart;
   }, []);
@@ -276,8 +280,8 @@ const Index = () => {
       {/* Magical background particles */}
       <MagicalParticles />
       
-      {/* Music control button */}
-      {isLoaded && (
+      {/* Music control button - only show if hasn't played yet */}
+      {isLoaded && !hasPlayed && (
         <div className="fixed top-4 right-4 z-50">
           <Button
             size="sm"
@@ -291,12 +295,12 @@ const Index = () => {
 
       {/* Enhanced magical background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 w-2 h-2 bg-magical-gold rounded-full animate-magical-glow opacity-60"></div>
-        <div className="absolute top-32 right-20 w-3 h-3 bg-magical-bronze rounded-full animate-sparkle opacity-40" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-64 left-1/4 w-1.5 h-1.5 bg-magical-silver rounded-full animate-levitate opacity-70" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-96 right-1/3 w-4 h-4 bg-magical-gold rounded-full animate-magical-glow opacity-30" style={{animationDelay: '3s'}}></div>
-        <div className="absolute bottom-64 left-20 w-2.5 h-2.5 bg-magical-bronze rounded-full animate-sparkle opacity-50" style={{animationDelay: '4s'}}></div>
-        <div className="absolute bottom-32 right-10 w-1.5 h-1.5 bg-magical-silver rounded-full animate-levitate opacity-80" style={{animationDelay: '5s'}}></div>
+        <div className="absolute top-10 left-10 w-3 h-3 bg-magical-gold rounded-full animate-magical-glow opacity-60"></div>
+        <div className="absolute top-32 right-20 w-4 h-4 bg-magical-bronze rounded-full animate-sparkle opacity-40" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-64 left-1/4 w-2 h-2 bg-magical-silver rounded-full animate-levitate opacity-70" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-96 right-1/3 w-5 h-5 bg-magical-gold rounded-full animate-magical-glow opacity-30" style={{animationDelay: '3s'}}></div>
+        <div className="absolute bottom-64 left-20 w-3 h-3 bg-magical-bronze rounded-full animate-sparkle opacity-50" style={{animationDelay: '4s'}}></div>
+        <div className="absolute bottom-32 right-10 w-2 h-2 bg-magical-silver rounded-full animate-levitate opacity-80" style={{animationDelay: '5s'}}></div>
       </div>
       
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
@@ -328,7 +332,8 @@ const Index = () => {
                 'Luminária': 'Luzes Místicas',
                 'Colares': 'Joias dos Fundadores',
                 'Moletons e Suéteres': 'Vestes de Hogwarts',
-                'Capinhas': 'Escudos Protetores'
+                'Capinhas': 'Escudos Protetores',
+                'Canecas': 'Cálices Mágicos'
               };
               return (
                 <Button 
@@ -363,7 +368,8 @@ const Index = () => {
           'Luminária': 'Luzes Místicas',
           'Colares': 'Joias dos Fundadores',
           'Moletons e Suéteres': 'Vestes de Hogwarts',
-          'Capinhas': 'Escudos Protetores'
+          'Capinhas': 'Escudos Protetores',
+          'Canecas': 'Cálices Mágicos'
         };
         if (categoryProducts.length === 0) return null;
         return (
@@ -409,9 +415,12 @@ const Index = () => {
         );
       })}
 
-      {/* Featured Products Carousel with Toggle */}
-      <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-gold/15 via-magical-bronze/15 to-magical-gold/15 backdrop-blur-sm animate-fade-in border-y border-magical-gold/30 shadow-2xl">
-        <div className="max-w-7xl mx-auto">
+      {/* Enhanced Featured Products Carousel with Toggle */}
+      <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-gold/20 via-magical-bronze/20 to-magical-gold/20 backdrop-blur-sm animate-fade-in border-y border-magical-gold/40 shadow-2xl relative overflow-hidden">
+        {/* Magical background overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/30 via-magical-mysticalPurple/30 to-magical-darkBlue/30"></div>
+        
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-8">
             <TabNavigation showingAI={showingAI} onTabChange={handleTabChange} />
             
@@ -431,7 +440,7 @@ const Index = () => {
                   ⚡ Relíquias Lendárias de Hogwarts
                 </h2>
                 <p className="text-base text-magical-starlight/80 animate-slide-in-right font-enchanted">
-                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Artefatos Mágicos' ? `Os tesouros mais procurados em ${currentFeaturedCategory}` : 'Os artefatos favoritos dos bruxos mais poderosos'}
+                  {currentFeaturedCategory && currentFeaturedCategory !== 'Artefatos Mágicos de Hogwarts' ? `Os tesouros mais procurados em ${currentFeaturedCategory}` : 'Os artefatos favoritos dos bruxos mais poderosos'}
                 </p>
               </div>
             )}

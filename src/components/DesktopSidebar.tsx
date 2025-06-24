@@ -67,10 +67,10 @@ export const DesktopSidebar = () => {
 
   if (loading) {
     return (
-      <div className="w-80 bg-gradient-to-br from-magical-deepPurple/60 to-magical-mysticalPurple/40 border-l border-magical-gold/30 p-6 space-y-4 backdrop-blur-sm">
+      <div className="w-80 bg-gradient-to-br from-magical-deepPurple/70 to-magical-mysticalPurple/50 border-l border-magical-gold/40 p-6 space-y-4 backdrop-blur-md shadow-2xl">
         <div className="animate-pulse space-y-4">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-20 bg-magical-gold/20 rounded-2xl animate-magical-glow border border-magical-gold/30"></div>
+            <div key={i} className="h-20 bg-magical-gold/20 rounded-2xl animate-magical-glow border border-magical-gold/30 shadow-lg"></div>
           ))}
         </div>
       </div>
@@ -78,32 +78,33 @@ export const DesktopSidebar = () => {
   }
 
   return (
-    <div className="w-80 bg-gradient-to-br from-magical-deepPurple/60 to-magical-mysticalPurple/40 border-l border-magical-gold/30 p-6 space-y-6 overflow-y-auto h-full backdrop-blur-sm shadow-2xl">
+    <div className="w-80 bg-gradient-to-br from-magical-deepPurple/70 to-magical-mysticalPurple/50 border-l border-magical-gold/40 p-6 space-y-6 overflow-y-auto h-full backdrop-blur-md shadow-2xl">
       {/* Enhanced magical header */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <h2 className="text-xl font-bold text-magical-starlight flex items-center gap-2 animate-fade-in font-magical">
-          <Crown className="w-5 h-5 text-magical-gold animate-magical-glow" />
+          <Crown className="w-6 h-6 text-magical-gold animate-magical-glow" />
           Relíquias Lendárias
         </h2>
         <p className="text-sm text-magical-starlight/80 font-enchanted">
-          As relíquias mais procuradas pelos bruxos
+          Os artefatos mais cobiçados pelos bruxos de Hogwarts
         </p>
+        <div className="h-0.5 bg-gradient-to-r from-transparent via-magical-gold/50 to-transparent rounded-full"></div>
       </div>
 
       {/* Enhanced magical products list */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {topProducts.map((product, index) => (
           <Card 
             key={product.id}
-            className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border border-magical-gold/40 hover:border-magical-gold/60 bg-gradient-to-br from-magical-gold/10 to-magical-bronze/10 backdrop-blur-sm hover:scale-105 animate-fade-in shadow-lg hover:shadow-magical-gold/20"
+            className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border border-magical-gold/50 hover:border-magical-gold/70 bg-gradient-to-br from-magical-gold/15 to-magical-bronze/15 backdrop-blur-sm hover:scale-102 animate-fade-in shadow-xl hover:shadow-magical-gold/30"
             onClick={() => handleProductClick(product)}
-            style={{ animationDelay: `${index * 0.1}s` }}
+            style={{ animationDelay: `${index * 0.15}s` }}
           >
             <CardContent className="p-0">
-              <div className="flex gap-3 p-3">
+              <div className="flex gap-3 p-4">
                 {/* Enhanced ranking badge */}
                 <div className="flex-shrink-0 relative">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden shadow-lg border border-magical-gold/30">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden shadow-xl border border-magical-gold/40 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20">
                     <OptimizedImage 
                       src={product.imagem1} 
                       alt={product.produto}
@@ -111,8 +112,8 @@ export const DesktopSidebar = () => {
                     />
                   </div>
                   <Badge 
-                    className={`absolute -top-1 -right-1 w-5 h-5 text-xs p-0 flex items-center justify-center border border-magical-gold/50 ${
-                      index < 3 ? 'bg-gradient-to-br from-magical-gold to-magical-bronze text-magical-midnight shadow-lg animate-magical-glow' : 'bg-gradient-to-br from-magical-silver to-magical-bronze text-magical-midnight'
+                    className={`absolute -top-2 -right-2 w-6 h-6 text-xs p-0 flex items-center justify-center border border-magical-gold/60 shadow-lg ${
+                      index < 3 ? 'bg-gradient-to-br from-magical-gold to-magical-bronze text-magical-midnight animate-magical-glow' : 'bg-gradient-to-br from-magical-silver to-magical-bronze text-magical-midnight'
                     }`}
                   >
                     {index + 1}
@@ -150,7 +151,7 @@ export const DesktopSidebar = () => {
                   {/* Enhanced magical button */}
                   <Button 
                     size="sm"
-                    className="w-full h-7 bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight text-xs font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-enchanted"
+                    className="w-full h-8 bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight text-xs font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-enchanted"
                     onClick={(e) => handleShopeeClick(product, e)}
                   >
                     <Sparkles className="w-3 h-3 mr-1" />
@@ -164,7 +165,7 @@ export const DesktopSidebar = () => {
       </div>
 
       {/* Enhanced magical stats */}
-      <Card className="bg-gradient-to-br from-magical-mysticalPurple/20 to-magical-deepPurple/20 border-magical-gold/40 shadow-xl backdrop-blur-sm">
+      <Card className="bg-gradient-to-br from-magical-mysticalPurple/30 to-magical-deepPurple/30 border-magical-gold/50 shadow-xl backdrop-blur-sm">
         <CardContent className="p-4 space-y-3">
           <h3 className="font-semibold text-magical-starlight text-sm flex items-center gap-2 font-magical">
             <Crown className="w-4 h-4 text-magical-gold animate-magical-glow" />
