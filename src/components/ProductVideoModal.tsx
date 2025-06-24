@@ -150,10 +150,10 @@ export const ProductVideoModal = ({
               </div>
               <Button 
                 onClick={handleBuyClick} 
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
+                className="w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-white font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
-                Comprar na Shopee
+                Adquirir Artefato
               </Button>
             </div>
           )}

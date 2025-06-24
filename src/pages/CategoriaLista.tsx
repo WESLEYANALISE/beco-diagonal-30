@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, ShoppingCart, Filter, Grid } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, Filter, Grid, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -94,10 +94,10 @@ const CategoriaLista = () => {
       }
       
       setProducts(filteredData);
-      showSuccess("Produtos carregados!");
+      showSuccess("Artefatos mágicos carregados!");
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
-      showError("Erro ao carregar produtos");
+      showError("Erro ao carregar artefatos mágicos");
     } finally {
       setLoading(false);
     }
@@ -152,24 +152,36 @@ const CategoriaLista = () => {
     setFilteredProducts(filtered);
   };
 
+  // Get magical names
+  const getMagicalCategoryName = (category: string) => {
+    const nameMap: Record<string, string> = {
+      'Beleza e Cuidados Pessoais': 'Poções e Unguentos',
+      'Casa e Decoração': 'Artefatos do Lar',
+      'Diversão e Familia': 'Entretenimento Mágico',
+      'Estilo e Moda': 'Vestes e Acessórios',
+      'Tecnologia e Acessórios': 'Artefatos Místicos'
+    };
+    return nameMap[category] || category;
+  };
+
   const getTitle = () => {
     if (tipo === 'mais-vendidos') {
-      return 'Mais Vendidos';
+      return 'Artefatos Mais Procurados';
     }
     if (tipo === 'subcategoria' && subcategoria) {
       return subcategoria;
     }
-    return categoria ? `${categoria}` : 'Produtos';
+    return categoria ? getMagicalCategoryName(categoria) : 'Artefatos Mágicos';
   };
 
   const getSubtitle = () => {
     if (tipo === 'mais-vendidos') {
-      return 'Os produtos favoritos dos nossos clientes';
+      return 'Os artefatos favoritos dos nossos magos';
     }
     if (tipo === 'subcategoria' && subcategoria) {
-      return `Produtos em ${categoria} > ${subcategoria}`;
+      return `Artefatos em ${getMagicalCategoryName(categoria)} > ${subcategoria}`;
     }
-    return `Explore todas as subcategorias de ${categoria}`;
+    return `Explore todas as escolas de ${getMagicalCategoryName(categoria)}`;
   };
 
   const getBackPath = () => {
@@ -190,16 +202,16 @@ const CategoriaLista = () => {
 
   const getCategoryGradient = (index: number) => {
     const gradients = [
-      'from-pink-500 via-purple-500 to-red-500',
-      'from-blue-500 via-cyan-500 to-purple-500',
-      'from-green-500 via-emerald-500 to-teal-500',
-      'from-yellow-500 via-orange-500 to-red-500',
-      'from-purple-500 via-pink-500 to-rose-500',
-      'from-indigo-500 via-blue-500 to-cyan-500',
-      'from-red-500 via-orange-500 to-yellow-500',
-      'from-teal-500 via-green-500 to-emerald-500',
-      'from-rose-500 via-pink-500 to-purple-500',
-      'from-amber-500 via-yellow-500 to-orange-500'
+      'from-magical-mysticalPurple to-magical-deepPurple',
+      'from-magical-gold to-magical-bronze',
+      'from-magical-emerald to-magical-mysticalPurple',
+      'from-magical-crimson to-magical-gold',
+      'from-magical-silver to-magical-deepPurple',
+      'from-magical-bronze to-magical-mysticalPurple',
+      'from-magical-deepPurple to-magical-gold',
+      'from-magical-mysticalPurple to-magical-emerald',
+      'from-magical-gold to-magical-deepPurple',
+      'from-magical-bronze to-magical-mysticalPurple'
     ];
     return gradients[index % gradients.length];
   };
@@ -208,13 +220,13 @@ const CategoriaLista = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple">
         <Header />
         <div className="flex">
           <div className="flex-1 container mx-auto px-4 py-8">
             <div className="animate-pulse space-y-4">
               {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="h-24 bg-gray-200 rounded-lg"></div>
+                <div key={index} className="h-24 bg-magical-gold/20 rounded-lg backdrop-blur-sm border border-magical-gold/30"></div>
               ))}
             </div>
           </div>
@@ -227,29 +239,30 @@ const CategoriaLista = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
       <Header />
       
       <div className="flex">
         {/* Main Content */}
         <div className="flex-1">
           {/* Header da página */}
-          <div className="bg-white border-b sticky top-0 z-10">
+          <div className="bg-gradient-to-r from-magical-deepPurple/90 via-magical-mysticalPurple/90 to-magical-deepPurple/90 backdrop-blur-md border-b border-magical-gold/30 sticky top-0 z-10">
             <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
               <div className="flex items-center gap-2 sm:gap-4 mb-3">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate(getBackPath())} 
-                  className="text-red-500 hover:text-red-600 p-1 sm:p-2"
+                  className="text-magical-gold hover:text-magical-darkGold hover:bg-magical-gold/20 p-1 sm:p-2 transition-all duration-300"
                 >
                   <ArrowLeft className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Voltar</span>
                 </Button>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{getTitle()}</h1>
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">{getSubtitle()}</p>
+                  <h1 className="text-lg sm:text-xl font-bold text-magical-starlight truncate font-magical">{getTitle()}</h1>
+                  <p className="text-xs sm:text-sm text-magical-starlight/80 truncate font-enchanted">{getSubtitle()}</p>
                 </div>
+                <Sparkles className="w-5 h-5 text-magical-gold animate-sparkle" />
               </div>
 
               {/* Controles de visualização e filtros - mostrar quando exibindo produtos */}
@@ -257,19 +270,19 @@ const CategoriaLista = () => {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
-                      <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm">
+                      <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm bg-magical-deepPurple/60 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/20">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="nome">Nome</SelectItem>
-                        <SelectItem value="preco">Preço</SelectItem>
+                      <SelectContent className="bg-magical-deepPurple border-magical-gold/30">
+                        <SelectItem value="nome" className="text-magical-starlight hover:bg-magical-gold/20">Nome</SelectItem>
+                        <SelectItem value="preco" className="text-magical-starlight hover:bg-magical-gold/20">Preço</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                      className="px-2 sm:px-3"
+                      className="px-2 sm:px-3 bg-magical-deepPurple/60 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/20 hover:text-magical-gold"
                     >
                       {sortOrder === 'asc' ? '↑' : '↓'}
                     </Button>
@@ -285,24 +298,25 @@ const CategoriaLista = () => {
               // Enhanced subcategories grid
               <div className="space-y-6">
                 <div className="text-center">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                    Subcategorias
+                  <h2 className="text-2xl sm:text-3xl font-bold text-magical-starlight mb-2 font-magical">
+                    Escolas de Magia
                   </h2>
-                  <p className="text-gray-600 mb-6">
-                    Encontre exatamente o que procura em {subcategoryGroups.length} subcategorias
+                  <p className="text-magical-starlight/80 mb-6 font-enchanted">
+                    Encontre exatamente o que procura em {subcategoryGroups.length} escolas especializadas
                   </p>
                 </div>
                 
                 {subcategoryGroups.length === 0 ? (
                   <div className="text-center py-16">
-                    <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                      <ShoppingCart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-magical-gold/30 to-magical-bronze/30 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-levitate shadow-2xl backdrop-blur-sm border border-magical-gold/40">
+                      <ShoppingCart className="w-12 h-12 sm:w-16 sm:h-16 text-magical-gold" />
+                      <Sparkles className="w-4 h-4 text-magical-gold absolute top-2 right-2 animate-sparkle" />
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-                      Nenhuma subcategoria encontrada
+                    <h2 className="text-xl sm:text-2xl font-bold text-magical-starlight mb-4 font-magical">
+                      Nenhuma escola de magia encontrada
                     </h2>
-                    <p className="text-gray-600">
-                      Esta categoria ainda não possui subcategorias
+                    <p className="text-magical-starlight/80 font-enchanted">
+                      Esta categoria ainda não possui escolas especializadas
                     </p>
                   </div>
                 ) : (

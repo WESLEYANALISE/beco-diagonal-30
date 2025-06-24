@@ -147,13 +147,13 @@ export const DesktopSidebar = () => {
                     </div>
                   </div>
 
-                  {/* Shopee Button */}
+                  {/* Shopee Button - Updated to magical purple */}
                   <Button 
                     size="sm"
-                    className="w-full h-7 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-xs font-medium"
+                    className="w-full h-7 bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-white text-xs font-medium border-0 shadow-lg hover:shadow-xl"
                     onClick={(e) => handleShopeeClick(product, e)}
                   >
-                    Comprar na Shopee
+                    Adquirir Artefato
                   </Button>
                 </div>
               </div>
@@ -163,23 +163,23 @@ export const DesktopSidebar = () => {
       </div>
 
       {/* Quick Stats */}
-      <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-red-100">
+      <Card className="bg-gradient-to-br from-magical-mysticalPurple/10 to-magical-deepPurple/10 border-magical-gold/30">
         <CardContent className="p-4 space-y-3">
           <h3 className="font-semibold text-gray-900 text-sm">
-            Estatísticas Rápidas
+            Estatísticas Mágicas
           </h3>
           <div className="grid grid-cols-2 gap-3 text-center">
             <div className="space-y-1">
-              <div className="text-lg font-bold text-red-600">
+              <div className="text-lg font-bold text-magical-mysticalPurple">
                 {topProducts.reduce((sum, p) => sum + (p.clicks || 0), 0)}
               </div>
               <div className="text-xs text-gray-600">Total Cliques</div>
             </div>
             <div className="space-y-1">
-              <div className="text-lg font-bold text-orange-600">
+              <div className="text-lg font-bold text-magical-deepPurple">
                 {topProducts.reduce((sum, p) => sum + (p.shopee_clicks || 0), 0)}
               </div>
-              <div className="text-xs text-gray-600">Compras Shopee</div>
+              <div className="text-xs text-gray-600">Artefatos Adquiridos</div>
             </div>
           </div>
         </CardContent>
