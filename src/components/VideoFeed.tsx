@@ -82,11 +82,11 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({ product, isActive, onBuy
   return (
     <div className="relative w-full h-screen bg-black flex items-center justify-center overflow-hidden">
       {/* Video Container */}
-      <div className="relative w-full h-full" onClick={handleVideoClick}>
+      <div className="relative w-full h-full max-w-md mx-auto" onClick={handleVideoClick}>
         {product.video && youtubeId ? (
           <iframe
             src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=0&controls=0&rel=0&loop=1&playlist=${youtubeId}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover rounded-lg"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -96,7 +96,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({ product, isActive, onBuy
             <img 
               src={product.imagem1} 
               alt={product.produto}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="bg-black/50 rounded-full p-4">
@@ -122,7 +122,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({ product, isActive, onBuy
 
       {/* Product Info Overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-        <div className="flex justify-between items-end">
+        <div className="flex justify-between items-end max-w-md mx-auto">
           <div className="flex-1 pr-4">
             <Badge className="bg-orange-500 text-white mb-2">
               {product.categoria}
@@ -135,20 +135,21 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({ product, isActive, onBuy
             </p>
             <Button 
               onClick={handleBuyClick}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-6 py-3 rounded-full"
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-6 py-3 rounded-full w-full"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Comprar Agora
+              Comprar na Shopee
             </Button>
           </div>
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-4">
-            <FavoriteButton 
-              productId={product.id} 
-              showText={false}
-              className="bg-black/50 hover:bg-black/70 rounded-full p-3"
-            />
+            <div className="bg-black/50 hover:bg-black/70 rounded-full p-3">
+              <FavoriteButton 
+                productId={product.id} 
+                showText={false}
+              />
+            </div>
             <Button 
               variant="ghost" 
               size="sm"

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ArrowLeft, Grid3X3, List, Play } from 'lucide-react';
+import { ArrowLeft, Grid2X2, LayoutList, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { VideoFeed } from '@/components/VideoFeed';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { ProductGrid } from '@/components/ProductGrid';
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Product {
   id: number;
@@ -25,6 +26,7 @@ interface Product {
 
 const Explorar = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('todas');
@@ -124,12 +126,38 @@ const Explorar = () => {
         }
       };
 
+      const handleTouchStart = (e: TouchEvent) => {
+        const touch = e.touches[0];
+        const startY = touch.clientY;
+        
+        const handleTouchMove = (moveEvent: TouchEvent) => {
+          const moveTouch = moveEvent.touches[0];
+          const diffY = startY - moveTouch.clientY;
+          
+          if (Math.abs(diffY) > 50) {
+            if (diffY > 0 && currentVideoIndex < videoProducts.length - 1) {
+              setCurrentVideoIndex(prev => prev + 1);
+            } else if (diffY < 0 && currentVideoIndex > 0) {
+              setCurrentVideoIndex(prev => prev - 1);
+            }
+            document.removeEventListener('touchmove', handleTouchMove);
+          }
+        };
+        
+        document.addEventListener('touchmove', handleTouchMove);
+        setTimeout(() => {
+          document.removeEventListener('touchmove', handleTouchMove);
+        }, 1000);
+      };
+
       window.addEventListener('wheel', handleScroll, { passive: false });
       window.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('touchstart', handleTouchStart);
 
       return () => {
         window.removeEventListener('wheel', handleScroll);
         window.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('touchstart', handleTouchStart);
       };
     }
   }, [viewMode, currentVideoIndex, videoProducts.length]);
@@ -174,16 +202,18 @@ const Explorar = () => {
               onClick={() => setViewMode('grid')}
               className={viewMode === 'grid' ? 'bg-orange-500 hover:bg-orange-600' : 'text-white hover:bg-white/20'}
             >
-              <Grid3X3 className="w-4 h-4" />
+              <Grid2X2 className="w-4 h-4" />
             </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className={`md:hidden ${viewMode === 'list' ? 'bg-orange-500 hover:bg-orange-600' : 'text-white hover:bg-white/20'}`}
-            >
-              <List className="w-4 h-4" />
-            </Button>
+            {isMobile && (
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? 'bg-orange-500 hover:bg-orange-600' : 'text-white hover:bg-white/20'}
+              >
+                <LayoutList className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -197,7 +227,7 @@ const Explorar = () => {
       </div>
 
       {/* Content */}
-      <div className="pt-32">
+      <div className={viewMode === 'video' ? 'pt-0' : 'pt-32'}>
         {viewMode === 'video' ? (
           <div className="relative">
             {videoProducts.length > 0 ? (
@@ -234,7 +264,7 @@ const Explorar = () => {
             <div className="max-w-7xl mx-auto">
               <ProductGrid 
                 products={filteredProducts} 
-                compact={viewMode === 'list'} 
+                compact={viewMode === 'grid'} 
               />
             </div>
           </div>
@@ -246,8 +276,9 @@ const Explorar = () => {
         <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-40">
           <div className="flex flex-col gap-2">
             {videoProducts.map((_, index) => (
-              <div
+              <button
                 key={index}
+                onClick={() => setCurrentVideoIndex(index)}
                 className={`w-1 h-8 rounded-full transition-all duration-300 ${
                   index === currentVideoIndex ? 'bg-orange-500' : 'bg-white/30'
                 }`}

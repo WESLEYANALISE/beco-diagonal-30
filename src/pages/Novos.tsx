@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Star, ShoppingCart, Play, Sparkles, Grid, List } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, Play, Sparkles, Grid2X2, LayoutList } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +10,12 @@ import { ProductVideoModal } from '@/components/ProductVideoModal';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { ProductCard } from '@/components/ProductCard';
+import { ProductGrid } from '@/components/ProductGrid';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { LazyImage } from '@/components/LazyImage';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Product {
   id: number;
@@ -36,6 +38,7 @@ const Novos = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchNewestProducts();
@@ -116,25 +119,27 @@ const Novos = () => {
             </p>
           </div>
           
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="p-2 bg-white/20 border-white/30 hover:bg-white/30 text-white"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="p-2 bg-white/20 border-white/30 hover:bg-white/30 text-white"
-            >
-              <Grid className="w-4 h-4" />
-            </Button>
-          </div>
+          {/* View Mode Toggle - Apenas para mobile/tablet */}
+          {isMobile && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="p-2 bg-white/20 border-white/30 hover:bg-white/30 text-white"
+              >
+                <LayoutList className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="p-2 bg-white/20 border-white/30 hover:bg-white/30 text-white"
+              >
+                <Grid2X2 className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
         {products.length === 0 ? (
@@ -156,122 +161,116 @@ const Novos = () => {
             </Button>
           </div>
         ) : (
-          <div className={viewMode === 'grid' ? 
-            "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4" : 
-            "space-y-2 sm:space-y-3"
-          }>
-            {products.map((product, index) => (
-              viewMode === 'grid' ? (
-                // Grid View - usando ProductCard
-                <div key={product.id}>
-                  <ProductCard 
-                    product={product} 
-                    showBadge={true}
-                    badgeText="NOVO"
-                    compact={true}
-                  />
-                </div>
-              ) : (
-                // List View
-                <Card 
-                  key={product.id} 
-                  className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-white border-0 shadow-lg group animate-fade-in cursor-pointer"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                  onClick={() => handleProductClick(product)}
-                >
-                  <div className="flex flex-col md:flex-row">
-                    <div className="relative w-full md:w-48 h-48 flex-shrink-0">
-                      <Carousel className="w-full h-full">
-                        <CarouselContent>
-                          {getProductImages(product).map((image, imgIndex) => (
-                            <CarouselItem key={imgIndex}>
-                              <div className="h-48 overflow-hidden">
-                                <LazyImage
-                                  src={image}
-                                  alt={`${product.produto} - ${imgIndex + 1}`}
-                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                />
-                              </div>
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="left-2 bg-white/90 hover:bg-white w-6 h-6" />
-                        <CarouselNext className="right-2 bg-white/90 hover:bg-white w-6 h-6" />
-                      </Carousel>
-                      
-                      {product.video && (
-                        <div className="absolute top-2 right-2">
-                          <div className="bg-red-500 rounded-full p-1 animate-pulse">
-                            <Play className="w-3 h-3 text-white" />
+          <>
+            {/* Mobile/Tablet View com toggle */}
+            {isMobile ? (
+              <ProductGrid 
+                products={products} 
+                compact={viewMode === 'grid'}
+              />
+            ) : (
+              /* Desktop View - Lista melhorada */
+              <div className="space-y-2 sm:space-y-3">
+                {products.map((product, index) => (
+                  <Card 
+                    key={product.id} 
+                    className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-white border-0 shadow-lg group animate-fade-in cursor-pointer"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                    onClick={() => handleProductClick(product)}
+                  >
+                    <div className="flex flex-col md:flex-row">
+                      <div className="relative w-full md:w-64 h-64 md:h-48 flex-shrink-0">
+                        <Carousel className="w-full h-full">
+                          <CarouselContent>
+                            {getProductImages(product).map((image, imgIndex) => (
+                              <CarouselItem key={imgIndex}>
+                                <div className="h-64 md:h-48 overflow-hidden">
+                                  <LazyImage
+                                    src={image}
+                                    alt={`${product.produto} - ${imgIndex + 1}`}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                  />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious className="left-2 bg-white/90 hover:bg-white w-8 h-8 transition-all duration-300 hover:scale-110" />
+                          <CarouselNext className="right-2 bg-white/90 hover:bg-white w-8 h-8 transition-all duration-300 hover:scale-110" />
+                        </Carousel>
+                        
+                        {product.video && (
+                          <div className="absolute top-2 right-2">
+                            <div className="bg-red-500 rounded-full p-2 animate-pulse shadow-lg">
+                              <Play className="w-4 h-4 text-white" />
+                            </div>
                           </div>
+                        )}
+                        
+                        <div className="absolute top-2 left-2">
+                          <Badge className="bg-green-500 text-white font-bold text-xs animate-bounce shadow-lg">
+                            NOVO
+                          </Badge>
                         </div>
-                      )}
-                      
-                      <div className="absolute top-2 left-2">
-                        <Badge className="bg-green-500 text-white font-bold text-xs animate-bounce">
-                          NOVO
-                        </Badge>
+
+                        <div className="absolute bottom-2 left-2">
+                          <FavoriteButton productId={product.id} size="sm" />
+                        </div>
                       </div>
 
-                      {/* Favorite button sempre presente */}
-                      <div className="absolute bottom-2 left-2">
-                        <FavoriteButton productId={product.id} size="sm" />
-                      </div>
-                    </div>
-
-                    <CardContent className="flex-1 p-4 md:p-6">
-                      <div className="flex flex-col h-full">
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-lg hover:text-red-600 transition-colors">
-                              {product.produto}
-                            </h3>
-                            <div className="flex items-center gap-1 ml-4">
-                              <Star className="w-4 h-4 text-yellow-400 fill-current animate-spin-slow" />
-                              <span className="text-sm text-gray-600">4.8</span>
+                      <CardContent className="flex-1 p-4 md:p-6">
+                        <div className="flex flex-col h-full">
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-2">
+                              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-lg hover:text-red-600 transition-colors">
+                                {product.produto}
+                              </h3>
+                              <div className="flex items-center gap-1 ml-4">
+                                <Star className="w-4 h-4 text-yellow-400 fill-current animate-spin-slow" />
+                                <span className="text-sm text-gray-600">4.8</span>
+                              </div>
+                            </div>
+                            
+                            {product.categoria && (
+                              <Badge variant="secondary" className="mb-3 animate-fade-in">
+                                {product.categoria}
+                              </Badge>
+                            )}
+                            
+                            <div className="text-xl font-bold text-red-500 mb-4">
+                              A partir de {formatPrice(product.valor)}
                             </div>
                           </div>
                           
-                          {product.categoria && (
-                            <Badge variant="secondary" className="mb-3 animate-fade-in">
-                              {product.categoria}
-                            </Badge>
-                          )}
-                          
-                          <div className="text-xl font-bold text-red-500 mb-4">
-                            A partir de {formatPrice(product.valor)}
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="flex gap-2 flex-1">
+                              <FavoriteButton productId={product.id} />
+                              <ProductPhotosModal 
+                                images={getProductImages(product)} 
+                                productName={product.produto} 
+                                productPrice={formatPrice(product.valor)} 
+                                productLink={product.link}
+                                videoUrl={product.video}
+                              />
+                            </div>
+                            <Button 
+                              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold hover:scale-105 transition-all duration-300 sm:w-auto w-full" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(product.link, '_blank');
+                              }}
+                            >
+                              <ShoppingCart className="w-4 h-4 mr-2" />
+                              Comprar na Shopee
+                            </Button>
                           </div>
                         </div>
-                        
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <div className="flex gap-2 flex-1">
-                            <FavoriteButton productId={product.id} />
-                            <ProductPhotosModal 
-                              images={getProductImages(product)} 
-                              productName={product.produto} 
-                              productPrice={formatPrice(product.valor)} 
-                              productLink={product.link}
-                              videoUrl={product.video}
-                            />
-                          </div>
-                          <Button 
-                            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold hover:scale-105 transition-all duration-300 sm:w-auto w-full" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(product.link, '_blank');
-                            }}
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            Comprar na Shopee
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </div>
-                </Card>
-              )
-            ))}
-          </div>
+                      </CardContent>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
