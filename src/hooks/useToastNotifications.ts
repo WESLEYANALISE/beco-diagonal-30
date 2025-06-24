@@ -28,18 +28,11 @@ export const useToastNotifications = () => {
     });
   };
 
-  const showLoading = (message: string) => {
-    toast({
-      title: "⏳ " + message,
-      description: "Aguarde...",
-      variant: "default",
-    });
-  };
+  // Removida a função showLoading para eliminar notificações desnecessárias
 
   return {
     showSuccess,
     showError,
-    showInfo,
-    showLoading
+    showInfo
   };
 };

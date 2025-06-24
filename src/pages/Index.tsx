@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
@@ -14,7 +13,6 @@ import { HeroSection } from '@/components/HeroSection';
 import { TabNavigation } from '@/components/TabNavigation';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
-import { useToastNotifications } from '@/hooks/useToastNotifications';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -51,9 +49,8 @@ const Index = () => {
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
   const [priceFilter, setPriceFilter] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
-  const { showError, showLoading, showInfo } = useToastNotifications();
 
-  // Function to shuffle array
+  // Function to shuffle array - sempre randomizar
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -67,16 +64,6 @@ const Index = () => {
   const parsePrice = (priceString: string): number => {
     const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
     return parseFloat(cleanPrice) || 0;
-  };
-
-  // Persistir ordem dos produtos no localStorage para manter durante a sessão
-  const getStoredProductOrder = () => {
-    const stored = localStorage.getItem('shuffledProductIds');
-    return stored ? JSON.parse(stored) : null;
-  };
-
-  const storeProductOrder = (productIds: number[]) => {
-    localStorage.setItem('shuffledProductIds', JSON.stringify(productIds));
   };
 
   useEffect(() => {
@@ -123,28 +110,13 @@ const Index = () => {
 
       if (error) throw error;
       
-      let processedProducts = data || [];
-      
-      // Verificar se já existe uma ordem armazenada
-      const storedOrder = getStoredProductOrder();
-      
-      if (storedOrder && storedOrder.length === processedProducts.length) {
-        // Usar ordem armazenada
-        processedProducts = storedOrder.map((id: number) => 
-          processedProducts.find(p => p.id === id)
-        ).filter(Boolean);
-      } else {
-        // Primeira visita - randomizar e armazenar
-        if (!categoryFromUrl) {
-          processedProducts = shuffleArray(processedProducts);
-          storeProductOrder(processedProducts.map(p => p.id));
-        }
-      }
+      // SEMPRE randomizar produtos a cada carregamento
+      let processedProducts = shuffleArray(data || []);
       
       setProducts(processedProducts);
       
-      // Set initial featured products (first 8)
-      const initialFeatured = processedProducts.slice(0, 8);
+      // Set initial featured products (first 8 randomizados)
+      const initialFeatured = shuffleArray(processedProducts).slice(0, 8);
       setFeaturedProducts(initialFeatured);
 
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
@@ -156,7 +128,6 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
-      showError("Erro ao carregar produtos", "Tente novamente em alguns instantes");
     } finally {
       setLoading(false);
     }
@@ -205,7 +176,6 @@ const Index = () => {
 
   const handlePriceFilter = (min: number, max: number) => {
     setPriceFilter({ min, max });
-    showInfo("Filtro de preço aplicado", `R$ ${min} - R$ ${max}`);
   };
 
   const handleProductClick = (productId: number) => {
@@ -224,11 +194,9 @@ const Index = () => {
     setSelectedProducts(prev => {
       const isSelected = prev.some(p => p.id === product.id);
       if (isSelected) {
-        showInfo("Produto removido da seleção");
         return prev.filter(p => p.id !== product.id);
       } else {
         if (prev.length >= 5) {
-          showError("Limite atingido", "Você pode selecionar no máximo 5 produtos");
           return prev;
         }
         return [...prev, product];
@@ -239,15 +207,11 @@ const Index = () => {
   const handleAnalyze = () => {
     if (selectedProducts.length > 0) {
       setShowAnalysisModal(true);
-      showLoading("Preparando análise da IA");
-    } else {
-      showError("Nenhum produto selecionado", "Selecione pelo menos um produto para análise");
     }
   };
 
   const analyzeProducts = async (products: Product[]): Promise<string> => {
     try {
-      showLoading("Analisando produtos com IA");
       const { data, error } = await supabase.functions.invoke('analyze-products', {
         body: { 
           products,
@@ -263,7 +227,6 @@ const Index = () => {
       return data.analysis || 'Análise não disponível';
     } catch (error) {
       console.error('Error in analyzeProducts:', error);
-      showError("Erro na análise", "Não foi possível analisar os produtos");
       throw error;
     }
   };
@@ -281,12 +244,10 @@ const Index = () => {
 
   const getCategoryProducts = (category: string, limit: number = 12) => {
     const categoryProducts = filteredProducts.filter(p => p.categoria === category);
-    
-    // Aumentar limite especialmente para "Diversão e Familia"
     const actualLimit = category === 'Diversão e Familia' ? 12 : limit;
     
-    // Não randomizar mais aqui, manter ordem original dos produtos
-    return categoryProducts.slice(0, actualLimit);
+    // Randomizar produtos da categoria também
+    return shuffleArray(categoryProducts).slice(0, actualLimit);
   };
 
   if (loading) {
@@ -447,7 +408,6 @@ const Index = () => {
 
           {showingAI ? (
             <>
-              {/* Categories during AI mode */}
               <div className="max-w-md mx-auto mb-6 animate-scale-in">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900">
@@ -495,7 +455,6 @@ const Index = () => {
                 <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
               </Carousel>
               
-              {/* Ver Mais button for Mais Vendidos */}
               <div className="text-center animate-fade-in">
                 <Button 
                   onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')}
@@ -555,7 +514,6 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Category Filter */}
             <div className="max-w-md mx-auto mb-6 animate-scale-in">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger className="bg-white border-gray-300 text-gray-900">
