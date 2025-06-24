@@ -33,7 +33,7 @@ export const useMagicalSounds = () => {
     
     // Create and play audio
     const audio = new Audio(selectedSound);
-    audio.volume = 0.3; // Keep volume moderate
+    audio.volume = 0.15; // Reduced volume from 0.3 to 0.15
     audio.preload = 'auto';
     
     audio.play().catch(() => {

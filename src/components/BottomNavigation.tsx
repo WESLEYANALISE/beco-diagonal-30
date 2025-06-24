@@ -70,7 +70,7 @@ export const BottomNavigation = () => {
               }`}
             >
               <Icon className={`${active ? 'w-4 h-4' : 'w-3.5 h-3.5'} transition-all duration-300`} />
-              <span className={`${active ? 'text-xs font-semibold' : 'text-xs'} transition-all duration-300 font-enchanted`}>
+              <span className={`${active ? 'text-[10px] font-semibold' : 'text-[10px]'} transition-all duration-300 font-enchanted leading-tight`}>
                 {item.label}
               </span>
             </Button>

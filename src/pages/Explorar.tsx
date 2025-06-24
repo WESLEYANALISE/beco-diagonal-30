@@ -129,14 +129,11 @@ const Explorar = () => {
     setCurrentVideoIndex(0);
   }, [playRandomMagicalSound]);
 
-  // Navigation function with debounce and magical sound
+  // Navigation function without magical sound (removed from video navigation)
   const navigateToVideo = useCallback((newIndex: number) => {
     if (isTransitioning || newIndex < 0 || newIndex >= filteredProducts.length) {
       return;
     }
-
-    // Play magical sound when navigating videos
-    playRandomMagicalSound();
 
     setIsTransitioning(true);
     setCurrentVideoIndex(newIndex);
@@ -145,7 +142,7 @@ const Explorar = () => {
     setTimeout(() => {
       setIsTransitioning(false);
     }, 300);
-  }, [isTransitioning, filteredProducts.length, playRandomMagicalSound]);
+  }, [isTransitioning, filteredProducts.length]);
 
   const handleVideoEnd = useCallback(() => {
     console.log('Video ended, checking for next video or category');
