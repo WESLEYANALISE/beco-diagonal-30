@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid } from 'lucide-react';
@@ -12,6 +13,7 @@ import { OptimizedImage } from '@/components/OptimizedImage';
 import { SubcategoryCard } from '@/components/SubcategoryCard';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
+import { ProductGrid } from '@/components/ProductGrid';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -151,17 +153,6 @@ const CategoriaLista = () => {
     setFilteredProducts(filtered);
   };
 
-  const getProductImages = (product: Product) => {
-    return [product.imagem1, product.imagem2, product.imagem3, product.imagem4, product.imagem5].filter(Boolean);
-  };
-
-  const formatPrice = (price: string) => {
-    if (price.includes('R$')) {
-      return price;
-    }
-    return `R$ ${price}`;
-  };
-
   const getTitle = () => {
     if (tipo === 'mais-vendidos') {
       return 'Mais Vendidos';
@@ -214,65 +205,6 @@ const CategoriaLista = () => {
     return gradients[index % gradients.length];
   };
 
-  const renderProductCard = (product: Product, index: number) => (
-    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleProductClick(product)}>
-      <CardContent className="p-0">
-        <div className="aspect-square relative">
-          <OptimizedImage 
-            src={product.imagem1} 
-            alt={product.produto} 
-            className="w-full h-full" 
-          />
-          <div className="absolute top-2 right-2">
-            <FavoriteButton productId={product.id} size="sm" />
-          </div>
-          {tipo === 'mais-vendidos' && index < 3 && (
-            <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
-              TOP {index + 1}
-            </Badge>
-          )}
-        </div>
-        
-        <div className="p-3">
-          <h3 className="font-medium text-gray-900 text-sm line-clamp-3 leading-relaxed mb-3 min-h-[3.75rem]">
-            {product.produto}
-          </h3>
-          
-          <div className="flex items-center justify-between mb-3">
-            <div className="font-bold text-red-500 text-sm">
-              {formatPrice(product.valor)}
-            </div>
-            <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 text-yellow-400 fill-current" />
-              <span className="text-xs text-gray-600">4.8</span>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <ProductPhotosModal 
-              images={getProductImages(product)} 
-              productName={product.produto} 
-              productPrice={formatPrice(product.valor)} 
-              productLink={product.link}
-              videoUrl={product.video}
-            />
-            <Button 
-              size="sm" 
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-xs"  
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(product.link, '_blank');
-              }}
-            >
-              <ShoppingCart className="w-3 h-3 mr-1" />
-              Comprar na Shopee
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -322,16 +254,6 @@ const CategoriaLista = () => {
               {/* Controles de visualização e filtros - apenas para lista de subcategoria */}
               {(tipo === 'subcategoria' || tipo === 'mais-vendidos') && (
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="p-2"
-                    >
-                      <Grid className="w-4 h-4" />
-                    </Button>
-                  </div>
-
                   <div className="flex items-center gap-2">
                     <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
                       <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm">
@@ -398,26 +320,12 @@ const CategoriaLista = () => {
                 )}
               </div>
             ) : (
-              // Show filtered products grid only
-              <>
-                {filteredProducts.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                      <ShoppingCart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-                      Nenhum produto encontrado
-                    </h2>
-                    <p className="text-gray-600">
-                      Não há produtos disponíveis nesta {tipo === 'subcategoria' ? 'subcategoria' : 'categoria'}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                    {filteredProducts.map((product, index) => renderProductCard(product, index))}
-                  </div>
-                )}
-              </>
+              // Show filtered products using ProductGrid component
+              <ProductGrid
+                products={filteredProducts}
+                loading={loading}
+                compact={true}
+              />
             )}
           </div>
         </div>
