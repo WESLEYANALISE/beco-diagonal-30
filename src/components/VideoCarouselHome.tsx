@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useNavigate } from 'react-router-dom';
 import { useProductClicks } from '@/hooks/useProductClicks';
+import { ProductDetailModal } from '@/components/ProductDetailModal';
 
 interface Product {
   id: number;
@@ -28,12 +29,12 @@ interface VideoCarouselHomeProps {
 
 interface VideoThumbnailProps {
   product: Product;
-  onWatchVideo: (productId: number) => void;
+  onWatchVideo: (product: Product) => void;
   onBuyProduct: (product: Product) => void;
   formatPrice: (price: string) => string;
 }
 
-const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
+const VideoThumbnail: React.FC<VideoThumbnailProps> = React.memo(({
   product,
   onWatchVideo,
   onBuyProduct,
@@ -42,7 +43,6 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Check if video is YouTube or direct MP4
   const isYouTubeVideo = (url: string) => {
     return url.includes('youtube.com') || url.includes('youtu.be');
   };
@@ -59,10 +59,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
       
       const handleLoadedData = () => {
         setIsLoading(false);
-        // Start playing automatically when loaded
-        video.play().catch(() => {
-          // If autoplay fails, just hide loading
-        });
+        video.play().catch(() => {});
       };
 
       const handleError = () => {
@@ -97,7 +94,6 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
       }
     }
 
-    // Direct video (MP4)
     return (
       <video
         ref={videoRef}
@@ -115,13 +111,11 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
 
   return (
     <div className="group relative bg-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
-      {/* Video Container */}
       <div className="relative aspect-video bg-gray-900 overflow-hidden">
         {product.video ? (
           <>
             {renderVideoContent()}
             
-            {/* Loading Overlay */}
             {isLoading && (
               <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
                 <img
@@ -140,13 +134,13 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
             src={product.imagem1}
             alt={product.produto}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            loading="lazy"
           />
         )}
         
-        {/* Video Overlay */}
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
-            onClick={() => onWatchVideo(product.id)}
+            onClick={() => onWatchVideo(product)}
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-full p-4"
             size="sm"
           >
@@ -154,21 +148,18 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
           </Button>
         </div>
 
-        {/* Video Badge */}
         <div className="absolute top-3 right-3">
           <Badge className="bg-red-600 text-white text-xs font-semibold">
             VÍDEO
           </Badge>
         </div>
 
-        {/* Category Badge */}
         <div className="absolute top-3 left-3">
           <Badge className="bg-orange-500 text-white text-xs">
             {product.categoria}
           </Badge>
         </div>
 
-        {/* Click count indicator for popular products */}
         {product.click_count && product.click_count > 0 && (
           <div className="absolute bottom-3 left-3">
             <Badge className="bg-green-600 text-white text-xs">
@@ -178,7 +169,6 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
         )}
       </div>
 
-      {/* Product Info */}
       <div className="p-4">
         <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
           {product.produto}
@@ -189,7 +179,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
         
         <div className="flex gap-2">
           <Button
-            onClick={() => onWatchVideo(product.id)}
+            onClick={() => onWatchVideo(product)}
             variant="outline"
             size="sm"
             className="flex-1 border-orange-500 text-orange-600 hover:bg-orange-50"
@@ -209,7 +199,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
   products: fallbackProducts
@@ -218,22 +208,27 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
   const { trackProductClick, getMostClickedProducts } = useProductClicks();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Load most clicked products on mount
   useEffect(() => {
     const loadFeaturedProducts = async () => {
       try {
         const mostClicked = await getMostClickedProducts(12);
         
         if (mostClicked.length > 0) {
-          setFeaturedProducts(mostClicked);
+          // Filtrar apenas produtos com vídeos
+          const productsWithVideos = mostClicked.filter(p => p.video && p.video.trim() !== '');
+          setFeaturedProducts(productsWithVideos);
         } else {
-          // Fallback to provided products if no click data
-          setFeaturedProducts(fallbackProducts);
+          // Fallback: filtrar produtos com vídeos dos produtos fornecidos
+          const productsWithVideos = fallbackProducts.filter(p => p.video && p.video.trim() !== '');
+          setFeaturedProducts(productsWithVideos.slice(0, 12));
         }
       } catch (error) {
         console.error('Error loading featured products:', error);
-        setFeaturedProducts(fallbackProducts);
+        const productsWithVideos = fallbackProducts.filter(p => p.video && p.video.trim() !== '');
+        setFeaturedProducts(productsWithVideos.slice(0, 12));
       } finally {
         setLoading(false);
       }
@@ -242,18 +237,14 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
     loadFeaturedProducts();
   }, [getMostClickedProducts, fallbackProducts]);
 
-  const handleWatchVideo = async (productId: number) => {
-    // Track the click
-    await trackProductClick(productId, 'video_view');
-    
-    // Navigate to Explorar page with the specific product
-    navigate(`/explorar?video=${productId}`);
+  const handleWatchVideo = async (product: Product) => {
+    await trackProductClick(product.id, 'video_view');
+    setSelectedProduct(product);
+    setIsModalOpen(true);
   };
 
   const handleBuyProduct = async (product: Product) => {
-    // Track the click
     await trackProductClick(product.id, 'buy_click');
-    
     window.open(product.link, '_blank');
   };
 
@@ -284,52 +275,64 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
   if (featuredProducts.length === 0) return null;
 
   return (
-    <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 backdrop-blur-sm px-0">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-            🏆 Produtos em Destaque
-          </h2>
-          <p className="text-base text-white/80 animate-slide-in-right">
-            Os produtos mais visualizados pelos usuários
-          </p>
-        </div>
+    <>
+      <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 backdrop-blur-sm px-0">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
+              🏆 Produtos em Destaque
+            </h2>
+            <p className="text-base text-white/80 animate-slide-in-right">
+              Os produtos mais visualizados pelos usuários
+            </p>
+          </div>
 
-        <Carousel className="w-full animate-scale-in">
-          <CarouselContent className="-ml-2 md:-ml-3">
-            {featuredProducts.map((product, index) => (
-              <CarouselItem
-                key={product.id}
-                className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <VideoThumbnail
-                  product={product}
-                  onWatchVideo={handleWatchVideo}
-                  onBuyProduct={handleBuyProduct}
-                  formatPrice={formatPrice}
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-          <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
-        </Carousel>
+          <Carousel className="w-full animate-scale-in">
+            <CarouselContent className="-ml-2 md:-ml-3">
+              {featuredProducts.map((product, index) => (
+                <CarouselItem
+                  key={product.id}
+                  className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <VideoThumbnail
+                    product={product}
+                    onWatchVideo={handleWatchVideo}
+                    onBuyProduct={handleBuyProduct}
+                    formatPrice={formatPrice}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
+            <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
+          </Carousel>
 
-        <div className="text-center mt-6 animate-fade-in">
-          <Button
-            onClick={async () => {
-              // Track exploration click
-              await trackProductClick(0, 'explore_products');
-              navigate('/explorar');
-            }}
-            className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-          >
-            Explorar Produtos
-            <Play className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="text-center mt-6 animate-fade-in">
+            <Button
+              onClick={async () => {
+                await trackProductClick(0, 'explore_products');
+                navigate('/explorar');
+              }}
+              className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+            >
+              Explorar Produtos
+              <Play className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {selectedProduct && (
+        <ProductDetailModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedProduct(null);
+          }}
+          product={selectedProduct}
+        />
+      )}
+    </>
   );
 };
