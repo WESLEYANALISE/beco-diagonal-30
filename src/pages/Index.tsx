@@ -14,8 +14,10 @@ import { TabNavigation } from '@/components/TabNavigation';
 import { OptimizedProductCard } from '@/components/OptimizedProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
 import { VideoCarouselHome } from '@/components/VideoCarouselHome';
+import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { useOptimizedProducts } from '@/hooks/useOptimizedProducts';
 import { useProductClicks } from '@/hooks/useProductClicks';
+import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
   id: number;
