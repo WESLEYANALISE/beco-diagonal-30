@@ -4515,6 +4515,44 @@ export type Database = {
         }
         Relationships: []
       }
+      product_clicks: {
+        Row: {
+          click_type: string
+          clicked_at: string | null
+          created_at: string | null
+          device_id: string
+          id: string
+          product_id: number
+          user_id: string | null
+        }
+        Insert: {
+          click_type?: string
+          clicked_at?: string | null
+          created_at?: string | null
+          device_id: string
+          id?: string
+          product_id: number
+          user_id?: string | null
+        }
+        Update: {
+          click_type?: string
+          clicked_at?: string | null
+          created_at?: string | null
+          device_id?: string
+          id?: string
+          product_id?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_clicks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_views: {
         Row: {
           id: string
@@ -7388,6 +7426,23 @@ export type Database = {
       get_content_details: {
         Args: { p_content_type: string; p_content_ids: string[] }
         Returns: Json
+      }
+      get_most_clicked_products_with_videos: {
+        Args: { limit_count?: number }
+        Returns: {
+          id: number
+          produto: string
+          valor: string
+          video: string
+          imagem1: string
+          imagem2: string
+          imagem3: string
+          imagem4: string
+          imagem5: string
+          link: string
+          categoria: string
+          click_count: number
+        }[]
       }
       get_simulado_leaderboard: {
         Args: { _categoria: string; _limit?: number }

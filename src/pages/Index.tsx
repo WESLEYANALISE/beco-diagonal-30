@@ -14,6 +14,7 @@ import { TabNavigation } from '@/components/TabNavigation';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
 import { VideoCarouselHome } from '@/components/VideoCarouselHome';
+import { useProductClicks } from '@/hooks/useProductClicks';
 import { supabase } from "@/integrations/supabase/client";
 interface Product {
   id: number;
@@ -167,7 +168,12 @@ const Index = () => {
       max
     });
   };
-  const handleProductClick = (productId: number) => {
+  const { trackProductClick } = useProductClicks();
+
+  const handleProductClick = async (productId: number) => {
+    // Track the product click
+    await trackProductClick(productId, 'product_view');
+    
     const productElement = document.getElementById(`product-${productId}`);
     if (productElement) {
       productElement.scrollIntoView({
@@ -284,7 +290,9 @@ const Index = () => {
       <HeroSection productsCount={filteredProducts.length} />
 
       {/* Video Carousel - Strategic placement after hero */}
-      {!showingAI && productsWithVideos.length > 0 && <VideoCarouselHome products={productsWithVideos} />}
+      {!showingAI && productsWithVideos.length > 0 && (
+        <VideoCarouselHome products={productsWithVideos} />
+      )}
 
       {/* Category Product Carousels - show all categories when not in AI mode */}
       {!showingAI && categories.map((category, index) => {
