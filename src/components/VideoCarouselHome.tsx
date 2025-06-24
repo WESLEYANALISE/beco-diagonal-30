@@ -42,6 +42,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
   formatPrice
 }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Check if video is YouTube or direct MP4
@@ -125,12 +126,19 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
             {/* Loading Overlay */}
             {isLoading && (
               <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-                <img
-                  src={product.imagem1}
-                  alt={product.produto}
-                  className="w-full h-full object-cover opacity-50"
-                  loading="lazy"
-                />
+                {!imageError ? (
+                  <img
+                    src={product.imagem1}
+                    alt={product.produto}
+                    className="w-full h-full object-cover opacity-50"
+                    loading="lazy"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                    <div className="text-white text-sm">Carregando...</div>
+                  </div>
+                )}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                 </div>
@@ -143,6 +151,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
             alt={product.produto}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             loading="lazy"
+            onError={() => setImageError(true)}
           />
         )}
         
@@ -222,16 +231,16 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(({
   useEffect(() => {
     const loadFeaturedProducts = async () => {
       try {
-        const mostClicked = await getMostClickedProducts(12);
+        const mostClicked = await getMostClickedProducts(8); // Reduced from 12 to 8 for better performance
         if (mostClicked.length > 0) {
           setFeaturedProducts(mostClicked);
         } else {
           // Fallback to provided products if no click data
-          setFeaturedProducts(fallbackProducts);
+          setFeaturedProducts(fallbackProducts.slice(0, 8)); // Limit to 8 products
         }
       } catch (error) {
         console.error('Error loading featured products:', error);
-        setFeaturedProducts(fallbackProducts);
+        setFeaturedProducts(fallbackProducts.slice(0, 8));
       } finally {
         setLoading(false);
       }

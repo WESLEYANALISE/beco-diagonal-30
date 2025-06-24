@@ -61,8 +61,9 @@ const Carousel = React.forwardRef<
       {
         ...opts,
         axis: orientation === "horizontal" ? "x" : "y",
-        duration: 30, // Transição mais rápida e fluida
-        dragFree: true, // Permite arrastar livremente
+        duration: 25, // Faster transition for better performance
+        dragFree: true,
+        skipSnaps: false, // Optimize snapping
       },
       plugins
     )
@@ -162,7 +163,7 @@ const CarouselContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "flex transition-transform duration-500 ease-out",
+          "flex transition-transform duration-300 ease-out", // Faster transition
           orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
           className
         )}
@@ -207,7 +208,7 @@ const CarouselPrevious = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute h-8 w-8 rounded-full transition-all duration-300 hover:scale-110",
+        "absolute h-8 w-8 rounded-full transition-all duration-200 hover:scale-110", // Faster button transition
         orientation === "horizontal"
           ? "-left-12 top-1/2 -translate-y-1/2"
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
@@ -236,7 +237,7 @@ const CarouselNext = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute h-8 w-8 rounded-full transition-all duration-300 hover:scale-110",
+        "absolute h-8 w-8 rounded-full transition-all duration-200 hover:scale-110", // Faster button transition
         orientation === "horizontal"
           ? "-right-12 top-1/2 -translate-y-1/2"
           : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",

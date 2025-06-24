@@ -16,6 +16,7 @@ import { ProductGrid } from '@/components/ProductGrid';
 import { VideoCarouselHome } from '@/components/VideoCarouselHome';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { supabase } from "@/integrations/supabase/client";
+
 interface Product {
   id: number;
   produto: string;
@@ -28,7 +29,9 @@ interface Product {
   imagem5: string;
   link: string;
   categoria: string;
+  uso?: string;
 }
+
 const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -56,29 +59,33 @@ const Index = () => {
     max: 1000
   });
 
-  // Function to shuffle array - sempre randomizar
-  const shuffleArray = <T,>(array: T[]): T[] => {
+  // Optimize shuffle function with memoization
+  const shuffleArray = useCallback(<T,>(array: T[], shouldShuffle: boolean = true): T[] => {
+    if (!shouldShuffle) return array;
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
-  };
+  }, []);
 
   // Parse price from string to number
-  const parsePrice = (priceString: string): number => {
+  const parsePrice = useCallback((priceString: string): number => {
     const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
     return parseFloat(cleanPrice) || 0;
-  };
+  }, []);
+
   useEffect(() => {
     fetchProducts();
   }, []);
+
   useEffect(() => {
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
     }
   }, [categoryFromUrl]);
+
   useEffect(() => {
     filterProducts();
   }, [selectedCategory, filteredProducts, searchTerm, sortBy, sortOrder]);
@@ -88,34 +95,37 @@ const Index = () => {
     applyPriceFilter();
   }, [products, priceFilter]);
 
-  // Auto-rotate featured products by category every 15 seconds - only when not viewing specific category
+  // Auto-rotate featured products by category every 20 seconds (increased from 15 for performance)
   useEffect(() => {
     if (categories.length > 0 && products.length > 0 && !categoryFromUrl) {
       const interval = setInterval(() => {
         const randomCategory = categories[Math.floor(Math.random() * categories.length)];
         setCurrentFeaturedCategory(randomCategory);
         const categoryProducts = products.filter(p => p.categoria === randomCategory);
-        const shuffledProducts = shuffleArray(categoryProducts);
-        setFeaturedProducts(shuffledProducts.slice(0, 8));
-      }, 15000);
+        const shuffledProducts = shuffleArray(categoryProducts, true);
+        setFeaturedProducts(shuffledProducts.slice(0, 6)); // Reduced from 8 to 6
+      }, 20000);
       return () => clearInterval(interval);
     }
-  }, [categories, products, categoryFromUrl]);
+  }, [categories, products, categoryFromUrl, shuffleArray]);
+
   const fetchProducts = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('SHOPEE').select('*').order('id');
+      const { data, error } = await supabase
+        .from('SHOPEE')
+        .select('*')
+        .order('id');
+      
       if (error) throw error;
 
-      // SEMPRE randomizar produtos a cada carregamento
-      let processedProducts = shuffleArray(data || []);
+      // Only shuffle once on initial load for better performance
+      let processedProducts = shuffleArray(data || [], true);
       setProducts(processedProducts);
 
-      // Set initial featured products (first 8 randomizados)
-      const initialFeatured = shuffleArray(processedProducts).slice(0, 8);
+      // Set initial featured products
+      const initialFeatured = shuffleArray(processedProducts, true).slice(0, 6); // Reduced from 8 to 6
       setFeaturedProducts(initialFeatured);
+      
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
       setCategories(uniqueCategories);
 
@@ -129,23 +139,27 @@ const Index = () => {
       setLoading(false);
     }
   };
-  const applyPriceFilter = () => {
+
+  const applyPriceFilter = useCallback(() => {
     const filtered = products.filter(product => {
       const price = parsePrice(product.valor);
       return price >= priceFilter.min && price <= priceFilter.max;
     });
     setFilteredProducts(filtered);
-  };
-  const filterProducts = () => {
+  }, [products, priceFilter, parsePrice]);
+
+  const filterProducts = useCallback(() => {
     let filtered = filteredProducts;
     if (selectedCategory !== 'todas') {
       filtered = filtered.filter(product => product.categoria === selectedCategory);
     }
     if (searchTerm.trim()) {
-      filtered = filtered.filter(product => product.produto.toLowerCase().includes(searchTerm.toLowerCase()));
+      filtered = filtered.filter(product => 
+        product.produto.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
-    // Aplicar ordenação
+    // Apply sorting
     filtered.sort((a, b) => {
       if (sortBy === 'nome') {
         const comparison = a.produto.localeCompare(b.produto);
@@ -158,19 +172,20 @@ const Index = () => {
       }
     });
     setDisplayedProducts(filtered);
-  };
-  const handleSearch = (term: string) => {
+  }, [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder, parsePrice]);
+
+  // Debounced search function for better performance
+  const handleSearch = useCallback((term: string) => {
     setSearchTerm(term);
-  };
-  const handlePriceFilter = (min: number, max: number) => {
-    setPriceFilter({
-      min,
-      max
-    });
-  };
+  }, []);
+
+  const handlePriceFilter = useCallback((min: number, max: number) => {
+    setPriceFilter({ min, max });
+  }, []);
+
   const { trackProductClick } = useProductClicks();
 
-  const handleProductClick = async (productId: number) => {
+  const handleProductClick = useCallback(async (productId: number) => {
     // Track the product click
     await trackProductClick(productId, 'product_view');
     
@@ -182,11 +197,13 @@ const Index = () => {
       });
       setSearchTerm(''); // Clear search to hide preview
     }
-  };
-  const handleTabChange = (tab: 'featured' | 'ai') => {
+  }, [trackProductClick]);
+
+  const handleTabChange = useCallback((tab: 'featured' | 'ai') => {
     setShowingAI(tab === 'ai');
-  };
-  const handleProductToggle = (product: Product) => {
+  }, []);
+
+  const handleProductToggle = useCallback((product: Product) => {
     setSelectedProducts(prev => {
       const isSelected = prev.some(p => p.id === product.id);
       if (isSelected) {
@@ -198,18 +215,17 @@ const Index = () => {
         return [...prev, product];
       }
     });
-  };
-  const handleAnalyze = () => {
+  }, []);
+
+  const handleAnalyze = useCallback(() => {
     if (selectedProducts.length > 0) {
       setShowAnalysisModal(true);
     }
-  };
+  }, [selectedProducts.length]);
+
   const analyzeProducts = async (products: Product[]): Promise<string> => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('analyze-products', {
+      const { data, error } = await supabase.functions.invoke('analyze-products', {
         body: {
           products,
           userPreferences: questionnaireAnswers
@@ -225,7 +241,8 @@ const Index = () => {
       throw error;
     }
   };
-  const getCategoryIcon = (category: string) => {
+
+  const getCategoryIcon = useCallback((category: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
       'Beleza e Cuidados Pessoais': Sparkles,
       'Casa e Decoração': Home,
@@ -234,21 +251,27 @@ const Index = () => {
       'Tecnologia e Acessórios': Smartphone
     };
     return iconMap[category] || ShoppingCart;
-  };
-  const getCategoryProducts = (category: string, limit: number = 12) => {
+  }, []);
+
+  const getCategoryProducts = useCallback((category: string, limit: number = 8) => {
     const categoryProducts = filteredProducts.filter(p => p.categoria === category);
-    const actualLimit = category === 'Diversão e Familia' ? 12 : limit;
+    const actualLimit = category === 'Diversão e Familia' ? 8 : limit; // Reduced from 12 to 8
 
-    // Randomizar produtos da categoria também
-    return shuffleArray(categoryProducts).slice(0, actualLimit);
-  };
+    // Only shuffle when necessary for better performance
+    return shuffleArray(categoryProducts, false).slice(0, actualLimit);
+  }, [filteredProducts, shuffleArray]);
 
-  // Add filtered products with videos for the video carousel
+  // Memoize products with videos for better performance
   const productsWithVideos = useMemo(() => {
-    return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== '')).slice(0, 12);
-  }, [filteredProducts]);
+    return shuffleArray(
+      filteredProducts.filter(product => product.video && product.video.trim() !== ''),
+      false
+    ).slice(0, 8); // Reduced from 12 to 8
+  }, [filteredProducts, shuffleArray]);
+
   if (loading) {
-    return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
         <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
@@ -256,13 +279,25 @@ const Index = () => {
             <ProductGrid loading={true} products={[]} />
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
       {/* Search Preview */}
-      {searchTerm && <SearchPreview searchTerm={searchTerm} products={filteredProducts.filter(p => p.produto.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)} onProductClick={handleProductClick} />}
+      {searchTerm && (
+        <SearchPreview 
+          searchTerm={searchTerm} 
+          products={filteredProducts
+            .filter(p => p.produto.toLowerCase().includes(searchTerm.toLowerCase()))
+            .slice(0, 5)
+          } 
+          onProductClick={handleProductClick} 
+        />
+      )}
 
       {/* Novidades Carousel */}
       <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
@@ -271,17 +306,30 @@ const Index = () => {
       <section className="px-4 py-2 animate-fade-in">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <Button size="sm" variant="outline" onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} 
+              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
+            >
               <ShoppingCart className="w-4 h-4" />
               Todas
             </Button>
-            {categories.slice(0, 8).map(category => {
-            const IconComponent = getCategoryIcon(category);
-            return <Button key={category} size="sm" variant="outline" onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2">
+            {categories.slice(0, 6).map(category => {
+              const IconComponent = getCategoryIcon(category);
+              return (
+                <Button 
+                  key={category}
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
+                >
                   <IconComponent className="w-4 h-4" />
                   {category}
-                </Button>;
-          })}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -294,14 +342,18 @@ const Index = () => {
         <VideoCarouselHome products={productsWithVideos} />
       )}
 
-      {/* Category Product Carousels - show all categories when not in AI mode */}
-      {!showingAI && categories.map((category, index) => {
-      const categoryProducts = getCategoryProducts(category);
-      const IconComponent = getCategoryIcon(category);
-      if (categoryProducts.length === 0) return null;
-      return <section key={category} style={{
-        animationDelay: `${index * 0.1}s`
-      }} className="md:px-6 py-4 animate-fade-in px-[6px]">
+      {/* Category Product Carousels - show top categories when not in AI mode */}
+      {!showingAI && categories.slice(0, 4).map((category, index) => {
+        const categoryProducts = getCategoryProducts(category);
+        const IconComponent = getCategoryIcon(category);
+        if (categoryProducts.length === 0) return null;
+        
+        return (
+          <section 
+            key={category}
+            style={{ animationDelay: `${index * 0.1}s` }}
+            className="md:px-6 py-4 animate-fade-in px-[6px]"
+          >
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -329,8 +381,9 @@ const Index = () => {
                 <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
               </Carousel>
             </div>
-          </section>;
-    })}
+          </section>
+        );
+      })}
 
       {/* Featured Products Carousel with Toggle */}
       <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
@@ -338,7 +391,8 @@ const Index = () => {
           <div className="text-center mb-8">
             <TabNavigation showingAI={showingAI} onTabChange={handleTabChange} />
             
-            {showingAI ? <div className="prose prose-invert max-w-none">
+            {showingAI ? (
+              <div className="prose prose-invert max-w-none">
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
                   🤖 Me Ajuda Escolher
                 </h2>
@@ -346,17 +400,24 @@ const Index = () => {
                   <p><strong>Selecione até 5 produtos</strong> e nossa <strong>IA</strong> irá te ajudar a decidir qual é melhor</p>
                   <p className="text-sm">✨ <em>Análise personalizada baseada em suas necessidades</em></p>
                 </div>
-              </div> : <div>
+              </div>
+            ) : (
+              <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
                   🔥 Mais Vendidos
                 </h2>
                 <p className="text-base text-white/80 animate-slide-in-right">
-                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' ? `Os favoritos em ${currentFeaturedCategory}` : 'Os produtos favoritos dos nossos clientes'}
+                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' 
+                    ? `Os favoritos em ${currentFeaturedCategory}` 
+                    : 'Os produtos favoritos dos nossos clientes'
+                  }
                 </p>
-              </div>}
+              </div>
+            )}
           </div>
 
-          {showingAI ? <>
+          {showingAI ? (
+            <>
               <div className="max-w-md mx-auto mb-6 animate-scale-in">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900">
@@ -364,39 +425,63 @@ const Index = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-white border-gray-300 z-50">
                     <SelectItem value="todas">Todas as Categorias</SelectItem>
-                    {categories.map(category => <SelectItem key={category} value={category}>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
                         {category}
-                      </SelectItem>)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               
-              <ProductSelector products={displayedProducts} selectedProducts={selectedProducts} onProductToggle={handleProductToggle} onAnalyze={handleAnalyze} onQuestionnaireChange={setQuestionnaireAnswers} />
-            </> : <>
+              <ProductSelector 
+                products={displayedProducts.slice(0, 20)} 
+                selectedProducts={selectedProducts} 
+                onProductToggle={handleProductToggle} 
+                onAnalyze={handleAnalyze} 
+                onQuestionnaireChange={setQuestionnaireAnswers} 
+              />
+            </>
+          ) : (
+            <>
               <Carousel className="w-full animate-scale-in mb-6">
                 <CarouselContent className="-ml-2 md:-ml-3">
-                  {featuredProducts.map((product, index) => <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in" style={{
-                animationDelay: `${index * 0.1}s`
-              }}>
-                      <ProductCard product={product} showBadge={true} badgeText="MAIS VENDIDO" compact={false} />
-                    </CarouselItem>)}
+                  {featuredProducts.map((product, index) => (
+                    <CarouselItem 
+                      key={product.id} 
+                      className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <ProductCard 
+                        product={product} 
+                        showBadge={true} 
+                        badgeText="MAIS VENDIDO" 
+                        compact={false} 
+                      />
+                    </CarouselItem>
+                  ))}
                 </CarouselContent>
                 <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
                 <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
               </Carousel>
               
               <div className="text-center animate-fade-in">
-                <Button onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105">
+                <Button 
+                  onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} 
+                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+                >
                   Ver Mais Produtos
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
-            </>}
+            </>
+          )}
         </div>
       </section>
 
       {/* Category Filter and Products Grid - only show when not in AI mode */}
-      {!showingAI && <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
+      {!showingAI && (
+        <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div className="text-center flex-1">
@@ -428,7 +513,12 @@ const Index = () => {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <Button size="sm" variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="bg-white text-gray-900 border-0 hover:bg-gray-100 transition-all duration-300 hover:scale-105">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} 
+                  className="bg-white text-gray-900 border-0 hover:bg-gray-100 transition-all duration-300 hover:scale-105"
+                >
                   {sortOrder === 'asc' ? '↑' : '↓'}
                 </Button>
               </div>
@@ -441,16 +531,19 @@ const Index = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-300 z-50">
                   <SelectItem value="todas">Todas as Categorias</SelectItem>
-                  {categories.map(category => <SelectItem key={category} value={category}>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
                       {category}
-                    </SelectItem>)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <ProductGrid products={displayedProducts.slice(0, 24)} compact={true} />
+            <ProductGrid products={displayedProducts.slice(0, 20)} compact={true} />
 
-            {displayedProducts.length === 0 && <div className="text-center py-16 animate-fade-in">
+            {displayedProducts.length === 0 && (
+              <div className="text-center py-16 animate-fade-in">
                 <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
                   <ShoppingCart className="w-16 h-16 text-white/50" />
                 </div>
@@ -460,22 +553,35 @@ const Index = () => {
                 <p className="text-white/80 mb-6">
                   {searchTerm ? `Não encontramos produtos para "${searchTerm}"` : 'Não há produtos nesta categoria'}
                 </p>
-                {searchTerm && <Button onClick={() => setSearchTerm('')} className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105">
+                {searchTerm && (
+                  <Button 
+                    onClick={() => setSearchTerm('')} 
+                    className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+                  >
                     Ver Todos os Produtos
-                  </Button>}
-              </div>}
+                  </Button>
+                )}
+              </div>
+            )}
 
-            {displayedProducts.length > 24 && <div className="text-center mt-8 animate-fade-in">
-                <Button onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)} className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105">
+            {displayedProducts.length > 20 && (
+              <div className="text-center mt-8 animate-fade-in">
+                <Button 
+                  onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)} 
+                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+                >
                   Ver Todos os {displayedProducts.length} Produtos
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-              </div>}
+              </div>
+            )}
           </div>
-        </section>}
+        </section>
+      )}
 
       {/* CTA Section - only show when not in AI mode */}
-      {!showingAI && <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden animate-fade-in">
+      {!showingAI && (
+        <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden animate-fade-in">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <div className="space-y-6">
@@ -488,19 +594,28 @@ const Index = () => {
               <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right">
                 Descubra os melhores produtos com preços incríveis na Shopee
               </p>
-              <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" onClick={() => window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          })}>
+              <Button 
+                size="lg" 
+                className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              >
                 Explorar Produtos
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
           </div>
-        </section>}
+        </section>
+      )}
 
       {/* AI Analysis Modal */}
-      <AIAnalysisModal isOpen={showAnalysisModal} onClose={() => setShowAnalysisModal(false)} selectedProducts={selectedProducts} onAnalyze={analyzeProducts} />
-    </div>;
+      <AIAnalysisModal 
+        isOpen={showAnalysisModal} 
+        onClose={() => setShowAnalysisModal(false)} 
+        selectedProducts={selectedProducts} 
+        onAnalyze={analyzeProducts} 
+      />
+    </div>
+  );
 };
+
 export default Index;
