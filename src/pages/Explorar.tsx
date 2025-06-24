@@ -42,10 +42,23 @@ const Explorar = () => {
     return shuffled;
   };
 
-  // Check if video is valid MP4
-  const isValidMP4Video = (url: string) => {
-    if (!url) return false;
-    return url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('mp4');
+  // Enhanced video validation
+  const isValidVideo = (url: string) => {
+    if (!url || typeof url !== 'string') return false;
+    
+    // Check if it's a valid MP4 URL
+    const isMP4 = url.toLowerCase().includes('.mp4');
+    
+    // Check if URL is accessible (basic validation)
+    const isValidURL = url.startsWith('http') && !url.includes('undefined') && !url.includes('null');
+    
+    // Check if it's not an image URL
+    const isNotImage = !url.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/);
+    
+    // Check for common video hosting domains
+    const hasValidDomain = url.includes('susercontent.com') || url.includes('shopee');
+    
+    return isMP4 && isValidURL && isNotImage && hasValidDomain;
   };
 
   useEffect(() => {
@@ -63,11 +76,14 @@ const Explorar = () => {
 
       if (error) throw error;
       
-      // Filter only MP4 videos and shuffle products
-      const mp4Products = (data || []).filter(product => 
-        product.video && isValidMP4Video(product.video)
+      // Filter only valid videos and shuffle products
+      const validVideoProducts = (data || []).filter(product => 
+        product.video && isValidVideo(product.video)
       );
-      const shuffledProducts = shuffleArray(mp4Products);
+      
+      console.log(`Filtered ${validVideoProducts.length} valid videos from ${data?.length || 0} total products`);
+      
+      const shuffledProducts = shuffleArray(validVideoProducts);
       setProducts(shuffledProducts);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
@@ -76,10 +92,10 @@ const Explorar = () => {
     }
   };
 
-  // Memoized filtered products - only products with valid MP4 videos
+  // Memoized filtered products - only products with valid videos
   const filteredProducts = useMemo(() => {
     const productsWithValidVideos = products.filter(product => 
-      product.video && isValidMP4Video(product.video)
+      product.video && isValidVideo(product.video)
     );
     
     if (selectedCategory === 'todas') {
@@ -88,9 +104,9 @@ const Explorar = () => {
     return productsWithValidVideos.filter(product => product.categoria === selectedCategory);
   }, [products, selectedCategory]);
 
-  // Memoized categories and counts - only from products with videos
+  // Memoized categories and counts - only from products with valid videos
   const { categories, productCounts } = useMemo(() => {
-    const productsWithVideos = products.filter(product => product.video && product.video.trim() !== '');
+    const productsWithVideos = products.filter(product => product.video && isValidVideo(product.video));
     const categoryMap = new Map<string, number>();
     
     productsWithVideos.forEach(product => {
@@ -260,7 +276,7 @@ const Explorar = () => {
             ) : (
               <div className="h-screen flex items-center justify-center text-white">
                 <div className="text-center">
-                  <p className="text-xl mb-4">Nenhum vídeo MP4 encontrado nesta categoria</p>
+                  <p className="text-xl mb-4">Nenhum vídeo válido encontrado nesta categoria</p>
                   <Button onClick={() => setViewMode('grid')} className="bg-orange-500 hover:bg-orange-600">
                     Ver em Grade
                   </Button>

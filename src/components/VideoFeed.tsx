@@ -32,18 +32,29 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   onBuy
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Check if video is MP4
-  const isValidMP4Video = (url: string) => {
-    if (!url) return false;
-    return url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('mp4');
+  // Enhanced video validation
+  const isValidVideo = (url: string) => {
+    if (!url || typeof url !== 'string') return false;
+    
+    // Check if it's a valid MP4 URL
+    const isMP4 = url.toLowerCase().includes('.mp4');
+    
+    // Check if URL is accessible (basic validation)
+    const isValidURL = url.startsWith('http') && !url.includes('undefined') && !url.includes('null');
+    
+    // Check if it's not an image URL
+    const isNotImage = !url.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/);
+    
+    return isMP4 && isValidURL && isNotImage;
   };
 
   // Get product images
@@ -59,31 +70,58 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   };
 
   useEffect(() => {
-    if (isActive && product.video && isValidMP4Video(product.video)) {
+    if (isActive && product.video && isValidVideo(product.video)) {
       if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.muted = false;
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            setIsPlaying(true);
-            setVideoError(false);
-          }).catch((error) => {
-            console.error('Error playing video:', error);
-            // Try with muted if autoplay with audio fails
-            if (videoRef.current) {
-              videoRef.current.muted = true;
-              setIsMuted(true);
-              videoRef.current.play().then(() => {
-                setIsPlaying(true);
-                setVideoError(false);
-              }).catch(() => {
-                setIsPlaying(false);
-                setVideoError(true);
-              });
-            }
-          });
-        }
+        const video = videoRef.current;
+        
+        // Reset video state
+        setVideoError(false);
+        setVideoLoaded(false);
+        setIsPlaying(false);
+        
+        video.currentTime = 0;
+        video.muted = true;
+        setIsMuted(true);
+        
+        // Load video and play when ready
+        video.load();
+        
+        const handleCanPlay = () => {
+          setVideoLoaded(true);
+          const playPromise = video.play();
+          
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              setIsPlaying(true);
+              setVideoError(false);
+            }).catch((error) => {
+              console.error('Error playing video:', error);
+              setVideoError(true);
+              setIsPlaying(false);
+            });
+          }
+        };
+        
+        const handleError = (e: Event) => {
+          console.error('Video error:', e);
+          setVideoError(true);
+          setVideoLoaded(false);
+          setIsPlaying(false);
+        };
+        
+        const handleLoadStart = () => {
+          setVideoLoaded(false);
+        };
+        
+        video.addEventListener('canplay', handleCanPlay);
+        video.addEventListener('error', handleError);
+        video.addEventListener('loadstart', handleLoadStart);
+        
+        return () => {
+          video.removeEventListener('canplay', handleCanPlay);
+          video.removeEventListener('error', handleError);
+          video.removeEventListener('loadstart', handleLoadStart);
+        };
       }
     } else {
       setIsPlaying(false);
@@ -94,23 +132,30 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   }, [isActive, product.video]);
 
   const togglePlay = useCallback(() => {
-    if (videoRef.current && !videoError) {
+    if (videoRef.current && !videoError && videoLoaded) {
       if (isPlaying) {
         videoRef.current.pause();
         setIsPlaying(false);
       } else {
-        videoRef.current.play();
-        setIsPlaying(true);
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setIsPlaying(true);
+          }).catch(() => {
+            setVideoError(true);
+          });
+        }
       }
     }
-  }, [isPlaying, videoError]);
+  }, [isPlaying, videoError, videoLoaded]);
 
   const toggleMute = useCallback(() => {
-    setIsMuted(!isMuted);
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
+    if (videoRef.current && !videoError) {
+      const newMutedState = !isMuted;
+      setIsMuted(newMutedState);
+      videoRef.current.muted = newMutedState;
     }
-  }, [isMuted]);
+  }, [isMuted, videoError]);
 
   const handleVideoClick = useCallback(() => {
     if (!hasInteracted) {
@@ -140,7 +185,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
   }, []);
 
   const renderVideo = () => {
-    if (!product.video || !isValidMP4Video(product.video)) {
+    if (!product.video || !isValidVideo(product.video)) {
       return (
         <div className="w-full h-full flex items-center justify-center bg-gray-800">
           <div className="text-center text-white">
@@ -171,20 +216,38 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
     }
 
     return (
-      <video
-        ref={videoRef}
-        src={product.video}
-        className="w-full h-full object-cover rounded-lg"
-        loop
-        muted={isMuted}
-        playsInline
-        preload="metadata"
-        autoPlay={isActive}
-        onError={() => {
-          console.error('Error loading video:', product.video);
-          setVideoError(true);
-        }}
-      />
+      <>
+        <video
+          ref={videoRef}
+          src={product.video}
+          className="w-full h-full object-cover rounded-lg"
+          loop
+          muted={isMuted}
+          playsInline
+          preload="metadata"
+          onError={() => {
+            console.error('Error loading video:', product.video);
+            setVideoError(true);
+          }}
+          onLoadedData={() => {
+            setVideoLoaded(true);
+          }}
+        />
+        
+        {/* Loading overlay */}
+        {!videoLoaded && !videoError && (
+          <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
+            <img 
+              src={product.imagem1} 
+              alt={product.produto} 
+              className="w-full h-full object-contain max-w-sm mx-auto rounded-lg opacity-50" 
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            </div>
+          </div>
+        )}
+      </>
     );
   };
 
@@ -197,7 +260,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         {renderVideo()}
 
         {/* Play/Pause Overlay */}
-        {showControls && !videoError && (
+        {showControls && !videoError && videoLoaded && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="bg-black/30 rounded-full p-4 animate-fade-in">
               {isPlaying ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white" />}
@@ -206,7 +269,7 @@ const VideoFeedComponent: React.FC<VideoFeedProps> = ({
         )}
 
         {/* Audio Control */}
-        {product.video && isValidMP4Video(product.video) && !videoError && (
+        {product.video && isValidVideo(product.video) && !videoError && videoLoaded && (
           <div className="absolute top-4 right-4">
             <Button
               variant="ghost"
