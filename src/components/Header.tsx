@@ -1,250 +1,201 @@
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart, Heart, Home, Search, Grid3X3, Sparkles, Info, Star } from 'lucide-react';
+import { Search, Menu, ShoppingCart, X, SlidersHorizontal } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PriceFilter } from '@/components/PriceFilter';
 import { useFavorites } from '@/hooks/useFavorites';
 
 interface HeaderProps {
-  onSearch?: (searchTerm: string) => void;
-  onPriceFilter?: (minPrice: number, maxPrice: number) => void;
+  onSearch?: (term: string) => void;
+  onPriceFilter?: (min: number, max: number) => void;
 }
 
-const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const Header: React.FC<HeaderProps> = ({ onSearch, onPriceFilter }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showPriceFilter, setShowPriceFilter] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { favoritesCount } = useFavorites();
+  const { favorites } = useFavorites();
 
-  const navItems = [
-    { path: '/', label: 'Início', icon: Home },
-    { path: '/categorias', label: 'Categorias', icon: Grid3X3 },
-    { path: '/favoritos', label: 'Favoritos', icon: Heart },
-    { path: '/novos', label: 'Novidades', icon: Sparkles },
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onSearch) {
+      onSearch(searchTerm);
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    if (onSearch) {
+      onSearch(e.target.value);
+    }
+  };
+
+  const menuItems = [
+    { label: 'Início', path: '/' },
+    { label: 'Categorias', path: '/categorias' },
+    { label: 'Favoritos', path: '/favoritos' },
+    { label: 'Novidades', path: '/novos' },
   ];
 
-  const handleNavigation = (path: string) => {
+  const handleMenuClick = (path: string) => {
     navigate(path);
-    setIsOpen(false);
+    setIsMenuOpen(false);
   };
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    onSearch(value);
-  };
-
-  const handlePriceFilterChange = (minPrice: number, maxPrice: number) => {
-    onPriceFilter(minPrice, maxPrice);
-  };
-
-  const handleClearFilter = () => {
-    onPriceFilter(0, 1000); // Reset to default range
-  };
-
-  const handleEvaluateApp = () => {
-    window.open('https://play.google.com/store/apps/details?id=br.com.app.gpu3121847.gpu5864a3ed792bc282cc5655927ef358d2', '_blank');
-    setIsOpen(false);
+  const handlePriceFilterChange = (min: number, max: number) => {
+    if (onPriceFilter) {
+      onPriceFilter(min, max);
+    }
   };
 
   return (
-    <>
-      {/* Desktop/Mobile Header */}
-      <header className="bg-gradient-to-r from-red-500 via-orange-500 to-red-600 text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-              <div className="bg-white/20 rounded-2xl p-2 backdrop-blur-sm">
-                <ShoppingCart className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold">Achadinhos Shopee</h1>
-                <p className="text-xs text-orange-100">Ofertas Imperdíveis</p>
-              </div>
+    <header className="bg-gradient-to-r from-red-500 to-orange-500 shadow-lg sticky top-0 z-50">
+      <div className="container mx-auto px-3 md:px-4 py-3 md:py-4">
+        <div className="flex items-center justify-between gap-2 md:gap-4">
+          {/* Logo/Brand - Mobile optimized */}
+          <div 
+            className="flex items-center gap-2 md:gap-3 cursor-pointer" 
+            onClick={() => navigate('/')}
+          >
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-xl md:rounded-2xl flex items-center justify-center">
+              <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
             </div>
-
-            <div className="flex items-center space-x-2">
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-2">
-                {navItems.slice(1).map((item) => (
-                  <Button
-                    key={item.path}
-                    variant="ghost"
-                    size="sm"
-                    className="text-white hover:bg-white/20 rounded-xl relative"
-                    onClick={() => handleNavigation(item.path)}
-                  >
-                    <item.icon className="w-4 h-4 mr-2" />
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Mobile Menu */}
-              <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="md:hidden text-white hover:bg-white/20 p-2 rounded-xl">
-                    <Menu className="w-6 h-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-80 bg-gradient-to-b from-red-500 to-orange-500 text-white border-0">
-                  <div className="py-6">
-                    <div className="flex items-center space-x-3 mb-8 px-2">
-                      <div className="bg-white/20 rounded-2xl p-3">
-                        <ShoppingCart className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-lg font-bold">Achadinhos Shopee</h2>
-                        <p className="text-sm text-orange-100">Ofertas Imperdíveis</p>
-                      </div>
-                    </div>
-                    
-                    {/* Price Filter - Only show on homepage */}
-                    {location.pathname === '/' && (
-                      <div className="mb-6 mx-2">
-                        <PriceFilter
-                          onFilter={handlePriceFilterChange}
-                          onClear={handleClearFilter}
-                        />
-                      </div>
-                    )}
-                    
-                    <nav className="space-y-2">
-                      {navItems.map((item) => (
-                        <button
-                          key={item.path}
-                          onClick={() => handleNavigation(item.path)}
-                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20 relative"
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span className="font-medium">{item.label}</span>
-                        </button>
-                      ))}
-                      
-                      {/* Separator */}
-                      <div className="border-t border-white/20 my-4 mx-4"></div>
-                      
-                      {/* About App */}
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <button className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20">
-                            <Info className="w-5 h-5" />
-                            <span className="font-medium">Sobre o app</span>
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-sm mx-4 bg-white/95 backdrop-blur-xl border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
-                          <div className="absolute inset-0 bg-gradient-to-br from-red-50/90 via-orange-50/90 to-white/90 rounded-lg backdrop-blur-xl"></div>
-                          <div className="relative z-10">
-                            <DialogHeader className="space-y-3 text-center pb-4">
-                              <div className="mx-auto w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                                <ShoppingCart className="w-6 h-6 text-white" />
-                              </div>
-                              <DialogTitle className="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
-                                Achadinhos Shopee
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 text-gray-700 text-sm">
-                              <div className="text-center">
-                                <p className="font-semibold text-gray-800 mb-2">
-                                  Seu companheiro perfeito para economizar!
-                                </p>
-                                <p className="text-xs text-gray-600 leading-relaxed">
-                                  Encontre os melhores produtos com os menores preços
-                                </p>
-                              </div>
-                              
-                              <div className="space-y-3">
-                                <div className="flex items-start gap-2">
-                                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
-                                  <p className="text-xs leading-relaxed">
-                                    Nosso app reúne cuidadosamente os <span className="font-semibold text-red-600">melhores achadinhos da Shopee</span>, oferecendo acesso aos produtos mais essenciais para o seu dia a dia.
-                                  </p>
-                                </div>
-                                
-                                <div className="flex items-start gap-2">
-                                  <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1.5 flex-shrink-0"></div>
-                                  <p className="text-xs leading-relaxed">
-                                    Desde itens de beleza, casa e decoração até gadgets e acessórios, tudo selecionado para garantir <span className="font-semibold text-orange-600">qualidade e economia</span>.
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              <div className="bg-gradient-to-r from-red-100 via-orange-100 to-red-100 p-3 rounded-lg border border-red-200/50 backdrop-blur-sm">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-base">💰</span>
-                                  <p className="text-xs font-semibold text-red-700">
-                                    Economize tempo e dinheiro
-                                  </p>
-                                </div>
-                                <p className="text-xs text-red-600">
-                                  Encontre as melhores ofertas em um só lugar!
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      
-                      {/* Rate App */}
-                      <button
-                        onClick={handleEvaluateApp}
-                        className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-white/20"
-                      >
-                        <Star className="w-5 h-5" />
-                        <span className="font-medium">Avaliar App</span>
-                      </button>
-                    </nav>
-                  </div>
-                </SheetContent>
-              </Sheet>
+            <div className="hidden sm:block">
+              <h1 className="text-lg md:text-xl font-bold text-white">Achadinhos Shopee</h1>
+              <p className="text-xs md:text-sm text-white/80">Ofertas Imperdíveis</p>
             </div>
           </div>
-        </div>
 
-        {/* Search Bar - Responsive sizing */}
-        {location.pathname === '/' && (
-          <div className="px-4 pb-3">
-            <div className="relative max-w-md md:max-w-sm mx-auto">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5" />
+          {/* Search Bar - Desktop version (smaller) */}
+          <div className="hidden md:flex flex-1 max-w-md lg:max-w-lg xl:max-w-xl mx-4">
+            <form onSubmit={handleSearch} className="flex w-full gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  placeholder="Buscar produtos..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="bg-white border-0 text-gray-900 placeholder-gray-500 text-sm"
+                />
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setShowPriceFilter(!showPriceFilter)}
+                className="bg-white text-gray-700 border-0 hover:bg-gray-100"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+              </Button>
+            </form>
+          </div>
+
+          {/* Mobile Search Bar */}
+          <div className="md:hidden flex-1 mx-2">
+            <form onSubmit={handleSearch} className="relative">
               <Input
+                type="text"
                 placeholder="Buscar produtos..."
                 value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10 bg-white border-white/30 text-gray-900 placeholder:text-gray-500 focus:bg-white"
+                onChange={handleSearchChange}
+                className="bg-white border-0 text-gray-900 placeholder-gray-500 text-sm pr-10"
               />
-            </div>
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </form>
+          </div>
+
+          {/* Mobile Price Filter Button */}
+          <div className="md:hidden">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowPriceFilter(!showPriceFilter)}
+              className="bg-white text-gray-700 border-0 hover:bg-gray-100 p-2"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-4">
+            {menuItems.map((item) => (
+              <Button
+                key={item.path}
+                variant="ghost"
+                onClick={() => navigate(item.path)}
+                className={`text-white hover:bg-white/20 transition-colors ${
+                  location.pathname === item.path ? 'bg-white/20' : ''
+                }`}
+              >
+                {item.label}
+                {item.label === 'Favoritos' && favorites.length > 0 && (
+                  <Badge className="ml-2 bg-yellow-500 text-yellow-900 text-xs">
+                    {favorites.length}
+                  </Badge>
+                )}
+              </Button>
+            ))}
+          </nav>
+
+          {/* Mobile Menu */}
+          <div className="lg:hidden">
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/20 p-2">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-64 bg-white">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-bold text-gray-900">Menu</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <nav className="space-y-3">
+                  {menuItems.map((item) => (
+                    <Button
+                      key={item.path}
+                      variant="ghost"
+                      onClick={() => handleMenuClick(item.path)}
+                      className={`w-full justify-start text-gray-900 hover:bg-gray-100 ${
+                        location.pathname === item.path ? 'bg-gray-100' : ''
+                      }`}
+                    >
+                      {item.label}
+                      {item.label === 'Favoritos' && favorites.length > 0 && (
+                        <Badge className="ml-auto bg-yellow-500 text-yellow-900 text-xs">
+                          {favorites.length}
+                        </Badge>
+                      )}
+                    </Button>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+
+        {/* Price Filter */}
+        {showPriceFilter && (
+          <div className="mt-3 md:mt-4">
+            <PriceFilter onPriceChange={handlePriceFilterChange} />
           </div>
         )}
-      </header>
-
-      {/* Bottom Navigation for Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-red-500 to-orange-500 border-t border-white/20 z-50 shadow-2xl">
-        <div className="grid grid-cols-4 gap-1 px-2 py-2">
-          {navItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => handleNavigation(item.path)}
-              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 text-white hover:bg-white/20 relative"
-            >
-              <item.icon className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium truncate max-w-full">
-                {item.label}
-              </span>
-              {item.path === '/favoritos' && favoritesCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 w-5 h-5 text-xs p-0 flex items-center justify-center bg-red-500 border-white">
-                  {favoritesCount}
-                </Badge>
-              )}
-            </button>
-          ))}
-        </div>
       </div>
-    </>
+    </header>
   );
 };
 
