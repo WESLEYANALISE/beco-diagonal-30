@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone, Zap, Crown, Wand2, ShoppingCart } from 'lucide-react';
@@ -6,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
 import { supabase } from "@/integrations/supabase/client";
+import { useMagicalSounds } from '@/hooks/useMagicalSounds';
 
 interface CategoryStats {
   categoria: string;
@@ -16,6 +16,7 @@ const Categorias = () => {
   const [categories, setCategories] = useState<CategoryStats[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { playRandomMagicalSound } = useMagicalSounds();
 
   useEffect(() => {
     fetchCategories();
@@ -51,6 +52,8 @@ const Categorias = () => {
   };
 
   const handleCategoryClick = (category: string) => {
+    // Play magical sound when clicking on category
+    playRandomMagicalSound();
     navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
   };
 

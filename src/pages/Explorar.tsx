@@ -7,6 +7,7 @@ import { CategoryFilter } from '@/components/CategoryFilter';
 import { ProductGrid } from '@/components/ProductGrid';
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useMagicalSounds } from '@/hooks/useMagicalSounds';
 
 interface Product {
   id: number;
@@ -35,6 +36,7 @@ const Explorar = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'video' | 'grid' | 'list'>('video');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const { playRandomMagicalSound } = useMagicalSounds();
 
   // Shuffle array function
   const shuffleArray = <T,>(array: T[]): T[] => {
@@ -121,15 +123,20 @@ const Explorar = () => {
   }, []);
 
   const handleCategoryChange = useCallback((category: string) => {
+    // Play magical sound when changing category
+    playRandomMagicalSound();
     setSelectedCategory(category);
     setCurrentVideoIndex(0);
-  }, []);
+  }, [playRandomMagicalSound]);
 
-  // Navigation function with debounce
+  // Navigation function with debounce and magical sound
   const navigateToVideo = useCallback((newIndex: number) => {
     if (isTransitioning || newIndex < 0 || newIndex >= filteredProducts.length) {
       return;
     }
+
+    // Play magical sound when navigating videos
+    playRandomMagicalSound();
 
     setIsTransitioning(true);
     setCurrentVideoIndex(newIndex);
@@ -138,7 +145,7 @@ const Explorar = () => {
     setTimeout(() => {
       setIsTransitioning(false);
     }, 300);
-  }, [isTransitioning, filteredProducts.length]);
+  }, [isTransitioning, filteredProducts.length, playRandomMagicalSound]);
 
   const handleVideoEnd = useCallback(() => {
     console.log('Video ended, checking for next video or category');
