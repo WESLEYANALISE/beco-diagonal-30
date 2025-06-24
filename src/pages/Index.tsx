@@ -1,23 +1,14 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, ShoppingCart, Star, User, Search, MapPin, Shield, Truck, Award, Play } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import Header from '@/components/Header';
-import { SearchPreview } from '@/components/SearchPreview';
-import { CategoryCarousel } from '@/components/CategoryCarousel';
-import { ProductSelector } from '@/components/ProductSelector';
-import { AIAnalysisModal } from '@/components/AIAnalysisModal';
-import { HeroSection } from '@/components/HeroSection';
-import { TabNavigation } from '@/components/TabNavigation';
-import { ProductGrid } from '@/components/ProductGrid';
-import { VideoCarouselHome } from '@/components/VideoCarouselHome';
+import VideoCarouselHome from '@/components/VideoCarouselHome';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
-import OptimizedProductCard from '@/components/OptimizedProductCard';
 import { useOptimizedProducts } from '@/hooks/useOptimizedProducts';
-import { useProductClicks } from '@/hooks/useProductClicks';
-import { supabase } from "@/integrations/supabase/client";
+import OptimizedProductCard from '@/components/OptimizedProductCard';
 
 interface Product {
   id: number;
@@ -31,571 +22,215 @@ interface Product {
   imagem5: string;
   link: string;
   categoria: string;
+  uso?: string;
 }
 
 const Index = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const categoryFromUrl = searchParams.get('categoria');
-  
-  // Usar hook otimizado
-  const { products: optimizedProducts, loading } = useOptimizedProducts();
-  
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [currentFeaturedCategory, setCurrentFeaturedCategory] = useState<string>('');
-  const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [showingAI, setShowingAI] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
-  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
-  const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
+  const { products, loading } = useOptimizedProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [priceFilter, setPriceFilter] = useState<{
-    min: number;
-    max: number;
-  }>({
-    min: 0,
-    max: 1000
-  });
 
-  // Memoizar categorias únicas
-  const memoizedCategories = useMemo(() => {
-    return [...new Set(optimizedProducts.all.map(product => product.categoria).filter(Boolean))];
-  }, [optimizedProducts.all]);
-
-  // Parse price from string to number
-  const parsePrice = useCallback((priceString: string): number => {
-    const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
-    return parseFloat(cleanPrice) || 0;
-  }, []);
-
-  // Inicializar dados quando produtos carregarem
-  useEffect(() => {
-    if (!loading && optimizedProducts.all.length > 0) {
-      const shuffledProducts = optimizedProducts.shuffled();
-      setFilteredProducts(shuffledProducts);
-      setFeaturedProducts(shuffledProducts.slice(0, 8));
-      setCategories(memoizedCategories);
-      
-      if (memoizedCategories.length > 0) {
-        setCurrentFeaturedCategory('Todos os Produtos');
-      }
-    }
-  }, [loading, optimizedProducts, memoizedCategories]);
-
-  useEffect(() => {
-    if (categoryFromUrl) {
-      setSelectedCategory(categoryFromUrl);
-    }
-  }, [categoryFromUrl]);
-
-  useEffect(() => {
-    filterProducts();
-  }, [selectedCategory, filteredProducts, searchTerm, sortBy, sortOrder]);
-
-  useEffect(() => {
-    applyPriceFilter();
-  }, [optimizedProducts.all, priceFilter]);
-
-  // Auto-rotate featured products by category every 15 seconds
-  useEffect(() => {
-    if (categories.length > 0 && optimizedProducts.all.length > 0 && !categoryFromUrl) {
-      const interval = setInterval(() => {
-        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-        setCurrentFeaturedCategory(randomCategory);
-        const categoryProducts = optimizedProducts.byCategory(randomCategory);
-        const shuffledProducts = optimizedProducts.shuffled().filter(p => p.categoria === randomCategory);
-        setFeaturedProducts(shuffledProducts.slice(0, 8));
-      }, 15000);
-      return () => clearInterval(interval);
-    }
-  }, [categories, optimizedProducts, categoryFromUrl]);
-
-  const applyPriceFilter = useCallback(() => {
-    const filtered = optimizedProducts.all.filter(product => {
-      const price = parsePrice(product.valor);
-      return price >= priceFilter.min && price <= priceFilter.max;
-    });
-    setFilteredProducts(filtered);
-  }, [optimizedProducts.all, priceFilter, parsePrice]);
-
-  const filterProducts = useCallback(() => {
-    let filtered = filteredProducts;
-    if (selectedCategory !== 'todas') {
-      filtered = filtered.filter(product => product.categoria === selectedCategory);
-    }
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(product => 
-        product.produto.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Aplicar ordenação
-    filtered.sort((a, b) => {
-      if (sortBy === 'nome') {
-        const comparison = a.produto.localeCompare(b.produto);
-        return sortOrder === 'asc' ? comparison : -comparison;
-      } else {
-        const priceA = parsePrice(a.valor);
-        const priceB = parsePrice(b.valor);
-        const comparison = priceA - priceB;
-        return sortOrder === 'asc' ? comparison : -comparison;
-      }
-    });
-    setDisplayedProducts(filtered);
-  }, [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder, parsePrice]);
-
-  const handleSearch = useCallback((term: string) => {
-    setSearchTerm(term);
-  }, []);
-
-  const handlePriceFilter = useCallback((min: number, max: number) => {
-    setPriceFilter({ min, max });
-  }, []);
-
-  const { trackProductClick } = useProductClicks();
-
-  const handleProductClick = useCallback(async (product: Product) => {
-    await trackProductClick(product.id, 'product_view');
+  const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
-    setIsProductModalOpen(true);
-  }, [trackProductClick]);
-
-  const handleTabChange = useCallback((tab: 'featured' | 'ai') => {
-    setShowingAI(tab === 'ai');
-  }, []);
-
-  const handleProductToggle = useCallback((product: Product) => {
-    setSelectedProducts(prev => {
-      const isSelected = prev.some(p => p.id === product.id);
-      if (isSelected) {
-        return prev.filter(p => p.id !== product.id);
-      } else {
-        if (prev.length >= 5) {
-          return prev;
-        }
-        return [...prev, product];
-      }
-    });
-  }, []);
-
-  const handleAnalyze = useCallback(() => {
-    if (selectedProducts.length > 0) {
-      setShowAnalysisModal(true);
-    }
-  }, [selectedProducts.length]);
-
-  const analyzeProducts = async (products: Product[]): Promise<string> => {
-    try {
-      const { data, error } = await supabase.functions.invoke('analyze-products', {
-        body: { products, userPreferences: questionnaireAnswers }
-      });
-      if (error) {
-        console.error('Error calling analyze-products function:', error);
-        throw new Error(error.message || 'Erro ao analisar produtos');
-      }
-      return data.analysis || 'Análise não disponível';
-    } catch (error) {
-      console.error('Error in analyzeProducts:', error);
-      throw error;
-    }
   };
 
-  const getCategoryIcon = useCallback((category: string) => {
-    const iconMap: Record<string, React.ComponentType<any>> = {
-      'Beleza e Cuidados Pessoais': Sparkles,
-      'Casa e Decoração': Home,
-      'Diversão e Familia': Gamepad2,
-      'Estilo e Moda': Shirt,
-      'Tecnologia e Acessórios': Smartphone
-    };
-    return iconMap[category] || ShoppingCart;
-  }, []);
+  const handleCloseModal = () => {
+    setSelectedProduct(null);
+  };
 
-  const getCategoryProducts = useCallback((category: string, limit: number = 12) => {
-    const categoryProducts = optimizedProducts.byCategory(category);
-    const actualLimit = category === 'Diversão e Familia' ? 12 : limit;
-    return optimizedProducts.shuffled().filter(p => p.categoria === category).slice(0, actualLimit);
-  }, [optimizedProducts]);
+  const testimonials = [
+    {
+      name: "Carlos M.",
+      text: "Produtos de qualidade e entrega rápida! Recomendo.",
+      rating: 5,
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face"
+    },
+    {
+      name: "Ana S.",
+      text: "Excelente atendimento e produtos originais.",
+      rating: 5,
+      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=64&h=64&fit=crop&crop=face"
+    },
+    {
+      name: "Roberto L.",
+      text: "Melhor site para compras online. Muito satisfeito!",
+      rating: 5,
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face"
+    }
+  ];
 
-  // Produtos com vídeos para o carrossel
-  const productsWithVideos = useMemo(() => {
-    return optimizedProducts.withVideos.slice(0, 12);
-  }, [optimizedProducts.withVideos]);
+  const stats = [
+    { icon: User, label: "Clientes Satisfeitos", value: "50K+" },
+    { icon: ShoppingCart, label: "Produtos Vendidos", value: "200K+" },
+    { icon: Star, label: "Avaliação Média", value: "4.9/5" },
+    { icon: MapPin, label: "Cidades Atendidas", value: "1000+" }
+  ];
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
-        <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-white/20 rounded-2xl animate-shimmer"></div>
-            <ProductGrid loading={true} products={[]} />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const benefits = [
+    {
+      icon: Shield,
+      title: "Compra Segura",
+      description: "Seus dados protegidos com criptografia SSL"
+    },
+    {
+      icon: Truck,
+      title: "Entrega Rápida",
+      description: "Frete grátis para todo o Brasil"
+    },
+    {
+      icon: Award,
+      title: "Garantia de Qualidade",
+      description: "Produtos originais com garantia"
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 pb-20">
-      <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20">
+      <Header />
       
-      {/* Search Preview */}
-      {searchTerm && (
-        <SearchPreview 
-          searchTerm={searchTerm} 
-          products={filteredProducts.filter(p => 
-            p.produto.toLowerCase().includes(searchTerm.toLowerCase())
-          ).slice(0, 5)} 
-          onProductClick={handleProductClick} 
-        />
-      )}
+      {/* Hero Section */}
+      <section className="relative py-12 md:py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+              Descubra Produtos Incríveis
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Os melhores produtos com qualidade garantida e entrega rápida para todo o Brasil
+            </p>
+            
+            {/* Search Bar */}
+            <div className="relative max-w-md mx-auto mb-12">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                placeholder="Buscar produtos..."
+                className="pl-10 pr-4 py-3 rounded-full border-2 border-gray-200 focus:border-blue-500 bg-white/80 backdrop-blur-sm"
+              />
+            </div>
 
-      {/* Novidades Carousel */}
-      <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
-      
-      {/* Category Quick Access Buttons */}
-      <section className="px-4 py-2 animate-fade-in">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} 
-              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              Todas
-            </Button>
-            {categories.slice(0, 8).map(category => {
-              const IconComponent = getCategoryIcon(category);
-              return (
-                <Button 
-                  key={category} 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
-                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-white/20 text-white border-white/30 hover:bg-white/30 flex items-center gap-2"
-                >
-                  <IconComponent className="w-4 h-4" />
-                  {category}
-                </Button>
-              );
-            })}
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {stats.map((stat, index) => (
+                <div key={index} className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/20">
+                  <stat.icon className="w-8 h-8 mx-auto mb-3 text-blue-600" />
+                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-sm text-gray-600">{stat.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Hero Section */}
-      <HeroSection productsCount={filteredProducts.length} />
-
-      {/* Video Carousel - Strategic placement after hero */}
-      {!showingAI && productsWithVideos.length > 0 && (
-        <VideoCarouselHome products={productsWithVideos} />
-      )}
-
-      {/* Category Product Carousels - show all categories when not in AI mode */}
-      {!showingAI && categories.map((category, index) => {
-        const categoryProducts = getCategoryProducts(category);
-        const IconComponent = getCategoryIcon(category);
-        if (categoryProducts.length === 0) return null;
-        
-        return (
-          <section 
-            key={category} 
-            style={{ animationDelay: `${index * 0.1}s` }} 
-            className="md:px-6 py-4 animate-fade-in px-[6px]"
-          >
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <IconComponent className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white">{category}</h3>
-                    <p className="text-xs text-white/70">{categoryProducts.length} produtos</p>
-                  </div>
-                </div>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs px-3 py-1 h-auto"
-                >
-                  Ver Todos
-                  <ArrowRight className="w-3 h-3 ml-1" />
-                </Button>
-              </div>
-              
-              <Carousel className="w-full">
-                <CarouselContent className="-ml-2 md:-ml-3">
-                  {categoryProducts.map(product => (
-                    <CarouselItem 
-                      key={product.id} 
-                      className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6"
-                    >
-                      <OptimizedProductCard 
-                        product={product} 
-                        compact={true} 
-                        onProductClick={handleProductClick}
-                      />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
-                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200 w-6 h-6" />
-              </Carousel>
-            </div>
-          </section>
-        );
-      })}
-
-      {/* Featured Products Carousel with Toggle */}
-      <section className="px-4 md:px-6 py-8 md:py-12 bg-white/10 backdrop-blur-sm animate-fade-in">
-        <div className="max-w-7xl mx-auto">
+      {/* Video Carousel - Produtos em Destaque */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <TabNavigation showingAI={showingAI} onTabChange={handleTabChange} />
-            
-            {showingAI ? (
-              <div className="prose prose-invert max-w-none">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  🤖 Me Ajuda Escolher
-                </h2>
-                <div className="text-base text-white/90 animate-slide-in-right space-y-2">
-                  <p><strong>Selecione até 5 produtos</strong> e nossa <strong>IA</strong> irá te ajudar a decidir qual é melhor</p>
-                  <p className="text-sm">✨ <em>Análise personalizada baseada em suas necessidades</em></p>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  🔥 Mais Vendidos
-                </h2>
-                <p className="text-base text-white/80 animate-slide-in-right">
-                  {currentFeaturedCategory && currentFeaturedCategory !== 'Todos os Produtos' 
-                    ? `Os favoritos em ${currentFeaturedCategory}` 
-                    : 'Os produtos favoritos dos nossos clientes'}
-                </p>
-              </div>
-            )}
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Produtos em Destaque</h2>
+            <p className="text-gray-600">Veja nossos produtos mais populares em ação</p>
           </div>
+          <VideoCarouselHome onProductClick={handleProductClick} />
+        </div>
+      </section>
 
-          {showingAI ? (
-            <>
-              <div className="max-w-md mx-auto mb-6 animate-scale-in">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300 z-50">
-                    <SelectItem value="todas">Todas as Categorias</SelectItem>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <ProductSelector 
-                products={displayedProducts} 
-                selectedProducts={selectedProducts} 
-                onProductToggle={handleProductToggle} 
-                onAnalyze={handleAnalyze} 
-                onQuestionnaireChange={setQuestionnaireAnswers} 
-              />
-            </>
+      {/* Produtos Populares - Grid sem vídeo */}
+      <section className="py-12 bg-white/40">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Produtos Populares</h2>
+            <p className="text-gray-600">Descubra os produtos mais vendidos</p>
+          </div>
+          
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="bg-gray-200 animate-pulse rounded-lg aspect-square"></div>
+              ))}
+            </div>
           ) : (
-            <>
-              <Carousel className="w-full animate-scale-in mb-6">
-                <CarouselContent className="-ml-2 md:-ml-3">
-                  {featuredProducts.map((product, index) => (
-                    <CarouselItem 
-                      key={product.id} 
-                      className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in" 
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <OptimizedProductCard 
-                        product={product} 
-                        showBadge={true} 
-                        badgeText="MAIS VENDIDO" 
-                        compact={false}
-                        onProductClick={handleProductClick}
-                      />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-                <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
-              </Carousel>
-              
-              <div className="text-center animate-fade-in">
-                <Button 
-                  onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} 
-                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-                >
-                  Ver Mais Produtos
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.shuffled().slice(0, 8).map((product) => (
+                <OptimizedProductCard
+                  key={product.id}
+                  product={product}
+                  compact={true}
+                  onProductClick={handleProductClick}
+                />
+              ))}
+            </div>
           )}
         </div>
       </section>
 
-      {/* Category Filter and Products Grid - only show when not in AI mode */}
-      {!showingAI && (
-        <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div className="text-center flex-1">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-                  Explorar Produtos
-                </h2>
-                <p className="text-base text-white/80 mb-4 animate-slide-in-right">
-                  {searchTerm ? `Resultados para "${searchTerm}"` : 'Navegue por nossa coleção completa'}
-                </p>
-              </div>
-              
-              <div className="flex gap-2 animate-slide-in-right">
-                <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
-                  <SelectTrigger className="bg-white text-gray-900 border-0 w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300 z-50">
-                    <SelectItem value="nome">
-                      <div className="flex items-center gap-2">
-                        <SortAsc className="w-4 h-4" />
-                        Nome
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="preco">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4" />
-                        Preço
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} 
-                  className="bg-white text-gray-900 border-0 hover:bg-gray-100 transition-all duration-300 hover:scale-105"
-                >
-                  {sortOrder === 'asc' ? '↑' : '↓'}
-                </Button>
-              </div>
-            </div>
-
-            <div className="max-w-md mx-auto mb-6 animate-scale-in">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300 z-50">
-                  <SelectItem value="todas">Todas as Categorias</SelectItem>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <ProductGrid products={displayedProducts.slice(0, 24)} compact={true} />
-
-            {displayedProducts.length === 0 && (
-              <div className="text-center py-16 animate-fade-in">
-                <div className="w-32 h-32 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse">
-                  <ShoppingCart className="w-16 h-16 text-white/50" />
+      {/* Benefits Section */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Por que Escolher Nossa Loja?</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {benefits.map((benefit, index) => (
+              <div key={index} className="text-center group">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <benefit.icon className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  Nenhum produto encontrado
-                </h2>
-                <p className="text-white/80 mb-6">
-                  {searchTerm ? `Não encontramos produtos para "${searchTerm}"` : 'Não há produtos nesta categoria'}
-                </p>
-                {searchTerm && (
-                  <Button 
-                    onClick={() => setSearchTerm('')} 
-                    className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-                  >
-                    Ver Todos os Produtos
-                  </Button>
-                )}
+                <h3 className="text-xl font-semibold mb-2">{benefit.title}</h3>
+                <p className="text-gray-600">{benefit.description}</p>
               </div>
-            )}
-
-            {displayedProducts.length > 24 && (
-              <div className="text-center mt-8 animate-fade-in">
-                <Button 
-                  onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)} 
-                  className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-                >
-                  Ver Todos os {displayedProducts.length} Produtos
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            )}
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* CTA Section - only show when not in AI mode */}
-      {!showingAI && (
-        <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 relative overflow-hidden animate-fade-in">
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="max-w-4xl mx-auto text-center relative z-10">
-            <div className="space-y-6">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
-                <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-white animate-pulse" />
-              </div>
-              <h2 className="text-2xl md:text-4xl font-bold mb-4 text-white animate-slide-in-left">
-                Não Perca Nenhuma Oferta!
-              </h2>
-              <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right">
-                Descubra os melhores produtos com preços incríveis na Shopee
-              </p>
-              <Button 
-                size="lg" 
-                className="bg-white text-red-600 hover:bg-gray-100 py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" 
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              >
-                Explorar Produtos
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
+      {/* Testimonials */}
+      <section className="py-12 bg-white/40">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">O que nossos clientes dizem</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="bg-white/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-4">
+                    <img 
+                      src={testimonial.image} 
+                      alt={testimonial.name}
+                      className="w-12 h-12 rounded-full mr-4"
+                    />
+                    <div>
+                      <h4 className="font-semibold">{testimonial.name}</h4>
+                      <div className="flex text-yellow-400">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-current" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 italic">"{testimonial.text}"</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* AI Analysis Modal */}
-      <AIAnalysisModal 
-        isOpen={showAnalysisModal} 
-        onClose={() => setShowAnalysisModal(false)} 
-        selectedProducts={selectedProducts} 
-        onAnalyze={analyzeProducts} 
-      />
+      {/* CTA Section */}
+      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-700">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Pronto para encontrar seu produto ideal?
+          </h2>
+          <p className="text-blue-100 mb-8 text-lg">
+            Explore nossa coleção completa e encontre exatamente o que você precisa
+          </p>
+          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg font-semibold">
+            <ShoppingCart className="w-5 h-5 mr-2" />
+            Explorar Produtos
+          </Button>
+        </div>
+      </section>
 
       {/* Product Detail Modal */}
       {selectedProduct && (
         <ProductDetailModal
-          isOpen={isProductModalOpen}
-          onClose={() => {
-            setIsProductModalOpen(false);
-            setSelectedProduct(null);
-          }}
+          isOpen={!!selectedProduct}
+          onClose={handleCloseModal}
           product={selectedProduct}
         />
       )}
