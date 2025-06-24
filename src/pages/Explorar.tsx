@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowLeft, Grid2X2, LayoutList, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -19,8 +18,12 @@ interface Product {
   imagem3: string;
   imagem4: string;
   imagem5: string;
+  imagem6?: string;
+  imagem7?: string;
   link: string;
   categoria: string;
+  subcategoria?: string;
+  uso?: string;
 }
 
 const Explorar = () => {
@@ -50,9 +53,8 @@ const Explorar = () => {
     const isMP4 = url.toLowerCase().includes('.mp4');
     const isValidURL = url.startsWith('http') && !url.includes('undefined') && !url.includes('null');
     const isNotImage = !url.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/);
-    const hasValidDomain = url.includes('susercontent.com') || url.includes('shopee');
     
-    return isMP4 && isValidURL && isNotImage && hasValidDomain;
+    return isMP4 && isValidURL && isNotImage;
   };
 
   useEffect(() => {
@@ -62,7 +64,7 @@ const Explorar = () => {
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
-        .from('SHOPEE')
+        .from('HARRY POTTER')
         .select('*')
         .not('video', 'is', null)
         .neq('video', '')
@@ -79,7 +81,7 @@ const Explorar = () => {
       const shuffledProducts = shuffleArray(validVideoProducts);
       setProducts(shuffledProducts);
     } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
+      console.error('Erro ao buscar artefatos mágicos:', error);
     } finally {
       setLoading(false);
     }
@@ -228,8 +230,8 @@ const Explorar = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">Carregando produtos...</div>
+      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple flex items-center justify-center">
+        <div className="text-magical-starlight text-xl font-magical">Carregando artefatos mágicos...</div>
       </div>
     );
   }
@@ -239,28 +241,28 @@ const Explorar = () => {
   const nextProduct = filteredProducts[currentVideoIndex + 1];
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple">
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-magical-deepPurple/90 via-magical-mysticalPurple/90 to-magical-deepPurple/90 backdrop-blur-md border-b border-magical-gold/30">
         <div className="flex items-center justify-between p-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/')}
-            className="text-white hover:bg-white/20"
+            className="text-magical-starlight hover:bg-magical-gold/20 hover:text-magical-gold"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Voltar
           </Button>
 
-          <h1 className="text-white font-bold text-xl">Explorar</h1>
+          <h1 className="text-magical-starlight font-bold text-xl font-magical">Explorar Artefatos Mágicos</h1>
 
           <div className="flex gap-2">
             <Button
               variant={viewMode === 'video' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('video')}
-              className={viewMode === 'video' ? 'bg-orange-500 hover:bg-orange-600' : 'text-white hover:bg-white/20'}
+              className={viewMode === 'video' ? 'bg-magical-mysticalPurple hover:bg-magical-deepPurple text-magical-starlight' : 'text-magical-starlight hover:bg-magical-gold/20'}
             >
               <Play className="w-4 h-4" />
             </Button>
@@ -268,7 +270,7 @@ const Explorar = () => {
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('grid')}
-              className={viewMode === 'grid' ? 'bg-orange-500 hover:bg-orange-600' : 'text-white hover:bg-white/20'}
+              className={viewMode === 'grid' ? 'bg-magical-mysticalPurple hover:bg-magical-deepPurple text-magical-starlight' : 'text-magical-starlight hover:bg-magical-gold/20'}
             >
               <Grid2X2 className="w-4 h-4" />
             </Button>
@@ -277,7 +279,7 @@ const Explorar = () => {
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-orange-500 hover:bg-orange-600' : 'text-white hover:bg-white/20'}
+                className={viewMode === 'list' ? 'bg-magical-mysticalPurple hover:bg-magical-deepPurple text-magical-starlight' : 'text-magical-starlight hover:bg-magical-gold/20'}
               >
                 <LayoutList className="w-4 h-4" />
               </Button>
@@ -326,18 +328,18 @@ const Explorar = () => {
                 )}
               </div>
             ) : (
-              <div className="h-screen flex items-center justify-center text-white">
+              <div className="h-screen flex items-center justify-center text-magical-starlight">
                 <div className="text-center">
-                  <p className="text-xl mb-4">Nenhum vídeo válido encontrado nesta categoria</p>
-                  <Button onClick={() => setViewMode('grid')} className="bg-orange-500 hover:bg-orange-600">
-                    Ver em Grade
+                  <p className="text-xl mb-4 font-magical">Nenhum vídeo de artefato encontrado nesta categoria</p>
+                  <Button onClick={() => setViewMode('grid')} className="bg-magical-mysticalPurple hover:bg-magical-deepPurple text-magical-starlight font-enchanted">
+                    Ver em Grade Mágica
                   </Button>
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 p-4">
+          <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple p-4">
             <div className="max-w-7xl mx-auto">
               <ProductGrid 
                 products={filteredProducts} 
@@ -360,7 +362,7 @@ const Explorar = () => {
                   onClick={() => navigateToVideo(actualIndex)}
                   disabled={isTransitioning}
                   className={`w-1 h-8 rounded-full transition-all duration-300 ${
-                    actualIndex === currentVideoIndex ? 'bg-orange-500' : 'bg-white/30'
+                    actualIndex === currentVideoIndex ? 'bg-magical-gold' : 'bg-magical-starlight/30'
                   } ${isTransitioning ? 'opacity-50' : ''}`}
                 />
               );

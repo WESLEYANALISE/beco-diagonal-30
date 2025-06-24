@@ -34,7 +34,6 @@ export const DesktopSidebar = () => {
 
       if (error) throw error;
 
-      // Simulate metrics for magical artifacts
       const productsWithMetrics = (data || []).map((product, index) => ({
         ...product,
         clicks: Math.floor(Math.random() * 1000) + 100,
@@ -95,7 +94,7 @@ export const DesktopSidebar = () => {
         {topProducts.map((product, index) => (
           <Card 
             key={product.id}
-            className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border border-magical-gold/50 hover:border-magical-gold/70 bg-gradient-to-br from-magical-gold/15 to-magical-bronze/15 backdrop-blur-sm hover:scale-102 animate-fade-in shadow-xl hover:shadow-magical-gold/30"
+            className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border border-magical-gold/50 hover:border-magical-gold/70 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 backdrop-blur-sm hover:scale-102 animate-fade-in shadow-xl hover:shadow-magical-gold/30"
             onClick={() => handleProductClick(product)}
             style={{ animationDelay: `${index * 0.15}s` }}
           >
@@ -147,7 +146,7 @@ export const DesktopSidebar = () => {
                     </div>
                   </div>
 
-                  {/* Enhanced magical button - agora ROXO */}
+                  {/* Enhanced magical button - agora ROXO temático */}
                   <Button 
                     size="sm"
                     className="w-full h-8 bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight text-xs font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-enchanted"

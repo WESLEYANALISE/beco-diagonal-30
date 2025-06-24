@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone, Wand2, Crown } from 'lucide-react';
@@ -30,11 +29,11 @@ interface Product {
   imagem3: string;
   imagem4: string;
   imagem5: string;
-  imagem6: string;
-  imagem7: string;
+  imagem6?: string;
+  imagem7?: string;
   link: string;
   categoria: string;
-  subcategoria: string;
+  subcategoria?: string;
   uso?: string;
 }
 
@@ -100,7 +99,6 @@ const Index = () => {
     filterProducts();
   }, [selectedCategory, filteredProducts, searchTerm, sortBy, sortOrder]);
 
-  // Apply price filter whenever priceFilter changes
   useEffect(() => {
     applyPriceFilter();
   }, [products, priceFilter]);
@@ -134,6 +132,7 @@ const Index = () => {
       const initialFeatured = shuffleArray(processedProducts, true).slice(0, 6);
       setFeaturedProducts(initialFeatured);
       
+      // Get all unique categories from HARRY POTTER table
       const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
       setCategories(uniqueCategories);
 
@@ -196,7 +195,6 @@ const Index = () => {
   } = useProductClicks();
 
   const handleProductClick = useCallback(async (productId: number) => {
-    // Track the product click
     await trackProductClick(productId, 'product_view');
     const productElement = document.getElementById(`product-${productId}`);
     if (productElement) {
@@ -204,7 +202,7 @@ const Index = () => {
         behavior: 'smooth',
         block: 'center'
       });
-      setSearchTerm(''); // Clear search to hide preview
+      setSearchTerm('');
     }
   }, [trackProductClick]);
 
@@ -315,7 +313,7 @@ const Index = () => {
       {/* Novidades Carousel */}
       <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
       
-      {/* Category Quick Access Buttons - usando categorias REAIS da tabela */}
+      {/* Category Quick Access Buttons - SHOWING ALL CATEGORIES from HARRY POTTER table */}
       <section className="px-4 py-2 animate-fade-in">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -328,7 +326,8 @@ const Index = () => {
               <Wand2 className="w-4 h-4" />
               Todos os Artefatos Mágicos
             </Button>
-            {categories.slice(0, 6).map(category => {
+            {/* Show ALL categories from the HARRY POTTER table */}
+            {categories.map(category => {
               const IconComponent = getCategoryIcon(category);
               return (
                 <Button 
@@ -353,8 +352,8 @@ const Index = () => {
       {/* Video Carousel - Strategic placement after hero */}
       {!showingAI && productsWithVideos.length > 0 && <VideoCarouselHome products={productsWithVideos} />}
 
-      {/* Category Product Carousels - show top categories when not in AI mode */}
-      {!showingAI && categories.slice(0, 4).map((category, index) => {
+      {/* Category Product Carousels - show ALL categories when not in AI mode */}
+      {!showingAI && categories.map((category, index) => {
         const categoryProducts = getCategoryProducts(category);
         const IconComponent = getCategoryIcon(category);
         
@@ -402,8 +401,8 @@ const Index = () => {
         );
       })}
 
-      {/* Enhanced Featured Products Carousel with Toggle */}
-      <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-gold/20 via-magical-bronze/20 to-magical-gold/20 backdrop-blur-sm animate-fade-in border-y border-magical-gold/40 shadow-2xl relative overflow-hidden">
+      {/* Enhanced Featured Products Carousel with Toggle - TEMÁTICO SEM LARANJA */}
+      <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-mysticalPurple/30 via-magical-deepPurple/30 to-magical-mysticalPurple/30 backdrop-blur-sm animate-fade-in border-y border-magical-gold/40 shadow-2xl relative overflow-hidden">
         {/* Magical background overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/30 via-magical-mysticalPurple/30 to-magical-darkBlue/30"></div>
         
