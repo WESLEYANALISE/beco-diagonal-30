@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MagicalParticles } from '@/components/MagicalParticles';
 import Header from '@/components/Header';
 import VideoFeed from '@/components/VideoFeed';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CategoryCarouselExplorar } from '@/components/CategoryCarouselExplorar';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -93,22 +94,14 @@ export const Explorar = () => {
       <div className="max-w-md mx-auto relative z-10">
         <Header />
         
-        <main className="pt-4 pb-20">
-          {/* Category Selection */}
+        <main className="pt-4">
+          {/* Category Carousel */}
           <div className="px-4 mb-4">
-            <Select value={currentCategory} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="bg-magical-starlight/90 border-magical-gold/40 text-magical-midnight font-enchanted shadow-lg">
-                <SelectValue placeholder="Filtrar por Escola" />
-              </SelectTrigger>
-              <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
-                <SelectItem value="todos">Todas as Escolas</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CategoryCarouselExplorar 
+              categories={categories}
+              currentCategory={currentCategory}
+              onCategoryChange={handleCategoryChange}
+            />
           </div>
           
           {/* Video Feed */}

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Book, Star, Wand2, Compass } from 'lucide-react';
@@ -10,8 +9,8 @@ export const BottomNavigation = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
 
-  // Only show on mobile and tablet, hide on desktop
-  if (!isMobile) {
+  // Only show on mobile and tablet, hide on desktop and hide on Explorar page
+  if (!isMobile || location.pathname === '/explorar') {
     return null;
   }
 
