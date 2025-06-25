@@ -38,6 +38,11 @@ export const CategoryProductCarousels: React.FC<CategoryProductCarouselsProps> =
 }) => {
   const navigate = useNavigate();
 
+  const handleExploreCategory = (category: string) => {
+    // First navigate to subcategories page, which will handle redirecting to products if no subcategories exist
+    navigate(`/subcategoria-detalhes?categoria=${encodeURIComponent(category)}`);
+  };
+
   if (showingAI) return null;
 
   return (
@@ -68,7 +73,7 @@ export const CategoryProductCarousels: React.FC<CategoryProductCarouselsProps> =
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  onClick={() => handleExploreCategory(category)} 
                   className="bg-magical-gold/30 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/40 text-xs px-3 py-1 h-auto font-enchanted shadow-md hover:shadow-magical-gold/20 transition-all duration-300 hover:scale-105"
                 >
                   Explorar Coleção
