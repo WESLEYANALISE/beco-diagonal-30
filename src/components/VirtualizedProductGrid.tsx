@@ -1,6 +1,5 @@
 
-import React, { memo, useMemo, useCallback } from 'react';
-import { FixedSizeGrid as Grid } from 'react-window';
+import React, { memo, useMemo } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -24,39 +23,6 @@ interface VirtualizedProductGridProps {
   compact?: boolean;
 }
 
-interface CellProps {
-  columnIndex: number;
-  rowIndex: number;
-  style: React.CSSProperties;
-  data: {
-    products: Product[];
-    columnsPerRow: number;
-    compact: boolean;
-  };
-}
-
-const Cell = memo<CellProps>(({ columnIndex, rowIndex, style, data }) => {
-  const { products, columnsPerRow, compact } = data;
-  const index = rowIndex * columnsPerRow + columnIndex;
-  const product = products[index];
-
-  if (!product) {
-    return <div style={style} />;
-  }
-
-  return (
-    <div style={style} className="p-2">
-      <ProductCard
-        product={product}
-        compact={compact}
-        style={{ animationDelay: `${index * 0.05}s` }}
-      />
-    </div>
-  );
-});
-
-Cell.displayName = 'VirtualizedCell';
-
 const VirtualizedProductGridComponent: React.FC<VirtualizedProductGridProps> = ({
   products,
   height = 600,
@@ -64,27 +30,10 @@ const VirtualizedProductGridComponent: React.FC<VirtualizedProductGridProps> = (
 }) => {
   const isMobile = useIsMobile();
 
-  const { columnsPerRow, columnWidth, rowHeight, totalWidth } = useMemo(() => {
+  const { columnsPerRow } = useMemo(() => {
     const cols = isMobile ? 2 : compact ? 5 : 3;
-    const colWidth = isMobile ? 180 : compact ? 200 : 280;
-    const rowH = isMobile ? 280 : compact ? 320 : 380;
-    const width = cols * colWidth;
-    
-    return {
-      columnsPerRow: cols,
-      columnWidth: colWidth,
-      rowHeight: rowH,
-      totalWidth: width
-    };
+    return { columnsPerRow: cols };
   }, [isMobile, compact]);
-
-  const rowCount = Math.ceil(products.length / columnsPerRow);
-
-  const itemData = useMemo(() => ({
-    products,
-    columnsPerRow,
-    compact
-  }), [products, columnsPerRow, compact]);
 
   if (products.length === 0) {
     return (
@@ -104,19 +53,24 @@ const VirtualizedProductGridComponent: React.FC<VirtualizedProductGridProps> = (
 
   return (
     <div className="w-full">
-      <Grid
-        columnCount={columnsPerRow}
-        columnWidth={columnWidth}
-        height={height}
-        rowCount={rowCount}
-        rowHeight={rowHeight}
-        width={totalWidth}
-        itemData={itemData}
-        overscanRowCount={2}
-        overscanColumnCount={1}
+      <div 
+        className={`grid gap-2 md:gap-4`}
+        style={{ 
+          gridTemplateColumns: `repeat(${columnsPerRow}, 1fr)`,
+          maxHeight: height,
+          overflowY: 'auto'
+        }}
       >
-        {Cell}
-      </Grid>
+        {products.map((product, index) => (
+          <div key={product.id} className="p-2">
+            <ProductCard
+              product={product}
+              compact={compact}
+              style={{ animationDelay: `${index * 0.05}s` }}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
