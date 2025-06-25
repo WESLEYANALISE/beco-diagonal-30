@@ -35,6 +35,7 @@ interface Product {
   categoria: string;
   subcategoria?: string;
   uso?: string;
+  descricao?: string;
 }
 
 const Index = () => {
@@ -70,7 +71,7 @@ const Index = () => {
 
   // Optimize shuffle function with memoization
   const shuffleArray = useCallback(<T,>(array: T[], shouldShuffle: boolean = true): T[] => {
-    if (!shouldShuffle) return array;
+    if (!Array.isArray(array) || !shouldShuffle) return array;
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -81,6 +82,7 @@ const Index = () => {
 
   // Parse price from string to number
   const parsePrice = useCallback((priceString: string): number => {
+    if (!priceString || typeof priceString !== 'string') return 0;
     const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
     return parseFloat(cleanPrice) || 0;
   }, []);
@@ -119,21 +121,53 @@ const Index = () => {
 
   const fetchProducts = async () => {
     try {
+      console.log('Fetching products...');
       const { data, error } = await supabase
         .from('HARRY POTTER')
-        .select('*')
+        .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso')
         .order('id');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      let processedProducts = shuffleArray(data || [], true);
+      console.log('Raw data from Supabase:', data);
+
+      if (!data || !Array.isArray(data)) {
+        console.warn('No data received from Supabase');
+        setProducts([]);
+        setFilteredProducts([]);
+        setLoading(false);
+        return;
+      }
+
+      // Filter out null/undefined products and ensure required fields exist
+      const validProducts = data.filter(product => 
+        product && 
+        product.produto && 
+        product.valor && 
+        product.categoria &&
+        typeof product.produto === 'string' &&
+        typeof product.valor === 'string' &&
+        typeof product.categoria === 'string'
+      );
+
+      console.log('Valid products:', validProducts.length);
+
+      let processedProducts = shuffleArray(validProducts, true);
       setProducts(processedProducts);
 
       const initialFeatured = shuffleArray(processedProducts, true).slice(0, 6);
       setFeaturedProducts(initialFeatured);
       
       // Get all unique categories from HARRY POTTER table
-      const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
+      const uniqueCategories = [...new Set(validProducts
+        .map(product => product.categoria)
+        .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '')
+      )];
+      
+      console.log('Categories found:', uniqueCategories);
       setCategories(uniqueCategories);
 
       if (uniqueCategories.length > 0) {
@@ -141,13 +175,21 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar artefatos mágicos:', error);
+      setProducts([]);
+      setFilteredProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
   const applyPriceFilter = useCallback(() => {
+    if (!Array.isArray(products)) {
+      setFilteredProducts([]);
+      return;
+    }
+    
     const filtered = products.filter(product => {
+      if (!product || !product.valor) return false;
       const price = parsePrice(product.valor);
       return price >= priceFilter.min && price <= priceFilter.max;
     });
@@ -155,38 +197,58 @@ const Index = () => {
   }, [products, priceFilter, parsePrice]);
 
   const filterProducts = useCallback(() => {
-    let filtered = filteredProducts;
-    if (selectedCategory !== 'todas') {
-      filtered = filtered.filter(product => product.categoria === selectedCategory);
+    if (!Array.isArray(filteredProducts)) {
+      setDisplayedProducts([]);
+      return;
     }
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(product => product.produto.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    let filtered = [...filteredProducts];
+    
+    if (selectedCategory && selectedCategory !== 'todas') {
+      filtered = filtered.filter(product => 
+        product && product.categoria === selectedCategory
+      );
+    }
+    
+    if (searchTerm && searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(product => 
+        product && 
+        product.produto && 
+        typeof product.produto === 'string' &&
+        product.produto.toLowerCase().includes(searchLower)
+      );
     }
 
     // Apply sorting
     filtered.sort((a, b) => {
+      if (!a || !b) return 0;
+      
       if (sortBy === 'nome') {
-        const comparison = a.produto.localeCompare(b.produto);
+        const nameA = a.produto || '';
+        const nameB = b.produto || '';
+        const comparison = nameA.localeCompare(nameB);
         return sortOrder === 'asc' ? comparison : -comparison;
       } else {
-        const priceA = parsePrice(a.valor);
-        const priceB = parsePrice(b.valor);
+        const priceA = parsePrice(a.valor || '');
+        const priceB = parsePrice(b.valor || '');
         const comparison = priceA - priceB;
         return sortOrder === 'asc' ? comparison : -comparison;
       }
     });
+    
     setDisplayedProducts(filtered);
   }, [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder, parsePrice]);
 
   // Debounced search function for better performance
   const handleSearch = useCallback((term: string) => {
-    setSearchTerm(term);
+    setSearchTerm(term || '');
   }, []);
 
   const handlePriceFilter = useCallback((min: number, max: number) => {
     setPriceFilter({
-      min,
-      max
+      min: min || 0,
+      max: max || 1000
     });
   }, []);
 
@@ -195,14 +257,20 @@ const Index = () => {
   } = useProductClicks();
 
   const handleProductClick = useCallback(async (productId: number) => {
-    await trackProductClick(productId, 'product_view');
-    const productElement = document.getElementById(`product-${productId}`);
-    if (productElement) {
-      productElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
-      setSearchTerm('');
+    if (!productId) return;
+    
+    try {
+      await trackProductClick(productId, 'product_view');
+      const productElement = document.getElementById(`product-${productId}`);
+      if (productElement) {
+        productElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+        setSearchTerm('');
+      }
+    } catch (error) {
+      console.error('Error tracking product click:', error);
     }
   }, [trackProductClick]);
 
@@ -211,6 +279,8 @@ const Index = () => {
   }, []);
 
   const handleProductToggle = useCallback((product: Product) => {
+    if (!product) return;
+    
     setSelectedProducts(prev => {
       const isSelected = prev.some(p => p.id === product.id);
       if (isSelected) {
@@ -245,7 +315,7 @@ const Index = () => {
         console.error('Error calling analyze-products function:', error);
         throw new Error(error.message || 'Erro ao analisar produtos');
       }
-      return data.analysis || 'Análise não disponível';
+      return data?.analysis || 'Análise não disponível';
     } catch (error) {
       console.error('Error in analyzeProducts:', error);
       throw error;
@@ -253,6 +323,8 @@ const Index = () => {
   };
 
   const getCategoryIcon = useCallback((category: string) => {
+    if (!category) return ShoppingCart;
+    
     const iconMap: Record<string, React.ComponentType<any>> = {
       'Itens Colecionáveis': Crown,
       'Bonecas e Brinquedos de Pelúcia': Sparkles,
@@ -266,13 +338,25 @@ const Index = () => {
   }, []);
 
   const getCategoryProducts = useCallback((category: string, limit: number = 8) => {
-    const categoryProducts = filteredProducts.filter(p => p.categoria === category);
+    if (!category || !Array.isArray(filteredProducts)) return [];
+    
+    const categoryProducts = filteredProducts.filter(p => 
+      p && p.categoria === category
+    );
     return shuffleArray(categoryProducts, false).slice(0, limit);
   }, [filteredProducts, shuffleArray]);
 
   // Memoize products with videos for better performance
   const productsWithVideos = useMemo(() => {
-    return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== ''), false).slice(0, 8);
+    if (!Array.isArray(filteredProducts)) return [];
+    
+    const withVideos = filteredProducts.filter(product => 
+      product && 
+      product.video && 
+      typeof product.video === 'string' &&
+      product.video.trim() !== ''
+    );
+    return shuffleArray(withVideos, false).slice(0, 8);
   }, [filteredProducts, shuffleArray]);
 
   if (loading) {
@@ -308,10 +392,21 @@ const Index = () => {
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
       {/* Search Preview */}
-      {searchTerm && <SearchPreview searchTerm={searchTerm} products={filteredProducts.filter(p => p.produto.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)} onProductClick={handleProductClick} />}
+      {searchTerm && Array.isArray(filteredProducts) && (
+        <SearchPreview 
+          searchTerm={searchTerm} 
+          products={filteredProducts
+            .filter(p => p && p.produto && p.produto.toLowerCase().includes(searchTerm.toLowerCase()))
+            .slice(0, 5)
+          } 
+          onProductClick={handleProductClick} 
+        />
+      )}
 
       {/* Novidades Carousel */}
-      <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
+      {Array.isArray(filteredProducts) && filteredProducts.length > 0 && (
+        <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
+      )}
       
       {/* Category Quick Access Buttons - SHOWING ALL CATEGORIES from HARRY POTTER table */}
       <section className="px-4 py-2 animate-fade-in">
@@ -327,7 +422,8 @@ const Index = () => {
               Todos os Artefatos Mágicos
             </Button>
             {/* Show ALL categories from the HARRY POTTER table */}
-            {categories.map(category => {
+            {Array.isArray(categories) && categories.map(category => {
+              if (!category) return null;
               const IconComponent = getCategoryIcon(category);
               return (
                 <Button 
@@ -353,7 +449,9 @@ const Index = () => {
       {!showingAI && productsWithVideos.length > 0 && <VideoCarouselHome products={productsWithVideos} />}
 
       {/* Category Product Carousels - show ALL categories when not in AI mode */}
-      {!showingAI && categories.map((category, index) => {
+      {!showingAI && Array.isArray(categories) && categories.map((category, index) => {
+        if (!category) return null;
+        
         const categoryProducts = getCategoryProducts(category);
         const IconComponent = getCategoryIcon(category);
         
@@ -441,7 +539,7 @@ const Index = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
                     <SelectItem value="todas">Todas as Casas</SelectItem>
-                    {categories.map(category => (
+                    {Array.isArray(categories) && categories.map(category => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
@@ -451,7 +549,7 @@ const Index = () => {
               </div>
               
               <ProductSelector 
-                products={displayedProducts.slice(0, 20)} 
+                products={Array.isArray(displayedProducts) ? displayedProducts.slice(0, 20) : []} 
                 selectedProducts={selectedProducts} 
                 onProductToggle={handleProductToggle} 
                 onAnalyze={handleAnalyze} 
@@ -462,7 +560,7 @@ const Index = () => {
             <>
               <Carousel className="w-full animate-scale-in mb-6">
                 <CarouselContent className="-ml-2 md:-ml-3">
-                  {featuredProducts.map((product, index) => (
+                  {Array.isArray(featuredProducts) && featuredProducts.map((product, index) => (
                     <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in" style={{animationDelay: `${index * 0.1}s`}}>
                       <ProductCard product={product} showBadge={true} badgeText="RELÍQUIA" compact={false} />
                     </CarouselItem>
@@ -538,7 +636,7 @@ const Index = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
                   <SelectItem value="todas">Todas as Casas</SelectItem>
-                  {categories.map(category => (
+                  {Array.isArray(categories) && categories.map(category => (
                     <SelectItem key={category} value={category}>
                       {category}
                     </SelectItem>
@@ -547,9 +645,9 @@ const Index = () => {
               </Select>
             </div>
 
-            <ProductGrid products={displayedProducts.slice(0, 20)} compact={true} />
+            <ProductGrid products={Array.isArray(displayedProducts) ? displayedProducts.slice(0, 20) : []} compact={true} />
 
-            {displayedProducts.length === 0 && (
+            {(!Array.isArray(displayedProducts) || displayedProducts.length === 0) && (
               <div className="text-center py-16 animate-fade-in">
                 <div className="w-32 h-32 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-levitate border border-magical-gold/30 shadow-2xl">
                   <Wand2 className="w-16 h-16 text-magical-gold/50" />
@@ -571,7 +669,7 @@ const Index = () => {
               </div>
             )}
 
-            {displayedProducts.length > 20 && (
+            {Array.isArray(displayedProducts) && displayedProducts.length > 20 && (
               <div className="text-center mt-8 animate-fade-in">
                 <Button 
                   onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)} 

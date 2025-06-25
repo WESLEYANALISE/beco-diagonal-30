@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid, Sparkles } from 'lucide-react';
@@ -58,6 +59,8 @@ const CategoriaLista = () => {
 
   const fetchProducts = useCallback(async () => {
     try {
+      console.log('Fetching products for categoria:', categoria, 'subcategoria:', subcategoria, 'tipo:', tipo);
+      
       let query = supabase
         .from('HARRY POTTER')
         .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso');
@@ -76,13 +79,43 @@ const CategoriaLista = () => {
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      setProducts(data || []);
-      showSuccess("Artefatos mágicos carregados com sucesso!");
+      console.log('Raw data:', data);
+      
+      if (!data || !Array.isArray(data)) {
+        console.warn('No data received');
+        setProducts([]);
+        showError("Nenhum artefato mágico encontrado");
+        return;
+      }
+
+      // Filter out invalid products
+      const validProducts = data.filter(product => 
+        product && 
+        product.produto && 
+        product.valor && 
+        product.categoria &&
+        typeof product.produto === 'string' &&
+        typeof product.valor === 'string' &&
+        typeof product.categoria === 'string'
+      );
+
+      console.log('Valid products found:', validProducts.length);
+      setProducts(validProducts);
+      
+      if (validProducts.length > 0) {
+        showSuccess("Artefatos mágicos carregados com sucesso!");
+      } else {
+        showError("Nenhum artefato mágico válido encontrado");
+      }
     } catch (error) {
       console.error('Erro ao buscar artefatos mágicos:', error);
       showError("Erro ao carregar artefatos mágicos");
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -90,15 +123,21 @@ const CategoriaLista = () => {
 
   // Memoized filtered and sorted products for better performance
   const filteredProducts = useMemo(() => {
+    if (!Array.isArray(products)) return [];
+    
     let filtered = [...products];
     
     filtered.sort((a, b) => {
+      if (!a || !b) return 0;
+      
       if (sortBy === 'nome') {
-        const comparison = a.produto.localeCompare(b.produto);
+        const nameA = a.produto || '';
+        const nameB = b.produto || '';
+        const comparison = nameA.localeCompare(nameB);
         return sortOrder === 'asc' ? comparison : -comparison;
       } else {
-        const priceA = parseFloat(a.valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-        const priceB = parseFloat(b.valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        const priceA = parseFloat((a.valor || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        const priceB = parseFloat((b.valor || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
         const comparison = priceA - priceB;
         return sortOrder === 'asc' ? comparison : -comparison;
       }
@@ -107,7 +146,9 @@ const CategoriaLista = () => {
     return filtered;
   }, [products, sortBy, sortOrder]);
 
-  const getMagicalCategoryName = (category: string) => {
+  const getMagicalCategoryName = useCallback((category: string) => {
+    if (!category) return '';
+    
     const nameMap: Record<string, string> = {
       'Itens Colecionáveis': 'Artefatos Colecionáveis',
       'Bonecas e Brinquedos de Pelúcia': 'Criaturas Mágicas',
@@ -118,9 +159,9 @@ const CategoriaLista = () => {
       'Canecas': 'Cálices Encantados'
     };
     return nameMap[category] || category;
-  };
+  }, []);
 
-  const getTitle = () => {
+  const getTitle = useCallback(() => {
     if (tipo === 'mais-vendidos') {
       return 'Artefatos Mais Procurados';
     }
@@ -128,9 +169,9 @@ const CategoriaLista = () => {
       return `${getMagicalCategoryName(categoria)} - ${subcategoria}`;
     }
     return categoria ? getMagicalCategoryName(categoria) : 'Artefatos Mágicos';
-  };
+  }, [tipo, subcategoria, categoria, getMagicalCategoryName]);
 
-  const getSubtitle = () => {
+  const getSubtitle = useCallback(() => {
     if (tipo === 'mais-vendidos') {
       return 'Os artefatos favoritos dos nossos magos';
     }
@@ -138,16 +179,17 @@ const CategoriaLista = () => {
       return `Explore todos os artefatos de ${subcategoria}`;
     }
     return `Explore todos os artefatos de ${getMagicalCategoryName(categoria)}`;
-  };
+  }, [tipo, subcategoria, categoria, getMagicalCategoryName]);
 
-  const getBackRoute = () => {
+  const getBackRoute = useCallback(() => {
     if (tipo === 'subcategoria') {
       return `/subcategoria-detalhes?categoria=${encodeURIComponent(categoria)}`;
     }
     return '/categorias';
-  };
+  }, [tipo, categoria]);
 
   const handleProductClick = useCallback((product: Product) => {
+    if (!product) return;
     setSelectedProduct(product);
     setIsDetailModalOpen(true);
   }, []);
