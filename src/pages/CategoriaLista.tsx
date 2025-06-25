@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid, Sparkles } from 'lucide-react';
@@ -234,7 +233,6 @@ const CategoriaLista = () => {
               products={filteredProducts}
               loading={loading}
               compact={true}
-              onProductClick={handleProductClick}
             />
           </div>
         </div>
