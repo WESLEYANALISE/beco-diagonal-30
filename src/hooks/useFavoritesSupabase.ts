@@ -1,166 +1,129 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAppUser } from './useAppUser';
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
 
 export const useFavoritesSupabase = () => {
-  const [favorites, setFavorites] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAppUser();
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Load favorites from Supabase
-  const loadFavorites = useCallback(async () => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-
+  // Buscar favoritos do usuário logado
+  const fetchFavorites = useCallback(async () => {
     try {
-      // Use article_id as the column name based on the error message
+      setLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
-        .from('user_favorites')
-        .select('article_id')
+        .from('user_favorites_harry_potter')
+        .select('product_id')
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error loading favorites:', error);
-        // Fallback to localStorage
-        const storedFavorites = localStorage.getItem('shopee-favorites');
-        if (storedFavorites) {
-          const parsed = JSON.parse(storedFavorites);
-          if (Array.isArray(parsed)) {
-            setFavorites(parsed);
-          }
-        }
-      } else {
-        const productIds = data.map(fav => Number(fav.article_id));
-        setFavorites(productIds);
-        // Sync with localStorage for offline access
-        localStorage.setItem('shopee-favorites', JSON.stringify(productIds));
+        console.error('Erro ao buscar favoritos:', error);
+        return;
       }
+
+      const ids = data?.map(item => item.product_id) || [];
+      setFavoriteIds(ids);
     } catch (error) {
-      console.error('Error loading favorites:', error);
+      console.error('Erro inesperado:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    loadFavorites();
-  }, [loadFavorites]);
+    fetchFavorites();
+  }, [fetchFavorites]);
 
-  const toggleFavorite = useCallback(async (productId: number) => {
-    if (!user) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar o favorito. Tente novamente.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const addFavorite = useCallback(async (productId: number) => {
     try {
-      const isFavorite = favorites.includes(productId);
-      
-      if (isFavorite) {
-        // Remove from favorites
-        const { error } = await supabase
-          .from('user_favorites')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('article_id', productId.toString());
-
-        if (error) throw error;
-
-        const newFavorites = favorites.filter(id => id !== productId);
-        setFavorites(newFavorites);
-        localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
-        
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         toast({
-          title: "Removido dos favoritos",
-          description: "Produto removido da sua lista de favoritos.",
+          title: "Login Necessário",
+          description: "Faça login para adicionar artefatos ao grimório",
+          variant: "destructive",
         });
-      } else {
-        // Add to favorites
-        const { error } = await supabase
-          .from('user_favorites')
-          .insert([{
-            user_id: user.id,
-            article_id: productId.toString()
-          }]);
-
-        if (error) throw error;
-
-        const newFavorites = [...favorites, productId];
-        setFavorites(newFavorites);
-        localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
-        
-        toast({
-          title: "Adicionado aos favoritos",
-          description: "Produto adicionado à sua lista de favoritos.",
-        });
+        return;
       }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
+
+      const { error } = await supabase
+        .from('user_favorites_harry_potter')
+        .insert({ user_id: user.id, product_id: productId });
+
+      if (error) {
+        console.error('Erro ao adicionar favorito:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao adicionar artefato ao grimório",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setFavoriteIds(prev => [...prev, productId]);
       toast({
-        title: "Erro",
-        description: "Não foi possível atualizar os favoritos. Tente novamente.",
-        variant: "destructive",
+        title: "Artefato Adicionado!",
+        description: "Artefato adicionado ao seu grimório mágico",
       });
+    } catch (error) {
+      console.error('Erro inesperado:', error);
     }
-  }, [user, favorites, toast]);
+  }, [toast]);
 
   const removeFavorite = useCallback(async (productId: number) => {
-    if (!user) return;
-
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { error } = await supabase
-        .from('user_favorites')
+        .from('user_favorites_harry_potter')
         .delete()
         .eq('user_id', user.id)
-        .eq('article_id', productId.toString());
+        .eq('product_id', productId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao remover favorito:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao remover artefato do grimório",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      const newFavorites = favorites.filter(id => id !== productId);
-      setFavorites(newFavorites);
-      localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
+      setFavoriteIds(prev => prev.filter(id => id !== productId));
+      toast({
+        title: "Artefato Removido",
+        description: "Artefato removido do seu grimório",
+      });
     } catch (error) {
-      console.error('Error removing favorite:', error);
+      console.error('Erro inesperado:', error);
     }
-  }, [user, favorites]);
+  }, [toast]);
+
+  const toggleFavorite = useCallback((productId: number) => {
+    if (favoriteIds.includes(productId)) {
+      removeFavorite(productId);
+    } else {
+      addFavorite(productId);
+    }
+  }, [favoriteIds, addFavorite, removeFavorite]);
 
   const isFavorite = useCallback((productId: number) => {
-    return favorites.includes(productId);
-  }, [favorites]);
-
-  const clearAllFavorites = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('user_favorites')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      setFavorites([]);
-      localStorage.setItem('shopee-favorites', JSON.stringify([]));
-    } catch (error) {
-      console.error('Error clearing favorites:', error);
-    }
-  }, [user]);
+    return favoriteIds.includes(productId);
+  }, [favoriteIds]);
 
   return {
-    favorites,
-    toggleFavorite,
+    favoriteIds,
+    addFavorite,
     removeFavorite,
+    toggleFavorite,
     isFavorite,
-    clearAllFavorites,
-    favoritesCount: favorites.length,
-    isLoading
+    loading
   };
 };

@@ -1,94 +1,72 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+
+const STORAGE_KEY = 'harryPotter_favorites';
 
 export const useFavoritesLocal = () => {
-  const [favorites, setFavorites] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
-  // Load favorites from localStorage
-  const loadFavorites = useCallback(() => {
+  // Carregar favoritos do localStorage
+  useEffect(() => {
     try {
-      const storedFavorites = localStorage.getItem('shopee-favorites');
-      if (storedFavorites) {
-        const parsed = JSON.parse(storedFavorites);
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          setFavorites(parsed);
+          setFavoriteIds(parsed);
         }
       }
     } catch (error) {
-      console.error('Error loading favorites:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Erro ao carregar favoritos do localStorage:', error);
     }
   }, []);
 
+  // Salvar no localStorage sempre que favoriteIds mudar
   useEffect(() => {
-    loadFavorites();
-  }, [loadFavorites]);
-
-  const toggleFavorite = useCallback((productId: number) => {
     try {
-      const isFavorite = favorites.includes(productId);
-      let newFavorites: number[];
-      
-      if (isFavorite) {
-        newFavorites = favorites.filter(id => id !== productId);
-        toast({
-          title: "Removido dos favoritos",
-          description: "Produto removido da sua lista de favoritos.",
-        });
-      } else {
-        newFavorites = [...favorites, productId];
-        toast({
-          title: "Adicionado aos favoritos",
-          description: "Produto adicionado à sua lista de favoritos.",
-        });
-      }
-      
-      setFavorites(newFavorites);
-      localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(favoriteIds));
     } catch (error) {
-      console.error('Error toggling favorite:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar os favoritos. Tente novamente.",
-        variant: "destructive",
-      });
+      console.error('Erro ao salvar favoritos no localStorage:', error);
     }
-  }, [favorites, toast]);
+  }, [favoriteIds]);
+
+  const addFavorite = useCallback((productId: number) => {
+    setFavoriteIds(prev => {
+      if (!prev.includes(productId)) {
+        return [...prev, productId];
+      }
+      return prev;
+    });
+  }, []);
 
   const removeFavorite = useCallback((productId: number) => {
-    try {
-      const newFavorites = favorites.filter(id => id !== productId);
-      setFavorites(newFavorites);
-      localStorage.setItem('shopee-favorites', JSON.stringify(newFavorites));
-    } catch (error) {
-      console.error('Error removing favorite:', error);
-    }
-  }, [favorites]);
+    setFavoriteIds(prev => prev.filter(id => id !== productId));
+  }, []);
+
+  const toggleFavorite = useCallback((productId: number) => {
+    setFavoriteIds(prev => {
+      if (prev.includes(productId)) {
+        return prev.filter(id => id !== productId);
+      } else {
+        return [...prev, productId];
+      }
+    });
+  }, []);
 
   const isFavorite = useCallback((productId: number) => {
-    return favorites.includes(productId);
-  }, [favorites]);
+    return favoriteIds.includes(productId);
+  }, [favoriteIds]);
 
-  const clearAllFavorites = useCallback(() => {
-    try {
-      setFavorites([]);
-      localStorage.setItem('shopee-favorites', JSON.stringify([]));
-    } catch (error) {
-      console.error('Error clearing favorites:', error);
-    }
+  const clearFavorites = useCallback(() => {
+    setFavoriteIds([]);
   }, []);
 
   return {
-    favorites,
-    toggleFavorite,
+    favoriteIds,
+    addFavorite,
     removeFavorite,
+    toggleFavorite,
     isFavorite,
-    clearAllFavorites,
-    favoritesCount: favorites.length,
-    isLoading
+    clearFavorites
   };
 };
