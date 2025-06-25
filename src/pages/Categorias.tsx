@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone, Zap, Crown, Wand2, ShoppingCart } from 'lucide-react';
@@ -5,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
 import { supabase } from "@/integrations/supabase/client";
-import { useMagicalSounds } from '@/hooks/useMagicalSounds';
+import { useCategoryMusic } from '@/hooks/useCategoryMusic';
 
 interface CategoryStats {
   categoria: string;
@@ -16,7 +17,7 @@ const Categorias = () => {
   const [categories, setCategories] = useState<CategoryStats[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { playRandomMagicalSound } = useMagicalSounds();
+  const { playCategoryMusic } = useCategoryMusic();
 
   useEffect(() => {
     fetchCategories();
@@ -45,15 +46,15 @@ const Categorias = () => {
 
       setCategories(categoryStats);
     } catch (error) {
-      console.error('Erro ao buscar categorias:', error);
+      // Silent error handling
     } finally {
       setLoading(false);
     }
   };
 
   const handleCategoryClick = (category: string) => {
-    // Play magical sound when clicking on category
-    playRandomMagicalSound();
+    // Play category-specific music
+    playCategoryMusic(category);
     navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
   };
 
@@ -164,7 +165,7 @@ const Categorias = () => {
                         handleCategoryClick(category.categoria);
                       }}
                     >
-                      Ver Artefatos Mágicos
+                      Explorar Coleção
                       <ArrowRight className="w-3 h-3 md:w-4 md:h-4 ml-1 md:ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                     </Button>
                   </CardContent>

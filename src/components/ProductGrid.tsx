@@ -1,9 +1,10 @@
 
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useMemo } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { Button } from "@/components/ui/button";
 import { Grid, List } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePerformanceOptimization } from '@/hooks/usePerformanceOptimization';
 
 interface Product {
   id: number;
@@ -17,6 +18,9 @@ interface Product {
   imagem5: string;
   link: string;
   categoria: string;
+  subcategoria?: string;
+  descricao?: string;
+  uso?: string;
 }
 
 interface ProductGridProps {
@@ -38,6 +42,30 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const isMobile = useIsMobile();
+  const { memoizeImages, optimizeRender } = usePerformanceOptimization();
+
+  // Memoize products to prevent unnecessary re-renders
+  const memoizedProducts = useMemo(() => {
+    // Preload first few images for better UX
+    products.slice(0, 6).forEach(product => {
+      if (product.imagem1) {
+        memoizeImages(product.imagem1);
+      }
+    });
+    
+    return products;
+  }, [products, memoizeImages]);
+
+  // Memoize grid classes for performance
+  const gridClasses = useMemo(() => {
+    if (viewMode === 'list' && isMobile) {
+      return 'space-y-4 px-4';
+    }
+    
+    return compact 
+      ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3'
+      : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3';
+  }, [viewMode, isMobile, compact]);
 
   if (loading) {
     return (
@@ -64,9 +92,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
           </div>
         )}
         
-        <div className={`${viewMode === 'list' && isMobile 
-          ? 'space-y-4 px-4' 
-          : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3'}`}>
+        <div className={gridClasses}>
           {Array.from({ length: 12 }).map((_, index) => (
             <div key={index} className={`bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-2xl animate-pulse backdrop-blur-sm border border-magical-gold/20 ${
               viewMode === 'list' && isMobile ? 'h-32' : 'h-64'
@@ -77,7 +103,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
     );
   }
 
-  if (products.length === 0) {
+  if (memoizedProducts.length === 0) {
     return (
       <div className="text-center py-16 animate-fade-in">
         <div className="w-32 h-32 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse border border-magical-gold/30">
@@ -118,16 +144,8 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
       )}
 
       {/* Products container */}
-      <div className={`${
-        viewMode === 'list' && isMobile 
-          ? 'space-y-4 px-4' 
-          : `grid gap-2 md:gap-3 ${
-              compact 
-                ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6' 
-                : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-            }`
-      }`}>
-        {products.map((product, index) => (
+      <div className={gridClasses}>
+        {memoizedProducts.map((product, index) => (
           <ProductCard
             key={product.id}
             product={product}
