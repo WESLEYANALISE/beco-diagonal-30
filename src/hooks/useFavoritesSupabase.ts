@@ -8,32 +8,36 @@ export const useFavoritesSupabase = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Buscar favoritos do usuário logado
+  // Usar localStorage como fallback já que a tabela user_favorites_harry_potter não existe
+  const getFavoritesFromStorage = useCallback(() => {
+    try {
+      const stored = localStorage.getItem('harry_potter_favorites');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const saveFavoritesToStorage = useCallback((favorites: number[]) => {
+    try {
+      localStorage.setItem('harry_potter_favorites', JSON.stringify(favorites));
+    } catch (error) {
+      console.error('Erro ao salvar favoritos:', error);
+    }
+  }, []);
+
+  // Buscar favoritos do localStorage
   const fetchFavorites = useCallback(async () => {
     try {
       setLoading(true);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('user_favorites_harry_potter')
-        .select('product_id')
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Erro ao buscar favoritos:', error);
-        return;
-      }
-
-      const ids = data?.map(item => item.product_id) || [];
-      setFavoriteIds(ids);
+      const favorites = getFavoritesFromStorage();
+      setFavoriteIds(favorites);
     } catch (error) {
       console.error('Erro inesperado:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getFavoritesFromStorage]);
 
   useEffect(() => {
     fetchFavorites();
@@ -41,70 +45,47 @@ export const useFavoritesSupabase = () => {
 
   const addFavorite = useCallback(async (productId: number) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Login Necessário",
-          description: "Faça login para adicionar artefatos ao grimório",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('user_favorites_harry_potter')
-        .insert({ user_id: user.id, product_id: productId });
-
-      if (error) {
-        console.error('Erro ao adicionar favorito:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao adicionar artefato ao grimório",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setFavoriteIds(prev => [...prev, productId]);
+      const currentFavorites = getFavoritesFromStorage();
+      const newFavorites = [...currentFavorites, productId];
+      
+      saveFavoritesToStorage(newFavorites);
+      setFavoriteIds(newFavorites);
+      
       toast({
         title: "Artefato Adicionado!",
         description: "Artefato adicionado ao seu grimório mágico",
       });
     } catch (error) {
       console.error('Erro inesperado:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar artefato ao grimório",
+        variant: "destructive",
+      });
     }
-  }, [toast]);
+  }, [getFavoritesFromStorage, saveFavoritesToStorage, toast]);
 
   const removeFavorite = useCallback(async (productId: number) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('user_favorites_harry_potter')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('product_id', productId);
-
-      if (error) {
-        console.error('Erro ao remover favorito:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao remover artefato do grimório",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setFavoriteIds(prev => prev.filter(id => id !== productId));
+      const currentFavorites = getFavoritesFromStorage();
+      const newFavorites = currentFavorites.filter((id: number) => id !== productId);
+      
+      saveFavoritesToStorage(newFavorites);
+      setFavoriteIds(newFavorites);
+      
       toast({
         title: "Artefato Removido",
         description: "Artefato removido do seu grimório",
       });
     } catch (error) {
       console.error('Erro inesperado:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover artefato do grimório",
+        variant: "destructive",
+      });
     }
-  }, [toast]);
+  }, [getFavoritesFromStorage, saveFavoritesToStorage, toast]);
 
   const toggleFavorite = useCallback((productId: number) => {
     if (favoriteIds.includes(productId)) {

@@ -54,6 +54,7 @@ export const SubcategoriaDetalhes = () => {
         return;
       }
 
+      console.log('Produtos encontrados:', data?.length);
       setProducts(data || []);
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -78,7 +79,7 @@ export const SubcategoriaDetalhes = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-md mx-auto px-4 py-8">
         {/* Header com navegação */}
         <div className="flex flex-col gap-4 mb-8 animate-fade-in">
           <div className="flex items-center gap-4">
@@ -88,7 +89,7 @@ export const SubcategoriaDetalhes = () => {
               className="text-magical-starlight hover:bg-magical-gold/20 hover:text-magical-gold transition-all duration-300"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
-              Voltar para {decodedCategoria}
+              Voltar
             </Button>
           </div>
           
@@ -105,11 +106,11 @@ export const SubcategoriaDetalhes = () => {
           <div className="flex items-center gap-3">
             <Sparkles className="w-8 h-8 text-magical-gold animate-sparkle" />
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-magical-starlight font-magical">
+              <h1 className="text-xl font-bold text-magical-starlight font-magical">
                 {decodedSubcategoria}
               </h1>
-              <p className="text-magical-starlight/80 font-enchanted">
-                Artefatos mágicos da categoria {decodedCategoria}
+              <p className="text-magical-starlight/80 font-enchanted text-sm">
+                Artefatos de {decodedCategoria}
               </p>
             </div>
           </div>
@@ -118,7 +119,7 @@ export const SubcategoriaDetalhes = () => {
           {products.length > 0 && (
             <div className="flex items-center gap-2 bg-magical-gold/20 px-4 py-2 rounded-full border border-magical-gold/30 w-fit">
               <Package className="w-4 h-4 text-magical-gold" />
-              <span className="text-magical-gold font-semibold font-enchanted">
+              <span className="text-magical-gold font-semibold font-enchanted text-sm">
                 {products.length} {products.length === 1 ? 'artefato encontrado' : 'artefatos encontrados'}
               </span>
             </div>
