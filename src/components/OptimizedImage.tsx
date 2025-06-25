@@ -29,22 +29,22 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   return (
     <div className={`relative overflow-hidden ${className}`}>
       {!isLoaded && (
-        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-magical-gold/20 via-magical-bronze/30 to-magical-gold/20 animate-shimmer backdrop-blur-sm flex items-center justify-center">
-          <div className="text-magical-starlight text-xs font-enchanted">Carregando magia...</div>
-        </div>
+        <img
+          src={placeholder}
+          alt="Carregando..."
+          className="absolute inset-0 w-full h-full object-cover blur-sm"
+        />
       )}
       <img
         src={hasError ? placeholder : src}
         alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-200 ${
+        className={`w-full h-full object-cover transition-opacity duration-300 ${
           isLoaded ? 'opacity-100' : 'opacity-0'
         }`}
         onLoad={handleLoad}
         onError={handleError}
         loading="lazy"
         decoding="async"
-        // Otimizações para carregamento super rápido
-        fetchPriority="high"
       />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone, Zap, Crown, Wand2, ShoppingCart } from 'lucide-react';
@@ -7,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
 import { supabase } from "@/integrations/supabase/client";
 import { useSequentialMagicalSounds } from '@/hooks/useSequentialMagicalSounds';
-import { logger } from '@/utils/logger';
 
 interface CategoryStats {
   categoria: string;
@@ -34,7 +32,7 @@ const Categorias = () => {
 
       if (error) throw error;
 
-      // Process categories and check for subcategories
+      // Processar categorias e verificar subcategorias
       const categoryMap = new Map<string, { count: number; hasSubcategories: boolean }>();
       
       (data || []).forEach(item => {
@@ -59,14 +57,9 @@ const Categorias = () => {
         hasSubcategories: stats.hasSubcategories
       }));
 
-      logger.info('Categories fetched successfully', { 
-        totalCategories: categoryStats.length,
-        withSubcategories: categoryStats.filter(c => c.hasSubcategories).length
-      });
-
       setCategories(categoryStats);
     } catch (error) {
-      logger.error('Error fetching categories', { error });
+      console.error('Erro ao buscar categorias:', error);
     } finally {
       setLoading(false);
     }
@@ -76,10 +69,10 @@ const Categorias = () => {
     playNextSequentialSound();
     
     if (category.hasSubcategories) {
-      // Navigate to subcategory details page
+      // Redirecionar para página de subcategorias
       navigate(`/subcategoria-detalhes?categoria=${encodeURIComponent(category.categoria)}`);
     } else {
-      // Go directly to products
+      // Ir direto para produtos
       navigate(`/categoria-lista?categoria=${encodeURIComponent(category.categoria)}&tipo=categoria`);
     }
   };
@@ -167,7 +160,7 @@ const Categorias = () => {
                     <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-magical-gold/20 rounded-full transition-transform duration-500 group-hover:scale-110"></div>
                     <div className="absolute -bottom-4 -left-4 w-12 md:w-16 h-12 md:h-16 bg-magical-starlight/10 rounded-full transition-transform duration-500 group-hover:scale-125"></div>
                     
-                    {/* Subcategory indicator */}
+                    {/* Indicador de subcategorias */}
                     {category.hasSubcategories && (
                       <div className="absolute top-1 right-1 w-3 h-3 bg-magical-gold rounded-full animate-pulse" title="Possui subcategorias"></div>
                     )}
@@ -182,7 +175,7 @@ const Categorias = () => {
                         {category.categoria}
                       </h3>
                       <p className="text-xs md:text-sm text-magical-starlight/80 font-enchanted">
-                        {category.count} artefato{category.count !== 1 ? 's' : ''} mágico{category.count !== 1 ? 's' : ''}
+                        {category.count} artefatos mágicos
                       </p>
                     </div>
                   </div>
