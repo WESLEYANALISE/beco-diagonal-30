@@ -10,7 +10,7 @@ export interface Product {
   imagem5?: string;
   imagem6?: string;
   imagem7?: string;
-  video?: string;
+  video: string;
   link: string;
   categoria: string;
   subcategoria?: string;
