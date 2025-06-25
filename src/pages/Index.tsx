@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { BookOpen, Gamepad2, ShoppingBag, Wand2, Sparkles, Crown, Star } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import Header from '@/components/Header';
 import { OptimizedCarousel } from '@/components/OptimizedCarousel';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useSupabaseCache } from '@/hooks/useSupabaseCache';
 import { useSequentialMagicalSounds } from '@/hooks/useSequentialMagicalSounds';
 import { useProductClicks } from '@/hooks/useProductClicks';
@@ -48,7 +48,7 @@ const Index = () => {
   const { trackProductClick } = useProductClicks();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Optimized products query with caching
+  // Optimized products query with specific field selection and caching
   const productsQuery = async () => {
     const { data, error } = await supabase
       .from('HARRY POTTER')
@@ -61,7 +61,7 @@ const Index = () => {
     return { data: data || [], error };
   };
 
-  // Optimized categories query with caching
+  // Optimized categories query with minimal field selection
   const categoriesQuery = async () => {
     const { data, error } = await supabase
       .from('HARRY POTTER')
@@ -194,128 +194,130 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
-      <Header />
-      
-      <div className="flex">
-        <div className="flex-1">
-          {/* Hero Section - Otimizado */}
-          <section className="md:px-6 md:py-16 px-[15px] py-[26px]">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center space-y-6 mb-12">
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-magical-gold/30 to-magical-bronze/30 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-levitate shadow-2xl backdrop-blur-sm border border-magical-gold/40">
-                  <Wand2 className="w-10 h-10 md:w-12 md:h-12 text-magical-gold" />
-                  <Sparkles className="w-4 h-4 text-magical-gold absolute top-2 right-2 animate-sparkle" />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
+        <Header />
+        
+        <div className="flex">
+          <div className="flex-1">
+            {/* Hero Section - Otimizado */}
+            <section className="md:px-6 md:py-16 px-[15px] py-[26px]">
+              <div className="max-w-7xl mx-auto">
+                <div className="text-center space-y-6 mb-12">
+                  <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-magical-gold/30 to-magical-bronze/30 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-levitate shadow-2xl backdrop-blur-sm border border-magical-gold/40">
+                    <Wand2 className="w-10 h-10 md:w-12 md:h-12 text-magical-gold" />
+                    <Sparkles className="w-4 h-4 text-magical-gold absolute top-2 right-2 animate-sparkle" />
+                  </div>
+                  <h1 className="text-3xl md:text-5xl font-bold text-magical-starlight mb-4 leading-tight font-magical">
+                    Bem-vindo ao <span className="text-magical-gold animate-magical-glow">Mundo Mágico</span>
+                  </h1>
+                  <p className="text-lg md:text-xl text-magical-starlight/90 mb-8 max-w-3xl mx-auto leading-relaxed font-enchanted">
+                    Descubra artefatos mágicos únicos, poções encantadas e relíquias místicas
+                  </p>
                 </div>
-                <h1 className="text-3xl md:text-5xl font-bold text-magical-starlight mb-4 leading-tight font-magical">
-                  Bem-vindo ao <span className="text-magical-gold animate-magical-glow">Mundo Mágico</span>
-                </h1>
-                <p className="text-lg md:text-xl text-magical-starlight/90 mb-8 max-w-3xl mx-auto leading-relaxed font-enchanted">
-                  Descubra artefatos mágicos únicos, poções encantadas e relíquias místicas
-                </p>
               </div>
-            </div>
-          </section>
+            </section>
 
-          {/* Carousel de Produtos Otimizado */}
-          {validProducts.length > 0 && (
-            <OptimizedCarousel 
-              products={validProducts}
-              onProductClick={handleProductClick}
-              autoScrollInterval={6000}
-              itemsToShow={2}
-            />
-          )}
+            {/* Carousel de Produtos Otimizado */}
+            {validProducts.length > 0 && (
+              <OptimizedCarousel 
+                products={validProducts}
+                onProductClick={handleProductClick}
+                autoScrollInterval={6000}
+                itemsToShow={2}
+              />
+            )}
 
-          {/* Video Carousel com Suspense */}
-          <Suspense fallback={
-            <div className="h-64 bg-magical-gold/20 rounded-2xl animate-pulse mx-4 my-8"></div>
-          }>
-            <VideoCarouselHome products={validProducts} />
-          </Suspense>
+            {/* Video Carousel com Suspense */}
+            <Suspense fallback={
+              <div className="h-64 bg-magical-gold/20 rounded-2xl animate-pulse mx-4 my-8"></div>
+            }>
+              <VideoCarouselHome products={validProducts} />
+            </Suspense>
 
-          {/* Categories Grid Otimizado */}
-          <section className="px-4 md:px-6 py-8">
-            <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 font-magical">
-                  Explorar por <span className="text-magical-gold">Categorias</span>
-                </h2>
-                <p className="text-magical-starlight/90 font-enchanted">
-                  Descubra artefatos organizados pelos mestres de Hogwarts
-                </p>
-              </div>
+            {/* Categories Grid Otimizado */}
+            <section className="px-4 md:px-6 py-8">
+              <div className="max-w-6xl mx-auto">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 font-magical">
+                    Explorar por <span className="text-magical-gold">Categorias</span>
+                  </h2>
+                  <p className="text-magical-starlight/90 font-enchanted">
+                    Descubra artefatos organizados pelos mestres de Hogwarts
+                  </p>
+                </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                {categories.map((category, index) => {
-                  const IconComponent = getCategoryIcon(category.categoria);
-                  
-                  return (
-                    <Card 
-                      key={category.categoria} 
-                      className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer animate-fade-in hover:-translate-y-1 backdrop-blur-sm hover:shadow-magical-gold/20 will-change-transform" 
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                      onClick={() => handleCategoryClick(category)}
-                    >
-                      <div className={`bg-gradient-to-br ${getCategoryGradient(index)} p-4 md:p-6 text-magical-starlight relative overflow-hidden`}>
-                        <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-magical-gold/20 rounded-full transition-transform duration-300 group-hover:scale-110 will-change-transform"></div>
-                        <div className="absolute -bottom-4 -left-4 w-12 md:w-16 h-12 md:h-16 bg-magical-starlight/10 rounded-full transition-transform duration-300 group-hover:scale-125 will-change-transform"></div>
-                        
-                        {category.hasSubcategories && (
-                          <div className="absolute top-1 right-1 w-3 h-3 bg-magical-gold rounded-full animate-pulse" title="Possui subcategorias"></div>
-                        )}
-                        
-                        <Star className="absolute top-1 left-1 w-3 h-3 text-magical-gold animate-sparkle" />
-                        
-                        <div className="relative z-10">
-                          <div className="mb-3 md:mb-4 transform transition-transform duration-200 group-hover:scale-110 will-change-transform">
-                            <IconComponent className="w-8 h-8 md:w-12 md:h-12 text-magical-starlight drop-shadow-lg" />
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                  {categories.map((category, index) => {
+                    const IconComponent = getCategoryIcon(category.categoria);
+                    
+                    return (
+                      <Card 
+                        key={category.categoria} 
+                        className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer animate-fade-in hover:-translate-y-1 backdrop-blur-sm hover:shadow-magical-gold/20 will-change-transform" 
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                        onClick={() => handleCategoryClick(category)}
+                      >
+                        <div className={`bg-gradient-to-br ${getCategoryGradient(index)} p-4 md:p-6 text-magical-starlight relative overflow-hidden`}>
+                          <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-magical-gold/20 rounded-full transition-transform duration-300 group-hover:scale-110 will-change-transform"></div>
+                          <div className="absolute -bottom-4 -left-4 w-12 md:w-16 h-12 md:h-16 bg-magical-starlight/10 rounded-full transition-transform duration-300 group-hover:scale-125 will-change-transform"></div>
+                          
+                          {category.hasSubcategories && (
+                            <div className="absolute top-1 right-1 w-3 h-3 bg-magical-gold rounded-full animate-pulse" title="Possui subcategorias"></div>
+                          )}
+                          
+                          <Star className="absolute top-1 left-1 w-3 h-3 text-magical-gold animate-sparkle" />
+                          
+                          <div className="relative z-10">
+                            <div className="mb-3 md:mb-4 transform transition-transform duration-200 group-hover:scale-110 will-change-transform">
+                              <IconComponent className="w-8 h-8 md:w-12 md:h-12 text-magical-starlight drop-shadow-lg" />
+                            </div>
+                            <h3 className="text-sm md:text-xl font-bold mb-1 md:mb-2 line-clamp-2 font-magical">
+                              {category.categoria}
+                            </h3>
+                            <p className="text-xs md:text-sm text-magical-starlight/80 font-enchanted">
+                              {category.count} artefatos mágicos
+                            </p>
                           </div>
-                          <h3 className="text-sm md:text-xl font-bold mb-1 md:mb-2 line-clamp-2 font-magical">
-                            {category.categoria}
-                          </h3>
-                          <p className="text-xs md:text-sm text-magical-starlight/80 font-enchanted">
-                            {category.count} artefatos mágicos
-                          </p>
                         </div>
-                      </div>
-                      
-                      <CardContent className="p-3 md:p-6">
-                        <Button 
-                          className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold transition-all duration-200 hover:scale-105 text-xs md:text-sm py-2 md:py-3 shadow-lg hover:shadow-xl font-enchanted border-0 will-change-transform" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCategoryClick(category);
-                          }}
-                        >
-                          {category.hasSubcategories ? 'Explorar Coleção' : 'Ver Artefatos'}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                        
+                        <CardContent className="p-3 md:p-6">
+                          <Button 
+                            className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold transition-all duration-200 hover:scale-105 text-xs md:text-sm py-2 md:py-3 shadow-lg hover:shadow-xl font-enchanted border-0 will-change-transform" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCategoryClick(category);
+                            }}
+                          >
+                            {category.hasSubcategories ? 'Explorar Coleção' : 'Ver Artefatos'}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
+
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block">
+            <DesktopSidebar />
+          </div>
         </div>
 
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block">
-          <DesktopSidebar />
-        </div>
+        {/* Product Detail Modal com Suspense */}
+        {selectedProduct && (
+          <Suspense fallback={null}>
+            <ProductDetailModal 
+              isOpen={!!selectedProduct} 
+              onClose={() => setSelectedProduct(null)} 
+              product={selectedProduct} 
+            />
+          </Suspense>
+        )}
       </div>
-
-      {/* Product Detail Modal com Suspense */}
-      {selectedProduct && (
-        <Suspense fallback={null}>
-          <ProductDetailModal 
-            isOpen={!!selectedProduct} 
-            onClose={() => setSelectedProduct(null)} 
-            product={selectedProduct} 
-          />
-        </Suspense>
-      )}
-    </div>
+    </ErrorBoundary>
   );
 };
 

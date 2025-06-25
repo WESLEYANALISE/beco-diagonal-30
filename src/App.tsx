@@ -5,7 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
+import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 import Index from "./pages/Index";
 import Categorias from "./pages/Categorias";
 import Favoritos from "./pages/Favoritos";
@@ -15,11 +17,22 @@ import SubcategoriaLista from "./pages/SubcategoriaLista";
 import SubcategoriaDetalhes from "./pages/SubcategoriaDetalhes";
 import Explorar from "./pages/Explorar";
 
-const queryClient = new QueryClient();
+// Optimized QueryClient configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (was cacheTime)
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const AppContent = () => {
-  // Initialize background music for the entire app - no manual control
+  // Initialize background music and performance monitoring
   useBackgroundMusic();
+  usePerformanceMonitor();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple relative">
@@ -39,15 +52,17 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

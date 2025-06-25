@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid, Sparkles } from 'lucide-react';
@@ -11,6 +10,7 @@ import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { VirtualizedProductGrid } from '@/components/VirtualizedProductGrid';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
 import { useSupabaseCache } from '@/hooks/useSupabaseCache';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -56,12 +56,10 @@ const CategoriaLista = () => {
   const debouncedSortBy = useDebounce(sortBy, 300);
   const debouncedSortOrder = useDebounce(sortOrder, 300);
 
-  // Optimized Supabase query with caching
+  // Optimized Supabase query with caching and specific field selection
   const cacheKey = `products-${categoria}-${subcategoria}-${tipo}`;
   
   const queryFunction = useCallback(async () => {
-    console.log('Fetching products for categoria:', categoria, 'subcategoria:', subcategoria, 'tipo:', tipo);
-    
     let query = supabase
       .from('HARRY POTTER')
       .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso');
@@ -97,7 +95,6 @@ const CategoriaLista = () => {
       }
     }
     if (error) {
-      console.error('Erro ao buscar artefatos mágicos:', error);
       showError("Erro ao carregar artefatos mágicos");
     }
   }, [products, loading, error, showSuccess, showError]);
@@ -206,85 +203,87 @@ const CategoriaLista = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
-      <Header />
-      
-      <div className="flex">
-        <div className="flex-1">
-          {/* Header da página */}
-          <div className="bg-gradient-to-r from-magical-deepPurple/90 via-magical-mysticalPurple/90 to-magical-deepPurple/90 backdrop-blur-md border-b border-magical-gold/30 sticky top-0 z-10">
-            <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-              <div className="flex items-center gap-2 sm:gap-4 mb-3">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate(getBackRoute())} 
-                  className="text-magical-gold hover:text-magical-darkGold hover:bg-magical-gold/20 p-1 sm:p-2 transition-all duration-300"
-                >
-                  <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Voltar</span>
-                </Button>
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-lg sm:text-xl font-bold text-magical-starlight truncate font-magical">{getTitle()}</h1>
-                  <p className="text-xs sm:text-sm text-magical-starlight/80 truncate font-enchanted">{getSubtitle()}</p>
-                </div>
-                <Sparkles className="w-5 h-5 text-magical-gold animate-sparkle" />
-              </div>
-
-              {/* Controles de visualização e filtros */}
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
-                    <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm bg-magical-deepPurple/60 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-magical-deepPurple border-magical-gold/30">
-                      <SelectItem value="nome" className="text-magical-starlight hover:bg-magical-gold/20">Nome</SelectItem>
-                      <SelectItem value="preco" className="text-magical-starlight hover:bg-magical-gold/20">Preço</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    className="px-2 sm:px-3 bg-magical-deepPurple/60 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/20 hover:text-magical-gold"
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
+        <Header />
+        
+        <div className="flex">
+          <div className="flex-1">
+            {/* Header da página */}
+            <div className="bg-gradient-to-r from-magical-deepPurple/90 via-magical-mysticalPurple/90 to-magical-deepPurple/90 backdrop-blur-md border-b border-magical-gold/30 sticky top-0 z-10">
+              <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+                <div className="flex items-center gap-2 sm:gap-4 mb-3">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => navigate(getBackRoute())} 
+                    className="text-magical-gold hover:text-magical-darkGold hover:bg-magical-gold/20 p-1 sm:p-2 transition-all duration-300"
                   >
-                    {sortOrder === 'asc' ? '↑' : '↓'}
+                    <ArrowLeft className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Voltar</span>
                   </Button>
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-lg sm:text-xl font-bold text-magical-starlight truncate font-magical">{getTitle()}</h1>
+                    <p className="text-xs sm:text-sm text-magical-starlight/80 truncate font-enchanted">{getSubtitle()}</p>
+                  </div>
+                  <Sparkles className="w-5 h-5 text-magical-gold animate-sparkle" />
                 </div>
-                
-                <Badge className="bg-magical-gold/20 text-magical-gold border-magical-gold/30 text-xs font-enchanted">
-                  {filteredProducts.length} artefatos encontrados
-                </Badge>
+
+                {/* Controles de visualização e filtros */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
+                      <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm bg-magical-deepPurple/60 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-magical-deepPurple border-magical-gold/30">
+                        <SelectItem value="nome" className="text-magical-starlight hover:bg-magical-gold/20">Nome</SelectItem>
+                        <SelectItem value="preco" className="text-magical-starlight hover:bg-magical-gold/20">Preço</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="px-2 sm:px-3 bg-magical-deepPurple/60 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/20 hover:text-magical-gold"
+                    >
+                      {sortOrder === 'asc' ? '↑' : '↓'}
+                    </Button>
+                  </div>
+                  
+                  <Badge className="bg-magical-gold/20 text-magical-gold border-magical-gold/30 text-xs font-enchanted">
+                    {filteredProducts.length} artefatos encontrados
+                  </Badge>
+                </div>
               </div>
+            </div>
+
+            {/* Content with Virtualized Grid */}
+            <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+              <VirtualizedProductGrid
+                products={filteredProducts}
+                height={800}
+                compact={true}
+              />
             </div>
           </div>
 
-          {/* Content with Virtualized Grid */}
-          <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
-            <VirtualizedProductGrid
-              products={filteredProducts}
-              height={800}
-              compact={true}
-            />
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block">
+            <DesktopSidebar />
           </div>
         </div>
 
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block">
-          <DesktopSidebar />
-        </div>
+        {/* Product Detail Modal */}
+        {selectedProduct && (
+          <ProductDetailModal 
+            isOpen={isDetailModalOpen} 
+            onClose={() => setIsDetailModalOpen(false)} 
+            product={selectedProduct} 
+          />
+        )}
       </div>
-
-      {/* Product Detail Modal */}
-      {selectedProduct && (
-        <ProductDetailModal 
-          isOpen={isDetailModalOpen} 
-          onClose={() => setIsDetailModalOpen(false)} 
-          product={selectedProduct} 
-        />
-      )}
-    </div>
+    </ErrorBoundary>
   );
 };
 
