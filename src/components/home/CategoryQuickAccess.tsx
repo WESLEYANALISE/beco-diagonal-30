@@ -30,7 +30,8 @@ export const CategoryQuickAccess: React.FC<CategoryQuickAccessProps> = ({ catego
   };
 
   const handleCategoryClick = (category: string) => {
-    // Navigate to subcategory details page to check for subcategories first
+    console.log('🔍 CategoryQuickAccess: Navegando para categoria:', category);
+    // Always navigate to subcategory details page first to check for subcategories
     navigate(`/subcategoria-detalhes?categoria=${encodeURIComponent(category)}`);
   };
 

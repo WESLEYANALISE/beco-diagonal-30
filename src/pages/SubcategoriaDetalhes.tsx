@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart, ArrowRight, Sparkles, Star } from 'lucide-react';
@@ -38,27 +37,27 @@ const SubcategoriaDetalhes = () => {
 
   const fetchSubcategories = async () => {
     try {
+      console.log('🔍 Fetching subcategories for categoria:', categoria);
+      
       const { data, error } = await supabase
         .from('HARRY POTTER')
         .select('subcategoria, imagem1, produto')
         .eq('categoria', categoria)
-        .not('subcategoria', 'is', null)
-        .neq('subcategoria', '');
+        .not('subcategoria', 'is', null);
 
       if (error) throw error;
 
-      // If no subcategories found, redirect directly to products
-      if (!data || data.length === 0) {
-        navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
-        return;
-      }
+      console.log('📊 Raw data from database:', data);
 
-      // Group by subcategory and count
+      // Filter out empty or null subcategories and group by subcategory
       const subcategoryMap = new Map<string, { count: number; image: string; product: string }>();
       
-      data.forEach(item => {
-        const subcat = item.subcategoria.trim();
-        if (subcat && subcat !== '') {
+      (data || []).forEach(item => {
+        const subcat = item.subcategoria?.trim();
+        console.log('Processing subcategoria:', subcat);
+        
+        // Only process non-empty subcategories
+        if (subcat && subcat !== '' && subcat.toLowerCase() !== 'null' && subcat !== 'undefined') {
           if (subcategoryMap.has(subcat)) {
             subcategoryMap.get(subcat)!.count += 1;
           } else {
@@ -71,8 +70,11 @@ const SubcategoriaDetalhes = () => {
         }
       });
 
-      // If only empty subcategories found, redirect to products
+      console.log('📈 Processed subcategories map:', Array.from(subcategoryMap.entries()));
+
+      // If no valid subcategories found, redirect directly to products
       if (subcategoryMap.size === 0) {
+        console.log('❌ No subcategories found, redirecting to products');
         navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
         return;
       }
@@ -84,10 +86,11 @@ const SubcategoriaDetalhes = () => {
         sampleProduct: data.product
       }));
 
+      console.log('✅ Final subcategory list:', subcategoryList);
       setSubcategories(subcategoryList);
       showSuccess("Subcategorias mágicas carregadas!");
     } catch (error) {
-      console.error('Erro ao buscar subcategorias:', error);
+      console.error('❌ Erro ao buscar subcategorias:', error);
       showError("Erro ao carregar subcategorias mágicas");
       // Redirect to products if there's an error
       navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
