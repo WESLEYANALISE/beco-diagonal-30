@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Header from '@/components/Header';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
-import { OptimizedImage } from '@/components/OptimizedImage';
-import { ProductGrid } from '@/components/ProductGrid';
+import { VirtualizedProductGrid } from '@/components/VirtualizedProductGrid';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
+import { useSupabaseCache } from '@/hooks/useSupabaseCache';
+import { useDebounce } from '@/hooks/useDebounce';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -41,8 +42,6 @@ const CategoriaLista = () => {
   const subcategoria = searchParams.get('subcategoria') || '';
   const tipo = searchParams.get('tipo') || 'categoria';
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -53,98 +52,90 @@ const CategoriaLista = () => {
     showError
   } = useToastNotifications();
 
-  useEffect(() => {
-    fetchProducts();
+  // Debounce sort changes to reduce re-renders
+  const debouncedSortBy = useDebounce(sortBy, 300);
+  const debouncedSortOrder = useDebounce(sortOrder, 300);
+
+  // Optimized Supabase query with caching
+  const cacheKey = `products-${categoria}-${subcategoria}-${tipo}`;
+  
+  const queryFunction = useCallback(async () => {
+    console.log('Fetching products for categoria:', categoria, 'subcategoria:', subcategoria, 'tipo:', tipo);
+    
+    let query = supabase
+      .from('HARRY POTTER')
+      .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso');
+    
+    if (tipo === 'categoria' && categoria && categoria !== 'todas') {
+      query = query.eq('categoria', categoria);
+    }
+    
+    if (tipo === 'subcategoria' && subcategoria) {
+      query = query.eq('categoria', categoria).eq('subcategoria', subcategoria);
+    }
+    
+    if (tipo === 'mais-vendidos') {
+      query = query.order('id').limit(20);
+    }
+    
+    return await query;
   }, [categoria, subcategoria, tipo]);
 
-  const fetchProducts = useCallback(async () => {
-    try {
-      console.log('Fetching products for categoria:', categoria, 'subcategoria:', subcategoria, 'tipo:', tipo);
-      
-      let query = supabase
-        .from('HARRY POTTER')
-        .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso');
-      
-      if (tipo === 'categoria' && categoria && categoria !== 'todas') {
-        query = query.eq('categoria', categoria);
-      }
-      
-      if (tipo === 'subcategoria' && subcategoria) {
-        query = query.eq('categoria', categoria).eq('subcategoria', subcategoria);
-      }
-      
-      if (tipo === 'mais-vendidos') {
-        query = query.order('id').limit(20);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+  const { data: products = [], loading, error } = useSupabaseCache<Product[]>(
+    queryFunction,
+    cacheKey,
+    [categoria, subcategoria, tipo]
+  );
 
-      console.log('Raw data:', data);
-      
-      if (!data || !Array.isArray(data)) {
-        console.warn('No data received');
-        setProducts([]);
-        showError("Nenhum artefato mágico encontrado");
-        return;
-      }
-
-      // Filter out invalid products
-      const validProducts = data.filter(product => 
-        product && 
-        product.produto && 
-        product.valor && 
-        product.categoria &&
-        typeof product.produto === 'string' &&
-        typeof product.valor === 'string' &&
-        typeof product.categoria === 'string'
-      );
-
-      console.log('Valid products found:', validProducts.length);
-      setProducts(validProducts);
-      
-      if (validProducts.length > 0) {
+  // Show notifications based on data state
+  useEffect(() => {
+    if (!loading && !error) {
+      if (products && products.length > 0) {
         showSuccess("Artefatos mágicos carregados com sucesso!");
       } else {
-        showError("Nenhum artefato mágico válido encontrado");
+        showError("Nenhum artefato mágico encontrado");
       }
-    } catch (error) {
+    }
+    if (error) {
       console.error('Erro ao buscar artefatos mágicos:', error);
       showError("Erro ao carregar artefatos mágicos");
-      setProducts([]);
-    } finally {
-      setLoading(false);
     }
-  }, [categoria, subcategoria, tipo, showSuccess, showError]);
+  }, [products, loading, error, showSuccess, showError]);
 
   // Memoized filtered and sorted products for better performance
   const filteredProducts = useMemo(() => {
     if (!Array.isArray(products)) return [];
     
-    let filtered = [...products];
-    
-    filtered.sort((a, b) => {
+    // Filter out invalid products
+    const validProducts = products.filter(product => 
+      product && 
+      product.produto && 
+      product.valor && 
+      product.categoria &&
+      typeof product.produto === 'string' &&
+      typeof product.valor === 'string' &&
+      typeof product.categoria === 'string'
+    );
+
+    // Sort products
+    const sorted = [...validProducts].sort((a, b) => {
       if (!a || !b) return 0;
       
-      if (sortBy === 'nome') {
+      if (debouncedSortBy === 'nome') {
         const nameA = a.produto || '';
         const nameB = b.produto || '';
         const comparison = nameA.localeCompare(nameB);
-        return sortOrder === 'asc' ? comparison : -comparison;
+        return debouncedSortOrder === 'asc' ? comparison : -comparison;
       } else {
         const priceA = parseFloat((a.valor || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
         const priceB = parseFloat((b.valor || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
         const comparison = priceA - priceB;
-        return sortOrder === 'asc' ? comparison : -comparison;
+        return debouncedSortOrder === 'asc' ? comparison : -comparison;
       }
     });
 
-    return filtered;
-  }, [products, sortBy, sortOrder]);
+    return sorted;
+  }, [products, debouncedSortBy, debouncedSortOrder]);
 
   const getMagicalCategoryName = useCallback((category: string) => {
     if (!category) return '';
@@ -269,11 +260,11 @@ const CategoriaLista = () => {
             </div>
           </div>
 
-          {/* Content */}
+          {/* Content with Virtualized Grid */}
           <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
-            <ProductGrid
+            <VirtualizedProductGrid
               products={filteredProducts}
-              loading={loading}
+              height={800}
               compact={true}
             />
           </div>
