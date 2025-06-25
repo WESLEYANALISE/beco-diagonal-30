@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShoppingCart, Filter, Grid, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ interface Product {
   link: string;
   categoria: string;
   subcategoria?: string;
+  descricao?: string;
   uso?: string;
 }
 
@@ -37,13 +38,13 @@ const CategoriaLista = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const categoria = searchParams.get('categoria') || '';
+  const subcategoria = searchParams.get('subcategoria') || '';
   const tipo = searchParams.get('tipo') || 'categoria';
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
@@ -54,19 +55,23 @@ const CategoriaLista = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [categoria, tipo]);
+  }, [categoria, subcategoria, tipo]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [products, sortBy, sortOrder]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
-      let query = supabase.from('HARRY POTTER').select('*');
+      let query = supabase
+        .from('HARRY POTTER')
+        .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso');
       
       if (tipo === 'categoria' && categoria && categoria !== 'todas') {
         query = query.eq('categoria', categoria);
-      } else if (tipo === 'mais-vendidos') {
+      }
+      
+      if (tipo === 'subcategoria' && subcategoria) {
+        query = query.eq('categoria', categoria).eq('subcategoria', subcategoria);
+      }
+      
+      if (tipo === 'mais-vendidos') {
         query = query.order('id').limit(20);
       }
       
@@ -75,16 +80,17 @@ const CategoriaLista = () => {
       if (error) throw error;
 
       setProducts(data || []);
-      showSuccess("Artefatos mágicos carregados!");
+      showSuccess("Artefatos mágicos carregados com sucesso!");
     } catch (error) {
       console.error('Erro ao buscar artefatos mágicos:', error);
       showError("Erro ao carregar artefatos mágicos");
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoria, subcategoria, tipo, showSuccess, showError]);
 
-  const applyFilters = () => {
+  // Memoized filtered and sorted products for better performance
+  const filteredProducts = useMemo(() => {
     let filtered = [...products];
     
     filtered.sort((a, b) => {
@@ -99,8 +105,8 @@ const CategoriaLista = () => {
       }
     });
 
-    setFilteredProducts(filtered);
-  };
+    return filtered;
+  }, [products, sortBy, sortOrder]);
 
   const getMagicalCategoryName = (category: string) => {
     const nameMap: Record<string, string> = {
@@ -119,6 +125,9 @@ const CategoriaLista = () => {
     if (tipo === 'mais-vendidos') {
       return 'Artefatos Mais Procurados';
     }
+    if (tipo === 'subcategoria' && subcategoria) {
+      return `${getMagicalCategoryName(categoria)} - ${subcategoria}`;
+    }
     return categoria ? getMagicalCategoryName(categoria) : 'Artefatos Mágicos';
   };
 
@@ -126,13 +135,23 @@ const CategoriaLista = () => {
     if (tipo === 'mais-vendidos') {
       return 'Os artefatos favoritos dos nossos magos';
     }
+    if (tipo === 'subcategoria' && subcategoria) {
+      return `Explore todos os artefatos de ${subcategoria}`;
+    }
     return `Explore todos os artefatos de ${getMagicalCategoryName(categoria)}`;
   };
 
-  const handleProductClick = (product: Product) => {
+  const getBackRoute = () => {
+    if (tipo === 'subcategoria') {
+      return `/subcategoria-detalhes?categoria=${encodeURIComponent(categoria)}`;
+    }
+    return '/categorias';
+  };
+
+  const handleProductClick = useCallback((product: Product) => {
     setSelectedProduct(product);
     setIsDetailModalOpen(true);
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -142,7 +161,7 @@ const CategoriaLista = () => {
           <div className="flex-1 container mx-auto px-4 py-8">
             <div className="animate-pulse space-y-4">
               {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="h-24 bg-magical-gold/20 rounded-lg backdrop-blur-sm border border-magical-gold/30"></div>
+                <div key={index} className="h-24 bg-magical-gold/20 rounded-lg backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
               ))}
             </div>
           </div>
@@ -167,7 +186,7 @@ const CategoriaLista = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigate('/categorias')} 
+                  onClick={() => navigate(getBackRoute())} 
                   className="text-magical-gold hover:text-magical-darkGold hover:bg-magical-gold/20 p-1 sm:p-2 transition-all duration-300"
                 >
                   <ArrowLeft className="w-4 h-4 sm:mr-2" />
@@ -201,6 +220,10 @@ const CategoriaLista = () => {
                     {sortOrder === 'asc' ? '↑' : '↓'}
                   </Button>
                 </div>
+                
+                <Badge className="bg-magical-gold/20 text-magical-gold border-magical-gold/30 text-xs font-enchanted">
+                  {filteredProducts.length} artefatos encontrados
+                </Badge>
               </div>
             </div>
           </div>
@@ -211,6 +234,7 @@ const CategoriaLista = () => {
               products={filteredProducts}
               loading={loading}
               compact={true}
+              onProductClick={handleProductClick}
             />
           </div>
         </div>

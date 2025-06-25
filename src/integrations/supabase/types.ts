@@ -2536,6 +2536,7 @@ export type Database = {
       "HARRY POTTER": {
         Row: {
           categoria: string | null
+          descricao: string | null
           id: number
           imagem1: string | null
           imagem2: string | null
@@ -2553,6 +2554,7 @@ export type Database = {
         }
         Insert: {
           categoria?: string | null
+          descricao?: string | null
           id?: number
           imagem1?: string | null
           imagem2?: string | null
@@ -2570,6 +2572,7 @@ export type Database = {
         }
         Update: {
           categoria?: string | null
+          descricao?: string | null
           id?: number
           imagem1?: string | null
           imagem2?: string | null
