@@ -54,6 +54,7 @@ export const useSubcategories = (categoria: string) => {
         setHasSubcategories(false);
       }
     } catch (error) {
+      console.error('Error fetching subcategories:', error);
       setSubcategories([]);
       setHasSubcategories(false);
     } finally {

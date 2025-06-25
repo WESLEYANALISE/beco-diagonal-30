@@ -17,6 +17,7 @@ import { VideoCarouselHome } from '@/components/VideoCarouselHome';
 import { MagicalParticles } from '@/components/MagicalParticles';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
+import { useCategoryMusic } from '@/hooks/useCategoryMusic';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -34,6 +35,7 @@ interface Product {
   link: string;
   categoria: string;
   subcategoria?: string;
+  descricao?: string;
   uso?: string;
 }
 
@@ -43,6 +45,9 @@ const Index = () => {
   
   // Initialize background music for the entire app - no manual control
   useBackgroundMusic();
+  
+  // Initialize category music
+  const { playCategoryMusic } = useCategoryMusic();
   
   const categoryFromUrl = searchParams.get('categoria');
   const [products, setProducts] = useState<Product[]>([]);
@@ -79,8 +84,11 @@ const Index = () => {
     return shuffled;
   }, []);
 
-  // Parse price from string to number
-  const parsePrice = useCallback((priceString: string): number => {
+  // Parse price from string to number - FIX: Add null/undefined check
+  const parsePrice = useCallback((priceString: string | null | undefined): number => {
+    if (!priceString || typeof priceString !== 'string') {
+      return 0;
+    }
     const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
     return parseFloat(cleanPrice) || 0;
   }, []);
@@ -160,13 +168,17 @@ const Index = () => {
       filtered = filtered.filter(product => product.categoria === selectedCategory);
     }
     if (searchTerm.trim()) {
-      filtered = filtered.filter(product => product.produto.toLowerCase().includes(searchTerm.toLowerCase()));
+      filtered = filtered.filter(product => 
+        product.produto && product.produto.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
     // Apply sorting
     filtered.sort((a, b) => {
       if (sortBy === 'nome') {
-        const comparison = a.produto.localeCompare(b.produto);
+        const nameA = a.produto || '';
+        const nameB = b.produto || '';
+        const comparison = nameA.localeCompare(nameB);
         return sortOrder === 'asc' ? comparison : -comparison;
       } else {
         const priceA = parsePrice(a.valor);
@@ -270,6 +282,12 @@ const Index = () => {
     return shuffleArray(categoryProducts, false).slice(0, limit);
   }, [filteredProducts, shuffleArray]);
 
+  // Handle "Explorar Coleção" click with music
+  const handleExploreCollection = useCallback((category: string) => {
+    playCategoryMusic(category);
+    navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
+  }, [playCategoryMusic, navigate]);
+
   // Memoize products with videos for better performance
   const productsWithVideos = useMemo(() => {
     return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== ''), false).slice(0, 8);
@@ -308,7 +326,7 @@ const Index = () => {
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
       {/* Search Preview */}
-      {searchTerm && <SearchPreview searchTerm={searchTerm} products={filteredProducts.filter(p => p.produto.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)} onProductClick={handleProductClick} />}
+      {searchTerm && <SearchPreview searchTerm={searchTerm} products={filteredProducts.filter(p => p.produto && p.produto.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)} onProductClick={handleProductClick} />}
 
       {/* Novidades Carousel */}
       <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
@@ -320,7 +338,7 @@ const Index = () => {
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} 
+              onClick={() => handleExploreCollection('todas')} 
               className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/30 text-magical-starlight border-magical-gold/50 hover:bg-magical-gold/40 flex items-center gap-2 font-enchanted shadow-lg hover:shadow-magical-gold/20"
             >
               <Wand2 className="w-4 h-4" />
@@ -334,7 +352,7 @@ const Index = () => {
                   key={category} 
                   size="sm" 
                   variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  onClick={() => handleExploreCollection(category)} 
                   className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted shadow-md hover:shadow-magical-gold/20"
                 >
                   <IconComponent className="w-4 h-4" />
@@ -377,7 +395,7 @@ const Index = () => {
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  onClick={() => handleExploreCollection(category)} 
                   className="bg-magical-gold/30 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/40 text-xs px-3 py-1 h-auto font-enchanted shadow-md hover:shadow-magical-gold/20 transition-all duration-300 hover:scale-105"
                 >
                   Explorar Coleção
