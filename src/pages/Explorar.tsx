@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MagicalParticles } from '@/components/MagicalParticles';
@@ -91,10 +90,10 @@ export const Explorar = () => {
     <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple">
       <MagicalParticles />
       
-      <div className="max-w-md mx-auto relative z-10 h-screen overflow-hidden">
+      <div className="max-w-md mx-auto relative z-10">
         <Header />
         
-        <main className="pt-4 pb-0 h-full">
+        <main className="pt-4 pb-20">
           {/* Category Selection */}
           <div className="px-4 mb-4">
             <Select value={currentCategory} onValueChange={handleCategoryChange}>
@@ -113,7 +112,7 @@ export const Explorar = () => {
           </div>
           
           {/* Video Feed */}
-          <div className="h-[calc(100vh-140px)] mobile-video-container overflow-hidden relative">
+          <div className="h-[calc(100vh-200px)] overflow-hidden relative">
             {currentVideos.map((product, index) => (
               <div
                 key={product.id}
@@ -139,19 +138,17 @@ export const Explorar = () => {
           </div>
           
           {/* Navigation dots */}
-          {currentVideos.length > 1 && (
-            <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2 z-30">
-              {currentVideos.map((_, index) => (
-                <button
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                    index === currentIndex ? 'bg-magical-gold' : 'bg-magical-starlight/50 hover:bg-magical-starlight/80'
-                  }`}
-                  onClick={() => setCurrentIndex(index)}
-                />
-              ))}
-            </div>
-          )}
+          <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2">
+            {currentVideos.map((_, index) => (
+              <button
+                key={index}
+                className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                  index === currentIndex ? 'bg-magical-gold' : 'bg-magical-starlight/50 hover:bg-magical-starlight/80'
+                }`}
+                onClick={() => setCurrentIndex(index)}
+              />
+            ))}
+          </div>
         </main>
       </div>
     </div>

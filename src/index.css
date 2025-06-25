@@ -1,57 +1,156 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --magical-midnight: #1a1332;
-  --magical-deepPurple: #2d1b69;
-  --magical-mysticalPurple: #4c1d95;
-  --magical-gold: #f59e0b;
-  --magical-bronze: #d97706;
-  --magical-darkGold: #b45309;
-  --magical-starlight: #f8fafc;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.75rem;
+  }
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
 }
 
-/* Fontes mágicas personalizadas */
-.font-magical {
-  font-family: 'Cinzel', serif;
-}
-
-.font-enchanted {
-  font-family: 'Merriweather', serif;
-}
-
-/* Safe area para dispositivos móveis */
-.safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Responsividade para vídeos */
-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-
-/* Mobile specific adjustments */
-@media (max-width: 768px) {
-  .mobile-video-container {
-    height: 100vh;
-    height: 100dvh; /* Dynamic viewport height */
+@layer base {
+  * {
+    @apply border-border;
   }
   
-  video {
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", sans-serif;
+  }
+
+  /* Remove scrollbar on mobile */
+  @media (max-width: 768px) {
+    body {
+      overflow-x: hidden;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
+    
+    * {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
   }
 }
 
-/* Animations */
-@keyframes fade-in {
+@layer utilities {
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .animate-fade-in-scale {
+    animation: fadeInScale 0.6s ease-out;
+  }
+  
+  .animate-slide-in-left {
+    animation: slideInLeft 0.5s ease-out;
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight 0.5s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+  
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+@keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -62,232 +161,46 @@ video {
   }
 }
 
-@keyframes sparkle {
-  0%, 100% {
-    transform: rotate(0deg) scale(1);
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
-  25% {
-    transform: rotate(-5deg) scale(1.1);
-  }
-  75% {
-    transform: rotate(5deg) scale(1.1);
-  }
-}
-
-@keyframes magical-glow {
-  0%, 100% {
-    box-shadow: 0 0 5px rgba(245, 158, 11, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(245, 158, 11, 0.8), 0 0 30px rgba(245, 158, 11, 0.6);
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out forwards;
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.animate-sparkle {
-  animation: sparkle 2s ease-in-out infinite;
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.animate-magical-glow {
-  animation: magical-glow 2s ease-in-out infinite;
-}
-
-/* Text utilities */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Scrollbar customization */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Custom backgrounds */
-.bg-magical-midnight {
-  background-color: var(--magical-midnight);
-}
-
-.bg-magical-deepPurple {
-  background-color: var(--magical-deepPurple);
-}
-
-.bg-magical-mysticalPurple {
-  background-color: var(--magical-mysticalPurple);
-}
-
-.bg-magical-gold {
-  background-color: var(--magical-gold);
-}
-
-.bg-magical-bronze {
-  background-color: var(--magical-bronze);
-}
-
-.bg-magical-darkGold {
-  background-color: var(--magical-darkGold);
-}
-
-.bg-magical-starlight {
-  background-color: var(--magical-starlight);
-}
-
-/* Text colors */
-.text-magical-midnight {
-  color: var(--magical-midnight);
-}
-
-.text-magical-deepPurple {
-  color: var(--magical-deepPurple);
-}
-
-.text-magical-mysticalPurple {
-  color: var(--magical-mysticalPurple);
-}
-
-.text-magical-gold {
-  color: var(--magical-gold);
-}
-
-.text-magical-bronze {
-  color: var(--magical-bronze);
-}
-
-.text-magical-darkGold {
-  color: var(--magical-darkGold);
-}
-
-.text-magical-starlight {
-  color: var(--magical-starlight);
-}
-
-/* Border colors */
-.border-magical-gold {
-  border-color: var(--magical-gold);
-}
-
-.border-magical-bronze {
-  border-color: var(--magical-bronze);
-}
-
-.border-magical-darkGold {
-  border-color: var(--magical-darkGold);
-}
-
-/* From colors for gradients */
-.from-magical-midnight {
-  --tw-gradient-from: var(--magical-midnight);
-  --tw-gradient-to: rgb(26 19 50 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.from-magical-deepPurple {
-  --tw-gradient-from: var(--magical-deepPurple);
-  --tw-gradient-to: rgb(45 27 105 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.from-magical-mysticalPurple {
-  --tw-gradient-from: var(--magical-mysticalPurple);
-  --tw-gradient-to: rgb(76 29 149 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.from-magical-gold {
-  --tw-gradient-from: var(--magical-gold);
-  --tw-gradient-to: rgb(245 158 11 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.from-magical-bronze {
-  --tw-gradient-from: var(--magical-bronze);
-  --tw-gradient-to: rgb(217 119 6 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.from-magical-darkGold {
-  --tw-gradient-from: var(--magical-darkGold);
-  --tw-gradient-to: rgb(180 83 9 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.from-magical-starlight {
-  --tw-gradient-from: var(--magical-starlight);
-  --tw-gradient-to: rgb(248 250 252 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-/* Via colors for gradients */
-.via-magical-midnight {
-  --tw-gradient-to: rgb(26 19 50 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--magical-midnight), var(--tw-gradient-to);
-}
-
-.via-magical-deepPurple {
-  --tw-gradient-to: rgb(45 27 105 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--magical-deepPurple), var(--tw-gradient-to);
-}
-
-.via-magical-mysticalPurple {
-  --tw-gradient-to: rgb(76 29 149 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--magical-mysticalPurple), var(--tw-gradient-to);
-}
-
-.via-magical-gold {
-  --tw-gradient-to: rgb(245 158 11 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--magical-gold), var(--tw-gradient-to);
-}
-
-.via-magical-bronze {
-  --tw-gradient-to: rgb(217 119 6 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--magical-bronze), var(--tw-gradient-to);
-}
-
-.via-magical-darkGold {
-  --tw-gradient-to: rgb(180 83 9 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--magical-darkGold), var(--tw-gradient-to);
-}
-
-.via-magical-starlight {
-  --tw-gradient-to: rgb(248 250 252 / 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--magical-starlight), var(--tw-gradient-to);
-}
-
-/* To colors for gradients */
-.to-magical-midnight {
-  --tw-gradient-to: var(--magical-midnight);
-}
-
-.to-magical-deepPurple {
-  --tw-gradient-to: var(--magical-deepPurple);
-}
-
-.to-magical-mysticalPurple {
-  --tw-gradient-to: var(--magical-mysticalPurple);
-}
-
-.to-magical-gold {
-  --tw-gradient-to: var(--magical-gold);
-}
-
-.to-magical-bronze {
-  --tw-gradient-to: var(--magical-bronze);
-}
-
-.to-magical-darkGold {
-  --tw-gradient-to: var(--magical-darkGold);
-}
-
-.to-magical-starlight {
-  --tw-gradient-to: var(--magical-starlight);
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
