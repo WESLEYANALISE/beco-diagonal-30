@@ -64,15 +64,17 @@ const VirtualizedProductGridComponent: React.FC<VirtualizedProductGridProps> = (
 }) => {
   const isMobile = useIsMobile();
 
-  const { columnsPerRow, columnWidth, rowHeight } = useMemo(() => {
+  const { columnsPerRow, columnWidth, rowHeight, totalWidth } = useMemo(() => {
     const cols = isMobile ? 2 : compact ? 5 : 3;
     const colWidth = isMobile ? 180 : compact ? 200 : 280;
     const rowH = isMobile ? 280 : compact ? 320 : 380;
+    const width = cols * colWidth;
     
     return {
       columnsPerRow: cols,
       columnWidth: colWidth,
-      rowHeight: rowH
+      rowHeight: rowH,
+      totalWidth: width
     };
   }, [isMobile, compact]);
 
@@ -108,6 +110,7 @@ const VirtualizedProductGridComponent: React.FC<VirtualizedProductGridProps> = (
         height={height}
         rowCount={rowCount}
         rowHeight={rowHeight}
+        width={totalWidth}
         itemData={itemData}
         overscanRowCount={2}
         overscanColumnCount={1}
