@@ -19,6 +19,7 @@ import { useProductClicks } from '@/hooks/useProductClicks';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useCategoryMusic } from '@/hooks/useCategoryMusic';
 import { supabase } from "@/integrations/supabase/client";
+import { validateProductData, parsePrice, filterValidProducts } from '@/utils/dataValidation';
 
 interface Product {
   id: number;
@@ -75,22 +76,13 @@ const Index = () => {
 
   // Optimize shuffle function with memoization
   const shuffleArray = useCallback(<T,>(array: T[], shouldShuffle: boolean = true): T[] => {
-    if (!shouldShuffle) return array;
+    if (!shouldShuffle || !Array.isArray(array)) return array;
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
-  }, []);
-
-  // Parse price from string to number - FIX: Add null/undefined check
-  const parsePrice = useCallback((priceString: string | null | undefined): number => {
-    if (!priceString || typeof priceString !== 'string') {
-      return 0;
-    }
-    const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
-    return parseFloat(cleanPrice) || 0;
   }, []);
 
   useEffect(() => {
@@ -127,21 +119,49 @@ const Index = () => {
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
+      
       const { data, error } = await supabase
         .from('HARRY POTTER')
         .select('*')
         .order('id');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching products:', error);
+        throw error;
+      }
 
-      let processedProducts = shuffleArray(data || [], true);
+      if (!data) {
+        console.warn('No data returned from Supabase');
+        setProducts([]);
+        setFeaturedProducts([]);
+        setCategories([]);
+        return;
+      }
+
+      console.log(`Fetched ${data.length} raw products from database`);
+      
+      // Filter valid products using the validation utility
+      const validProducts = filterValidProducts(data);
+      console.log(`${validProducts.length} valid products after filtering`);
+      
+      if (validProducts.length === 0) {
+        console.warn('No valid products found after filtering');
+        setProducts([]);
+        setFeaturedProducts([]);
+        setCategories([]);
+        return;
+      }
+      
+      const processedProducts = shuffleArray(validProducts, true);
       setProducts(processedProducts);
 
       const initialFeatured = shuffleArray(processedProducts, true).slice(0, 6);
       setFeaturedProducts(initialFeatured);
       
-      // Get all unique categories from HARRY POTTER table
-      const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
+      // Get all unique categories from valid products only
+      const uniqueCategories = [...new Set(processedProducts.map(product => product.categoria).filter(Boolean))];
+      console.log(`Found ${uniqueCategories.length} unique categories:`, uniqueCategories);
       setCategories(uniqueCategories);
 
       if (uniqueCategories.length > 0) {
@@ -149,56 +169,103 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar artefatos mágicos:', error);
+      // Set empty states on error
+      setProducts([]);
+      setFeaturedProducts([]);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
   const applyPriceFilter = useCallback(() => {
+    if (!Array.isArray(products) || products.length === 0) {
+      setFilteredProducts([]);
+      return;
+    }
+    
     const filtered = products.filter(product => {
-      const price = parsePrice(product.valor);
-      return price >= priceFilter.min && price <= priceFilter.max;
-    });
-    setFilteredProducts(filtered);
-  }, [products, priceFilter, parsePrice]);
-
-  const filterProducts = useCallback(() => {
-    let filtered = filteredProducts;
-    if (selectedCategory !== 'todas') {
-      filtered = filtered.filter(product => product.categoria === selectedCategory);
-    }
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(product => 
-        product.produto && product.produto.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      if (sortBy === 'nome') {
-        const nameA = a.produto || '';
-        const nameB = b.produto || '';
-        const comparison = nameA.localeCompare(nameB);
-        return sortOrder === 'asc' ? comparison : -comparison;
-      } else {
-        const priceA = parsePrice(a.valor);
-        const priceB = parsePrice(b.valor);
-        const comparison = priceA - priceB;
-        return sortOrder === 'asc' ? comparison : -comparison;
+      try {
+        if (!validateProductData(product)) {
+          return false;
+        }
+        
+        const price = parsePrice(product.valor);
+        return price >= priceFilter.min && price <= priceFilter.max;
+      } catch (error) {
+        console.error('Error filtering product by price:', product, error);
+        return false;
       }
     });
-    setDisplayedProducts(filtered);
-  }, [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder, parsePrice]);
+    
+    setFilteredProducts(filtered);
+  }, [products, priceFilter]);
+
+  const filterProducts = useCallback(() => {
+    if (!Array.isArray(filteredProducts)) {
+      setDisplayedProducts([]);
+      return;
+    }
+    
+    let filtered = filteredProducts;
+    
+    try {
+      if (selectedCategory !== 'todas') {
+        filtered = filtered.filter(product => {
+          return validateProductData(product) && product.categoria === selectedCategory;
+        });
+      }
+      
+      if (searchTerm && searchTerm.trim()) {
+        const searchTermLower = searchTerm.toLowerCase().trim();
+        filtered = filtered.filter(product => {
+          if (!validateProductData(product)) return false;
+          
+          const productName = product.produto || '';
+          return productName.toLowerCase().includes(searchTermLower);
+        });
+      }
+
+      // Apply sorting with proper validation
+      filtered.sort((a, b) => {
+        try {
+          if (!validateProductData(a) || !validateProductData(b)) {
+            return 0;
+          }
+          
+          if (sortBy === 'nome') {
+            const nameA = a.produto || '';
+            const nameB = b.produto || '';
+            const comparison = nameA.localeCompare(nameB);
+            return sortOrder === 'asc' ? comparison : -comparison;
+          } else {
+            const priceA = parsePrice(a.valor);
+            const priceB = parsePrice(b.valor);
+            const comparison = priceA - priceB;
+            return sortOrder === 'asc' ? comparison : -comparison;
+          }
+        } catch (error) {
+          console.error('Error sorting products:', error);
+          return 0;
+        }
+      });
+      
+      setDisplayedProducts(filtered);
+    } catch (error) {
+      console.error('Error in filterProducts:', error);
+      setDisplayedProducts([]);
+    }
+  }, [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder]);
 
   // Debounced search function for better performance
   const handleSearch = useCallback((term: string) => {
-    setSearchTerm(term);
+    setSearchTerm(term || '');
   }, []);
 
   const handlePriceFilter = useCallback((min: number, max: number) => {
     setPriceFilter({
-      min,
-      max
+      min: Math.max(0, min || 0),
+      max: Math.max(min || 0, max || 1000)
     });
   }, []);
 
@@ -207,14 +274,18 @@ const Index = () => {
   } = useProductClicks();
 
   const handleProductClick = useCallback(async (productId: number) => {
-    await trackProductClick(productId, 'product_view');
-    const productElement = document.getElementById(`product-${productId}`);
-    if (productElement) {
-      productElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
-      setSearchTerm('');
+    try {
+      await trackProductClick(productId, 'product_view');
+      const productElement = document.getElementById(`product-${productId}`);
+      if (productElement) {
+        productElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+        setSearchTerm('');
+      }
+    } catch (error) {
+      console.error('Error handling product click:', error);
     }
   }, [trackProductClick]);
 
@@ -223,6 +294,11 @@ const Index = () => {
   }, []);
 
   const handleProductToggle = useCallback((product: Product) => {
+    if (!validateProductData(product)) {
+      console.warn('Attempting to toggle invalid product:', product);
+      return;
+    }
+    
     setSelectedProducts(prev => {
       const isSelected = prev.some(p => p.id === product.id);
       if (isSelected) {
@@ -244,15 +320,18 @@ const Index = () => {
 
   const analyzeProducts = async (products: Product[]): Promise<string> => {
     try {
+      const validProducts = products.filter(validateProductData);
+      
       const {
         data,
         error
       } = await supabase.functions.invoke('analyze-products', {
         body: {
-          products,
+          products: validProducts,
           userPreferences: questionnaireAnswers
         }
       });
+      
       if (error) {
         console.error('Error calling analyze-products function:', error);
         throw new Error(error.message || 'Erro ao analisar produtos');
@@ -278,19 +357,30 @@ const Index = () => {
   }, []);
 
   const getCategoryProducts = useCallback((category: string, limit: number = 8) => {
-    const categoryProducts = filteredProducts.filter(p => p.categoria === category);
+    const categoryProducts = filteredProducts.filter(p => {
+      return validateProductData(p) && p.categoria === category;
+    });
     return shuffleArray(categoryProducts, false).slice(0, limit);
   }, [filteredProducts, shuffleArray]);
 
   // Handle "Explorar Coleção" click with music
   const handleExploreCollection = useCallback((category: string) => {
-    playCategoryMusic(category);
-    navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
+    try {
+      playCategoryMusic(category);
+      navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
+    } catch (error) {
+      console.error('Error handling explore collection:', error);
+      // Still navigate even if music fails
+      navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
+    }
   }, [playCategoryMusic, navigate]);
 
   // Memoize products with videos for better performance
   const productsWithVideos = useMemo(() => {
-    return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== ''), false).slice(0, 8);
+    const validProductsWithVideos = filteredProducts.filter(product => {
+      return validateProductData(product) && product.video && product.video.trim() !== '';
+    });
+    return shuffleArray(validProductsWithVideos, false).slice(0, 8);
   }, [filteredProducts, shuffleArray]);
 
   if (loading) {
@@ -326,10 +416,10 @@ const Index = () => {
       <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
       
       {/* Search Preview */}
-      {searchTerm && <SearchPreview searchTerm={searchTerm} products={filteredProducts.filter(p => p.produto && p.produto.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)} onProductClick={handleProductClick} />}
+      {searchTerm && <SearchPreview searchTerm={searchTerm} products={filteredProducts.filter(p => validateProductData(p) && p.produto && p.produto.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)} onProductClick={handleProductClick} />}
 
       {/* Novidades Carousel */}
-      <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
+      <CategoryCarousel products={filteredProducts.filter(validateProductData)} onProductClick={handleProductClick} />
       
       {/* Category Quick Access Buttons - SHOWING ALL CATEGORIES from HARRY POTTER table */}
       <section className="px-4 py-2 animate-fade-in">

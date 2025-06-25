@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Grid, List } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePerformanceOptimization } from '@/hooks/usePerformanceOptimization';
+import { validateProductData, filterValidProducts } from '@/utils/dataValidation';
 
 interface Product {
   id: number;
@@ -44,16 +45,34 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
   const isMobile = useIsMobile();
   const { memoizeImages, optimizeRender } = usePerformanceOptimization();
 
-  // Memoize products to prevent unnecessary re-renders
+  // Memoize and validate products to prevent unnecessary re-renders
   const memoizedProducts = useMemo(() => {
-    // Preload first few images for better UX
-    products.slice(0, 6).forEach(product => {
-      if (product.imagem1) {
-        memoizeImages(product.imagem1);
+    try {
+      if (!Array.isArray(products)) {
+        console.warn('ProductGrid: products is not an array:', products);
+        return [];
       }
-    });
-    
-    return products;
+      
+      // Filter valid products using the validation utility
+      const validProducts = filterValidProducts(products);
+      
+      if (validProducts.length === 0) {
+        console.warn('ProductGrid: No valid products found');
+        return [];
+      }
+      
+      // Preload first few images for better UX
+      validProducts.slice(0, 6).forEach(product => {
+        if (product.imagem1) {
+          memoizeImages(product.imagem1);
+        }
+      });
+      
+      return validProducts;
+    } catch (error) {
+      console.error('Error processing products in ProductGrid:', error);
+      return [];
+    }
   }, [products, memoizeImages]);
 
   // Memoize grid classes for performance
@@ -145,18 +164,26 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
 
       {/* Products container */}
       <div className={gridClasses}>
-        {memoizedProducts.map((product, index) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            compact={viewMode === 'grid' ? compact : false}
-            listView={viewMode === 'list' && isMobile}
-            selectable={selectable}
-            selected={selectedProducts.some(p => p.id === product.id)}
-            onToggle={onProductToggle}
-            style={{ animationDelay: `${index * 0.05}s` }}
-          />
-        ))}
+        {memoizedProducts.map((product, index) => {
+          // Double-check product validity before rendering
+          if (!validateProductData(product)) {
+            console.warn(`ProductGrid: Skipping invalid product at index ${index}:`, product);
+            return null;
+          }
+          
+          return (
+            <ProductCard
+              key={product.id}
+              product={product}
+              compact={viewMode === 'grid' ? compact : false}
+              listView={viewMode === 'list' && isMobile}
+              selectable={selectable}
+              selected={selectedProducts.some(p => p.id === product.id)}
+              onToggle={onProductToggle}
+              style={{ animationDelay: `${index * 0.05}s` }}
+            />
+          );
+        })}
       </div>
     </div>
   );
