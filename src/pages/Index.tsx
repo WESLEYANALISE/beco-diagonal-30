@@ -415,8 +415,8 @@ const Index = () => {
       {/* Hero Section */}
       <HeroSection productsCount={filteredProducts.length} />
 
-      {/* Video Carousel with Harry Potter themed products */}
-      {!showingAI && <VideoCarouselHome products={[]} />}
+      {/* Video Carousel with most clicked products with videos */}
+      {!showingAI && <VideoCarouselHome products={productsWithVideos} />}
 
       {/* Category Product Carousels */}
       <CategoryProductCarousels 
