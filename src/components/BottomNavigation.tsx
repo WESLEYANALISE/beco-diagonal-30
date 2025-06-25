@@ -1,14 +1,22 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Book, Star, Wand2, Compass } from 'lucide-react';
+import { Home, Book, Star, Wand2, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { getFavoritesCount } = useFavorites();
+  const favoritesCount = getFavoritesCount();
+
+  // Hide bottom navigation on /explorar page
+  if (location.pathname === '/explorar') {
+    return null;
+  }
 
   // Only show on mobile and tablet, hide on desktop
   if (!isMobile) {
@@ -16,30 +24,32 @@ export const BottomNavigation = () => {
   }
 
   const navItems = [{
+    icon: Star,
+    label: 'Favoritos',
+    path: '/favoritos',
+    activeColor: 'from-magical-gold to-magical-bronze',
+    featured: true, // Destacado em primeiro
+    badge: favoritesCount > 0 ? favoritesCount : null
+  }, {
     icon: Home,
     label: 'Inicio',
     path: '/',
-    activeColor: 'from-magical-gold to-magical-bronze'
+    activeColor: 'from-magical-mysticalPurple to-magical-deepPurple'
   }, {
     icon: Book,
     label: 'Categorias',
     path: '/categorias',
-    activeColor: 'from-magical-mysticalPurple to-magical-deepPurple'
+    activeColor: 'from-magical-deepPurple to-magical-mysticalPurple'
   }, {
-    icon: Star,
-    label: 'Favoritos',
-    path: '/favoritos',
-    activeColor: 'from-magical-crimson to-magical-gold'
+    icon: Sparkles,
+    label: 'Mágia',
+    path: '/magia',
+    activeColor: 'from-magical-emerald to-magical-gold'
   }, {
     icon: Wand2,
     label: 'Novidades',
     path: '/novos',
-    activeColor: 'from-magical-emerald to-magical-gold'
-  }, {
-    icon: Compass,
-    label: 'Explorar',
-    path: '/explorar',
-    activeColor: 'from-magical-silver to-magical-gold'
+    activeColor: 'from-magical-crimson to-magical-darkGold'
   }];
 
   const isActive = (path: string) => location.pathname === path;
@@ -56,16 +66,23 @@ export const BottomNavigation = () => {
               key={item.path}
               onClick={() => navigate(item.path)}
               variant="ghost"
-              className={`flex flex-col items-center justify-center min-h-[60px] px-2 py-1 rounded-lg transition-all duration-300 hover:scale-105 ${
+              className={`flex flex-col items-center justify-center min-h-[60px] px-2 py-1 rounded-lg transition-all duration-300 hover:scale-105 relative ${
                 active 
-                  ? `bg-gradient-to-br ${item.activeColor} text-white shadow-lg shadow-magical-gold/25` 
+                  ? `bg-gradient-to-br ${item.activeColor} text-white shadow-lg shadow-magical-gold/25 ${item.featured ? 'ring-2 ring-magical-gold/50' : ''}` 
                   : 'text-magical-starlight/80 hover:text-magical-gold hover:bg-magical-gold/10'
-              }`}
+              } ${item.featured ? 'transform scale-110' : ''}`}
             >
-              <Icon className={`w-5 h-5 mb-1 ${active ? 'animate-pulse' : ''}`} />
-              <span className={`text-xs font-medium truncate max-w-full font-enchanted ${active ? 'text-white' : ''}`}>
+              <Icon className={`w-5 h-5 mb-1 ${active ? 'animate-pulse' : ''} ${item.featured && active ? 'text-magical-midnight' : ''}`} />
+              <span className={`text-xs font-medium truncate max-w-full font-enchanted ${active ? 'text-white' : ''} ${item.featured ? 'font-bold' : ''}`}>
                 {item.label}
               </span>
+              
+              {/* Badge para contagem de favoritos */}
+              {item.badge && (
+                <div className="absolute -top-1 -right-1 bg-magical-crimson text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-bold animate-magical-glow">
+                  {item.badge > 99 ? '99+' : item.badge}
+                </div>
+              )}
             </Button>
           );
         })}

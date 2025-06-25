@@ -1,13 +1,12 @@
 
 import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
-import { Play, ShoppingCart, Sparkles, Crown } from 'lucide-react';
+import { Play, ShoppingCart, Sparkles, Crown, TrendingUp } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useNavigate } from 'react-router-dom';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
-import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/utils/logger';
 
 interface Product {
@@ -35,13 +34,15 @@ interface VideoThumbnailProps {
   onWatchVideo: (product: Product) => void;
   onBuyProduct: (product: Product) => void;
   formatPrice: (price: string) => string;
+  isActive: boolean;
 }
 
 const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
   product,
   onWatchVideo,
   onBuyProduct,
-  formatPrice
+  formatPrice,
+  isActive
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -64,9 +65,12 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       
       const handleLoadedData = () => {
         setIsLoading(false);
-        video.play().catch(() => {
-          // Se autoplay falhar, apenas esconde o loading
-        });
+        // Autoplay only if this thumbnail is active/visible
+        if (isActive) {
+          video.play().catch(() => {
+            // Se autoplay falhar, apenas esconde o loading
+          });
+        }
       };
 
       const handleError = () => {
@@ -81,7 +85,21 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
         video.removeEventListener('error', handleError);
       };
     }
-  }, [product.video, isYouTubeVideo]);
+  }, [product.video, isYouTubeVideo, isActive]);
+
+  // Control video playback based on active state
+  useEffect(() => {
+    if (!isYouTubeVideo(product.video) && videoRef.current) {
+      const video = videoRef.current;
+      if (isActive && !isLoading) {
+        video.play().catch(() => {
+          // Ignore autoplay errors
+        });
+      } else {
+        video.pause();
+      }
+    }
+  }, [isActive, isLoading, product.video, isYouTubeVideo]);
 
   const renderVideoContent = () => {
     if (isYouTubeVideo(product.video)) {
@@ -89,7 +107,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       if (youtubeId) {
         return (
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&loop=1&playlist=${youtubeId}`}
             className="w-full h-full object-cover"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
@@ -102,7 +120,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       }
     }
 
-    // Vídeo direto (MP4) otimizado para carregamento rápido
+    // Vídeo direto (MP4) com autoplay otimizado
     return (
       <video
         ref={videoRef}
@@ -111,9 +129,10 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
         loop
         muted
         playsInline
-        preload="none" // Carregamento só quando necessário
-        poster={product.imagem1} // Usa imagem como poster
+        preload="metadata" // Mudança para metadata para carregamento mais rápido
+        poster={product.imagem1}
         onError={() => setIsLoading(false)}
+        autoPlay={isActive} // Autoplay baseado no estado ativo
       />
     );
   };
@@ -133,7 +152,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
 
   return (
     <div className="group relative bg-gradient-to-br from-magical-deepPurple to-magical-mysticalPurple rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-magical-gold/30">
-      {/* Video Container com carregamento otimizado */}
+      {/* Video Container com autoplay otimizado */}
       <div className="relative aspect-video bg-magical-midnight overflow-hidden">
         {product.video ? (
           <>
@@ -190,14 +209,22 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
           </Badge>
         </div>
 
-        {/* Click count indicator mágico */}
+        {/* Click count indicator com trending badge */}
         {product.click_count && product.click_count > 0 && (
           <div className="absolute bottom-3 left-3">
-            <Badge className="bg-gradient-to-r from-magical-crimson to-magical-darkGold text-magical-starlight text-xs font-bold animate-pulse">
-              ⚡ {product.click_count} visualizações
+            <Badge className="bg-gradient-to-r from-magical-crimson to-magical-darkGold text-magical-starlight text-xs font-bold animate-pulse flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              {product.click_count} views
             </Badge>
           </div>
         )}
+
+        {/* "Mais Clicado" badge para destacar */}
+        <div className="absolute top-3 right-3">
+          <Badge className="bg-gradient-to-r from-magical-emerald to-magical-gold text-magical-midnight text-xs font-bold animate-magical-glow">
+            🔥 TRENDING
+          </Badge>
+        </div>
       </div>
 
       {/* Product Info temático */}
@@ -237,45 +264,47 @@ VideoThumbnail.displayName = 'VideoThumbnail';
 
 export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
   const navigate = useNavigate();
-  const { trackProductClick } = useProductClicks();
+  const { trackProductClick, getMostClickedProducts } = useProductClicks();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  // Carregar produtos da tabela HARRY POTTER com vídeos
+  // Carregar produtos mais clicados com vídeos da tabela HARRY POTTER
   useEffect(() => {
-    const loadFeaturedProducts = async () => {
+    const loadMostClickedProducts = async () => {
       try {
-        logger.info('Carregando produtos em destaque da tabela HARRY POTTER');
+        logger.info('Carregando produtos mais clicados com vídeo da tabela HARRY POTTER');
         
-        const { data, error } = await supabase
-          .from('HARRY POTTER')
-          .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, link, categoria')
-          .not('video', 'is', null)
-          .neq('video', '')
-          .order('id', { ascending: false })
-          .limit(12);
-
-        if (error) {
-          logger.error('Erro ao carregar produtos HARRY POTTER:', error);
-          throw error;
-        }
-
-        if (data && data.length > 0) {
-          setFeaturedProducts(data);
-          logger.info(`${data.length} produtos mágicos com vídeo carregados`);
+        // Buscar produtos mais clicados
+        const mostClickedProducts = await getMostClickedProducts(8);
+        
+        if (mostClickedProducts && mostClickedProducts.length > 0) {
+          // Filtrar apenas produtos com vídeo válido
+          const validVideoProducts = mostClickedProducts.filter(product => {
+            if (!product.video || typeof product.video !== 'string') return false;
+            const isMP4 = product.video.toLowerCase().includes('.mp4');
+            const isValidURL = product.video.startsWith('http') && !product.video.includes('undefined');
+            const isNotImage = !product.video.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/);
+            return isMP4 && isValidURL && isNotImage;
+          });
+          
+          setFeaturedProducts(validVideoProducts);
+          logger.info(`${validVideoProducts.length} produtos mais clicados com vídeo carregados`);
         } else {
-          logger.warn('Nenhum produto com vídeo encontrado na tabela HARRY POTTER');
+          logger.warn('Nenhum produto mais clicado encontrado, usando produtos padrão');
+          setFeaturedProducts([]);
         }
       } catch (error) {
-        logger.error('Erro ao carregar produtos em destaque:', error);
+        logger.error('Erro ao carregar produtos mais clicados:', error);
+        setFeaturedProducts([]);
       } finally {
         setLoading(false);
       }
     };
     
-    loadFeaturedProducts();
-  }, []);
+    loadMostClickedProducts();
+  }, [getMostClickedProducts]);
 
   const handleWatchVideo = useCallback(async (product: Product) => {
     await trackProductClick(product.id, 'video_view');
@@ -324,15 +353,25 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
         <div className="absolute inset-0 bg-magical-midnight/10"></div>
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
+            <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical flex items-center justify-center gap-2">
               🏆 Artefatos Mágicos em Destaque
+              <TrendingUp className="w-8 h-8 text-magical-gold animate-bounce" />
             </h2>
             <p className="text-base text-magical-starlight/80 animate-slide-in-right font-enchanted">
-              Os artefatos mais poderosos de Hogwarts com demonstrações mágicas
+              Os artefatos mais populares de Hogwarts com demonstrações mágicas
             </p>
+            <div className="text-sm text-magical-gold font-magical mt-2">
+              ⚡ Baseado nos produtos mais visualizados pelos bruxos
+            </div>
           </div>
 
-          <Carousel className="w-full animate-scale-in">
+          <Carousel 
+            className="w-full animate-scale-in"
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+          >
             <CarouselContent className="-ml-2 md:-ml-3">
               {featuredProducts.map((product, index) => (
                 <CarouselItem
@@ -345,12 +384,19 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
                     onWatchVideo={handleWatchVideo}
                     onBuyProduct={handleBuyProduct}
                     formatPrice={formatPrice}
+                    isActive={index === activeIndex}
                   />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-2xl" />
-            <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-2xl" />
+            <CarouselPrevious 
+              className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-2xl"
+              onClick={() => setActiveIndex(prev => prev > 0 ? prev - 1 : featuredProducts.length - 1)}
+            />
+            <CarouselNext 
+              className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-2xl"
+              onClick={() => setActiveIndex(prev => prev < featuredProducts.length - 1 ? prev + 1 : 0)}
+            />
           </Carousel>
 
           <div className="text-center mt-6 animate-fade-in">
