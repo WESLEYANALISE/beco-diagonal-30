@@ -7,6 +7,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { useNavigate } from 'react-router-dom';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
+import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/utils/logger';
 
 interface Product {
@@ -63,7 +64,6 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       
       const handleLoadedData = () => {
         setIsLoading(false);
-        // Enable autoplay for videos
         video.play().catch(() => {
           // Se autoplay falhar, apenas esconde o loading
         });
@@ -89,7 +89,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       if (youtubeId) {
         return (
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&loop=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1`}
             className="w-full h-full object-cover"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
@@ -102,7 +102,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       }
     }
 
-    // Vídeo direto (MP4) com autoplay habilitado
+    // Vídeo direto (MP4) otimizado para carregamento rápido
     return (
       <video
         ref={videoRef}
@@ -110,10 +110,9 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
         className="w-full h-full object-cover"
         loop
         muted
-        autoPlay
         playsInline
-        preload="metadata"
-        poster={product.imagem1}
+        preload="none" // Carregamento só quando necessário
+        poster={product.imagem1} // Usa imagem como poster
         onError={() => setIsLoading(false)}
       />
     );
@@ -134,7 +133,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
 
   return (
     <div className="group relative bg-gradient-to-br from-magical-deepPurple to-magical-mysticalPurple rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-magical-gold/30">
-      {/* Video Container com autoplay */}
+      {/* Video Container com carregamento otimizado */}
       <div className="relative aspect-video bg-magical-midnight overflow-hidden">
         {product.video ? (
           <>
@@ -238,34 +237,45 @@ VideoThumbnail.displayName = 'VideoThumbnail';
 
 export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
   const navigate = useNavigate();
-  const { trackProductClick, getMostClickedProducts } = useProductClicks();
+  const { trackProductClick } = useProductClicks();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Carregar produtos mais clicados com vídeos
+  // Carregar produtos da tabela HARRY POTTER com vídeos
   useEffect(() => {
-    const loadMostClickedProducts = async () => {
+    const loadFeaturedProducts = async () => {
       try {
-        logger.info('Carregando produtos mais clicados com vídeos');
+        logger.info('Carregando produtos em destaque da tabela HARRY POTTER');
         
-        const products = await getMostClickedProducts(12);
-        
-        if (products && products.length > 0) {
-          setFeaturedProducts(products);
-          logger.info(`${products.length} produtos mais clicados com vídeo carregados`);
+        const { data, error } = await supabase
+          .from('HARRY POTTER')
+          .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, link, categoria')
+          .not('video', 'is', null)
+          .neq('video', '')
+          .order('id', { ascending: false })
+          .limit(12);
+
+        if (error) {
+          logger.error('Erro ao carregar produtos HARRY POTTER:', error);
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          setFeaturedProducts(data);
+          logger.info(`${data.length} produtos mágicos com vídeo carregados`);
         } else {
-          logger.warn('Nenhum produto com vídeo e cliques encontrado');
+          logger.warn('Nenhum produto com vídeo encontrado na tabela HARRY POTTER');
         }
       } catch (error) {
-        logger.error('Erro ao carregar produtos mais clicados:', error);
+        logger.error('Erro ao carregar produtos em destaque:', error);
       } finally {
         setLoading(false);
       }
     };
     
-    loadMostClickedProducts();
-  }, [getMostClickedProducts]);
+    loadFeaturedProducts();
+  }, []);
 
   const handleWatchVideo = useCallback(async (product: Product) => {
     await trackProductClick(product.id, 'video_view');
@@ -318,7 +328,7 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
               🏆 Artefatos Mágicos em Destaque
             </h2>
             <p className="text-base text-magical-starlight/80 animate-slide-in-right font-enchanted">
-              Os artefatos mais populares de Hogwarts com demonstrações mágicas
+              Os artefatos mais poderosos de Hogwarts com demonstrações mágicas
             </p>
           </div>
 

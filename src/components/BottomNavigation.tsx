@@ -3,36 +3,21 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Book, Star, Wand2, Compass } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useFavorites } from "@/hooks/useFavorites";
 
 export const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { favoritesCount } = useFavorites();
 
   // Only show on mobile and tablet, hide on desktop
   if (!isMobile) {
     return null;
   }
 
-  // Hide bottom navigation on specific pages
-  if (location.pathname === '/explorar') {
-    return null;
-  }
-
   const navItems = [{
-    icon: Star,
-    label: 'Favoritos',
-    path: '/favoritos',
-    activeColor: 'from-magical-crimson to-magical-gold',
-    showBadge: true,
-    badgeCount: favoritesCount
-  }, {
     icon: Home,
-    label: 'Início',
+    label: 'Inicio',
     path: '/',
     activeColor: 'from-magical-gold to-magical-bronze'
   }, {
@@ -41,9 +26,14 @@ export const BottomNavigation = () => {
     path: '/categorias',
     activeColor: 'from-magical-mysticalPurple to-magical-deepPurple'
   }, {
+    icon: Star,
+    label: 'Favoritos',
+    path: '/favoritos',
+    activeColor: 'from-magical-crimson to-magical-gold'
+  }, {
     icon: Wand2,
-    label: 'Magia',
-    path: '/magia',
+    label: 'Novidades',
+    path: '/novos',
     activeColor: 'from-magical-emerald to-magical-gold'
   }, {
     icon: Compass,
@@ -66,20 +56,13 @@ export const BottomNavigation = () => {
               key={item.path}
               onClick={() => navigate(item.path)}
               variant="ghost"
-              className={`relative flex flex-col items-center justify-center min-h-[60px] px-2 py-1 rounded-lg transition-all duration-300 hover:scale-105 ${
+              className={`flex flex-col items-center justify-center min-h-[60px] px-2 py-1 rounded-lg transition-all duration-300 hover:scale-105 ${
                 active 
                   ? `bg-gradient-to-br ${item.activeColor} text-white shadow-lg shadow-magical-gold/25` 
                   : 'text-magical-starlight/80 hover:text-magical-gold hover:bg-magical-gold/10'
               }`}
             >
-              <div className="relative">
-                <Icon className={`w-5 h-5 mb-1 ${active ? 'animate-pulse' : ''}`} />
-                {item.showBadge && item.badgeCount > 0 && (
-                  <Badge className="absolute -top-2 -right-2 min-w-[18px] h-[18px] text-xs bg-magical-crimson text-white rounded-full flex items-center justify-center px-1">
-                    {item.badgeCount > 99 ? '99+' : item.badgeCount}
-                  </Badge>
-                )}
-              </div>
+              <Icon className={`w-5 h-5 mb-1 ${active ? 'animate-pulse' : ''}`} />
               <span className={`text-xs font-medium truncate max-w-full font-enchanted ${active ? 'text-white' : ''}`}>
                 {item.label}
               </span>

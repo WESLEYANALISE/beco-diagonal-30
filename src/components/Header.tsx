@@ -1,193 +1,232 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { Search, Filter, DollarSign, X } from 'lucide-react';
-import { Input } from "@/components/ui/input";
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, Crown, Wand2, Home, Search, Grid3X3, Sparkles, Info, Star } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { PriceFilter } from '@/components/PriceFilter';
+import { useFavorites } from '@/hooks/useFavorites';
 import { MagicalLogo } from '@/components/MagicalLogo';
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HeaderProps {
-  onSearch: (term: string) => void;
-  onPriceFilter: (min: number, max: number) => void;
+  onSearch?: (searchTerm: string) => void;
+  onPriceFilter?: (minPrice: number, maxPrice: number) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch, onPriceFilter }) => {
+const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 500]);
-  const [isPriceFilterActive, setIsPriceFilterActive] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { favoritesCount } = useFavorites();
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const navItems = [
+    { path: '/', label: 'Salão Principal', icon: Home },
+    { path: '/categorias', label: 'Escolas de Magia', icon: Grid3X3 },
+    { path: '/favoritos', label: 'Grimório Pessoal', icon: Crown },
+    { path: '/novos', label: 'Novos Encantamentos', icon: Sparkles },
+    { path: '/explorar', label: 'Mapa do Maroto', icon: Search },
+  ];
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
+  };
+
+  const handleSearch = (value: string) => {
     setSearchTerm(value);
     onSearch(value);
-  }, [onSearch]);
+  };
 
-  const handleClearSearch = useCallback(() => {
-    setSearchTerm('');
-    onSearch('');
-  }, [onSearch]);
+  const handlePriceFilterChange = (minPrice: number, maxPrice: number) => {
+    onPriceFilter(minPrice, maxPrice);
+  };
 
-  const handlePriceRangeChange = useCallback((values: number[]) => {
-    setPriceRange(values);
-  }, []);
-
-  const applyPriceFilter = useCallback(() => {
-    onPriceFilter(priceRange[0], priceRange[1]);
-    setIsPriceFilterActive(true);
-    setIsFilterOpen(false);
-  }, [priceRange, onPriceFilter]);
-
-  const clearPriceFilter = useCallback(() => {
-    setPriceRange([0, 500]);
+  const handleClearFilter = () => {
     onPriceFilter(0, 1000);
-    setIsPriceFilterActive(false);
-  }, [onPriceFilter]);
+  };
 
-  const predefinedRanges = useMemo(() => [
-    { label: 'Até R$ 50', min: 0, max: 50 },
-    { label: 'R$ 50-100', min: 50, max: 100 },
-    { label: 'R$ 100-200', min: 100, max: 200 },
-    { label: 'Acima R$ 200', min: 200, max: 500 }
-  ], []);
-
-  const formatPrice = (price: number) => `R$ ${price}`;
+  const handleEvaluateApp = () => {
+    window.open('https://play.google.com/store/apps/details?id=br.com.app.gpu3121847.gpu5864a3ed792bc282cc5655927ef358d2', '_blank');
+    setIsOpen(false);
+  };
 
   return (
-    <header className="sticky top-0 z-40 bg-gradient-to-r from-magical-deepPurple/95 via-magical-mysticalPurple/95 to-magical-deepPurple/95 backdrop-blur-xl border-b border-magical-gold/30 shadow-2xl">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <MagicalLogo />
-          </div>
+    <>
+      {/* Desktop/Mobile Header */}
+      <header className="bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-darkBlue text-magical-starlight shadow-2xl sticky top-0 z-50 backdrop-blur-sm border-b border-magical-gold/20">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
+              <MagicalLogo size="md" showText={true} />
+            </div>
 
-          {/* Search and Filter Container */}
-          <div className="flex-1 max-w-2xl mx-4">
-            <div className="flex items-center gap-2">
-              {/* Search Bar */}
-              <div className="relative flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-magical-starlight/60 w-4 h-4" />
-                  <Input
-                    type="text"
-                    placeholder="Buscar artefatos mágicos..."
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className="pl-10 pr-10 bg-magical-starlight/10 border-magical-gold/30 text-magical-starlight placeholder:text-magical-starlight/60 focus:border-magical-gold focus:ring-magical-gold/20 rounded-full h-10"
-                  />
-                  {searchTerm && (
-                    <Button
-                      onClick={handleClearSearch}
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-magical-gold/20 text-magical-starlight/60 hover:text-magical-gold"
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  )}
-                </div>
+            <div className="flex items-center space-x-2">
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center space-x-2">
+                {navItems.slice(1).map((item) => (
+                  <Button
+                    key={item.path}
+                    variant="ghost"
+                    size="sm"
+                    className="text-magical-starlight hover:bg-magical-gold/20 rounded-xl relative font-enchanted hover:text-magical-gold transition-all duration-300"
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <item.icon className="w-4 h-4 mr-2" />
+                    {item.label}
+                  </Button>
+                ))}
               </div>
 
-              {/* Price Filter */}
-              <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`relative border-magical-gold/30 text-magical-starlight hover:bg-magical-gold/20 rounded-full h-10 px-3 ${
-                      isPriceFilterActive ? 'bg-magical-gold/20 border-magical-gold' : ''
-                    }`}
-                  >
-                    <Filter className="w-4 h-4 mr-1" />
-                    {isMobile ? '' : 'Preço'}
-                    {isPriceFilterActive && (
-                      <Badge className="ml-1 bg-magical-crimson text-white text-xs px-1 py-0 h-4">
-                        •
-                      </Badge>
-                    )}
+              {/* Mobile Menu */}
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="md:hidden text-magical-starlight hover:bg-magical-gold/20 p-2 rounded-xl">
+                    <Menu className="w-6 h-6" />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-0" align="end">
-                  <Card className="border-magical-gold/30 bg-magical-deepPurple/95 backdrop-blur-xl">
-                    <CardContent className="p-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-magical-starlight flex items-center gap-2">
-                          <DollarSign className="w-4 h-4" />
-                          Filtro por Preço
-                        </h3>
-                        {isPriceFilterActive && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={clearPriceFilter}
-                            className="h-6 w-6 p-0 hover:bg-magical-crimson/20 text-magical-crimson"
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        )}
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80 bg-gradient-to-b from-magical-deepPurple to-magical-mysticalPurple text-magical-starlight border-l border-magical-gold/30">
+                  <div className="py-6">
+                    <div className="flex items-center space-x-3 mb-8 px-2">
+                      <MagicalLogo size="md" showText={true} />
+                    </div>
+                    
+                    {/* Price Filter - Only show on homepage */}
+                    {location.pathname === '/' && (
+                      <div className="mb-6 mx-2">
+                        <PriceFilter
+                          onFilter={handlePriceFilterChange}
+                          onClear={handleClearFilter}
+                        />
                       </div>
-
-                      {/* Range Display */}
-                      <div className="flex justify-between text-sm text-magical-starlight/80">
-                        <span>{formatPrice(priceRange[0])}</span>
-                        <span>{formatPrice(priceRange[1])}</span>
-                      </div>
-
-                      {/* Slider */}
-                      <Slider
-                        value={priceRange}
-                        onValueChange={handlePriceRangeChange}
-                        max={500}
-                        min={0}
-                        step={5}
-                        className="w-full"
-                      />
-
-                      {/* Predefined Ranges */}
-                      <div className="grid grid-cols-2 gap-2">
-                        {predefinedRanges.map((range) => (
-                          <Button
-                            key={range.label}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPriceRange([range.min, range.max])}
-                            className="text-xs h-8 border-magical-gold/30 text-magical-starlight hover:bg-magical-gold/20"
-                          >
-                            {range.label}
-                          </Button>
-                        ))}
-                      </div>
-
-                      {/* Apply Button */}
-                      <Button
-                        onClick={applyPriceFilter}
-                        size="sm"
-                        className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold"
+                    )}
+                    
+                    <nav className="space-y-2">
+                      {navItems.map((item) => (
+                        <button
+                          key={item.path}
+                          onClick={() => handleNavigation(item.path)}
+                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 relative font-enchanted"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="font-medium">{item.label}</span>
+                        </button>
+                      ))}
+                      
+                      {/* Separator */}
+                      <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
+                      
+                      {/* About App */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted">
+                            <Info className="w-5 h-5" />
+                            <span className="font-medium">Sobre o Universo</span>
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-sm mx-4 bg-magical-midnight/95 backdrop-blur-xl border border-magical-gold/30 shadow-2xl max-h-[90vh] overflow-y-auto">
+                          <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/90 via-magical-mysticalPurple/90 to-magical-midnight/90 rounded-lg backdrop-blur-xl"></div>
+                          <div className="relative z-10">
+                            <DialogHeader className="space-y-3 text-center pb-4">
+                              <MagicalLogo size="lg" showText={false} />
+                              <DialogTitle className="text-xl font-magical font-bold bg-gradient-to-r from-magical-gold to-magical-bronze bg-clip-text text-transparent">
+                                Universo Potter
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 text-magical-starlight text-sm">
+                              <div className="text-center">
+                                <p className="font-semibold text-magical-gold mb-2 font-enchanted">
+                                  Bem-vindo ao mundo mágico de compras!
+                                </p>
+                                <p className="text-xs text-magical-silver leading-relaxed">
+                                  Descubra artefatos mágicos com os melhores preços do mundo bruxo
+                                </p>
+                              </div>
+                              
+                              <div className="space-y-3">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-magical-gold rounded-full mt-1.5 flex-shrink-0 animate-sparkle"></div>
+                                  <p className="text-xs leading-relaxed">
+                                    Nosso universo reúne cuidadosamente os <span className="font-semibold text-magical-gold">melhores artefatos mágicos</span>, oferecendo acesso aos itens mais essenciais para sua jornada bruxa.
+                                  </p>
+                                </div>
+                                
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-magical-bronze rounded-full mt-1.5 flex-shrink-0 animate-sparkle"></div>
+                                  <p className="text-xs leading-relaxed">
+                                    Desde poções de beleza, decoração para sua casa até varinhas e acessórios mágicos, tudo selecionado para garantir <span className="font-semibold text-magical-bronze">qualidade e economia</span>.
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-gradient-to-r from-magical-gold/20 via-magical-bronze/20 to-magical-gold/20 p-3 rounded-lg border border-magical-gold/30 backdrop-blur-sm">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-base">✨</span>
+                                  <p className="text-xs font-semibold text-magical-gold font-magical">
+                                    Economize tempo e galeões
+                                  </p>
+                                </div>
+                                <p className="text-xs text-magical-bronze">
+                                  Encontre os melhores encantamentos em um só lugar!
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      
+                      {/* Rate App */}
+                      <button
+                        onClick={handleEvaluateApp}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted"
                       >
-                        Aplicar Filtro
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </PopoverContent>
-              </Popover>
+                        <Star className="w-5 h-5" />
+                        <span className="font-medium">Avaliar Universo</span>
+                      </button>
+                    </nav>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
+        </div>
 
-          {/* Optional: Additional header content on desktop */}
-          {!isMobile && (
-            <div className="flex-shrink-0">
-              {/* Espaço para conteúdo adicional no desktop se necessário */}
+        {/* Search Bar - Always visible at top - Smaller on desktop */}
+        {location.pathname === '/' && (
+          <div className="px-4 pb-3">
+            <div className="relative w-full max-w-md mx-auto md:max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-magical-gold/70 w-5 h-5" />
+              <Input
+                placeholder="Buscar artefatos mágicos..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-10 bg-magical-starlight/90 border-magical-gold/30 text-magical-midnight placeholder:text-magical-deepPurple/60 focus:bg-magical-starlight focus:border-magical-gold"
+              />
             </div>
-          )}
+          </div>
+        )}
+      </header>
+
+      {/* Bottom Navigation for Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-magical-deepPurple to-magical-mysticalPurple border-t border-magical-gold/30 z-50 shadow-2xl">
+        <div className="grid grid-cols-5 gap-1 px-2 py-2">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => handleNavigation(item.path)}
+              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 text-magical-starlight hover:bg-magical-gold/20 relative"
+            >
+              <item.icon className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium truncate max-w-full font-enchanted">
+                {item.label}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
-    </header>
+    </>
   );
 };
 
