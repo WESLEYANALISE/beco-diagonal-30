@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart, ArrowRight, Sparkles, Star } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Header from '@/components/Header';
 import { LazyImage } from '@/components/LazyImage';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
@@ -37,64 +37,44 @@ const SubcategoriaDetalhes = () => {
 
   const fetchSubcategories = async () => {
     try {
-      console.log('🔍 Buscando subcategorias para categoria:', categoria);
+      console.log('🔍 Fetching subcategories for categoria:', categoria);
       
       const { data, error } = await supabase
         .from('HARRY POTTER')
         .select('subcategoria, imagem1, produto')
-        .eq('categoria', categoria);
+        .eq('categoria', categoria)
+        .not('subcategoria', 'is', null);
 
-      if (error) {
-        console.error('❌ Erro na consulta:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('📊 Dados brutos do banco:', data);
-      console.log('📊 Total de registros:', data?.length || 0);
+      console.log('📊 Raw data from database:', data);
 
-      if (!data || data.length === 0) {
-        console.log('❌ Nenhum produto encontrado para a categoria:', categoria);
-        navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
-        return;
-      }
-
-      // Agrupar por subcategoria e contar produtos
+      // Filter out empty or null subcategories and group by subcategory
       const subcategoryMap = new Map<string, { count: number; image: string; product: string }>();
       
-      data.forEach((item, index) => {
-        console.log(`📝 Processando item ${index + 1}:`, {
-          produto: item.produto,
-          subcategoria: item.subcategoria,
-          imagem: item.imagem1 ? 'presente' : 'ausente'
-        });
-        
+      (data || []).forEach(item => {
         const subcat = item.subcategoria?.trim();
+        console.log('Processing subcategoria:', subcat);
         
-        // Aceitar qualquer subcategoria que não seja null, undefined ou string vazia
-        if (subcat && subcat !== '' && subcat !== 'null' && subcat !== 'undefined' && subcat.toLowerCase() !== 'null') {
+        // Only process non-empty subcategories
+        if (subcat && subcat !== '' && subcat.toLowerCase() !== 'null' && subcat !== 'undefined') {
           if (subcategoryMap.has(subcat)) {
-            const existing = subcategoryMap.get(subcat)!;
-            existing.count += 1;
-            console.log(`➕ Incrementando contador para "${subcat}": ${existing.count}`);
+            subcategoryMap.get(subcat)!.count += 1;
           } else {
             subcategoryMap.set(subcat, {
               count: 1,
               image: item.imagem1 || '',
               product: item.produto || ''
             });
-            console.log(`🆕 Nova subcategoria encontrada: "${subcat}"`);
           }
-        } else {
-          console.log(`⚠️ Subcategoria inválida ignorada:`, subcat);
         }
       });
 
-      console.log('📈 Mapa final de subcategorias:', Array.from(subcategoryMap.entries()));
-      console.log('📊 Total de subcategorias únicas:', subcategoryMap.size);
+      console.log('📈 Processed subcategories map:', Array.from(subcategoryMap.entries()));
 
-      // Se não há subcategorias válidas, redirecionar para produtos
+      // If no valid subcategories found, redirect directly to products
       if (subcategoryMap.size === 0) {
-        console.log('❌ Nenhuma subcategoria válida encontrada, redirecionando para produtos');
+        console.log('❌ No subcategories found, redirecting to products');
         navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
         return;
       }
@@ -106,13 +86,13 @@ const SubcategoriaDetalhes = () => {
         sampleProduct: data.product
       }));
 
-      console.log('✅ Lista final de subcategorias:', subcategoryList);
+      console.log('✅ Final subcategory list:', subcategoryList);
       setSubcategories(subcategoryList);
-      showSuccess(`${subcategoryList.length} subcategorias mágicas encontradas!`);
+      showSuccess("Subcategorias mágicas carregadas!");
     } catch (error) {
       console.error('❌ Erro ao buscar subcategorias:', error);
       showError("Erro ao carregar subcategorias mágicas");
-      // Redirecionar para produtos se há erro
+      // Redirect to products if there's an error
       navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
     } finally {
       setLoading(false);
@@ -120,7 +100,6 @@ const SubcategoriaDetalhes = () => {
   };
 
   const handleSubcategoryClick = (subcategoria: string) => {
-    console.log('🔍 Navegando para subcategoria:', subcategoria);
     playNextSequentialSound();
     navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&subcategoria=${encodeURIComponent(subcategoria)}&tipo=subcategoria`);
   };
@@ -133,8 +112,7 @@ const SubcategoriaDetalhes = () => {
       'Colares': 'Joias e Amuletos Encantados',
       'Moletons e Suéteres': 'Vestes das Casas de Hogwarts',
       'Capinhas': 'Proteções Místicas Portáteis',
-      'Canecas': 'Cálices e Poções Mágicas',
-      'Livros': 'Grimórios e Tomos Mágicos'
+      'Canecas': 'Cálices e Poções Mágicas'
     };
     return nameMap[category] || category;
   };
@@ -146,8 +124,8 @@ const SubcategoriaDetalhes = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-32 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="h-48 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
               ))}
             </div>
@@ -187,7 +165,7 @@ const SubcategoriaDetalhes = () => {
         </div>
       </div>
 
-      {/* Subcategorias em grade */}
+      {/* Carrossel de Subcategorias */}
       <section className="px-4 md:px-6 py-8">
         <div className="max-w-7xl mx-auto">
           {subcategories.length === 0 ? (
@@ -214,51 +192,57 @@ const SubcategoriaDetalhes = () => {
                 </p>
               </div>
               
-              {/* Grade de subcategorias */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {subcategories.map((subcategory, index) => (
-                  <Card 
-                    key={subcategory.subcategoria} 
-                    className="overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer backdrop-blur-sm hover:shadow-magical-gold/20 hover:animate-magical-glow"
-                    onClick={() => handleSubcategoryClick(subcategory.subcategoria)}
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="aspect-[4/3] relative overflow-hidden">
-                      <LazyImage 
-                        src={subcategory.sampleImage} 
-                        alt={subcategory.subcategoria} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-magical-midnight/80 via-transparent to-transparent" />
-                      <div className="absolute bottom-4 left-4 right-4 text-magical-starlight">
-                        <h3 className="text-lg font-bold mb-1 line-clamp-2 font-magical">
-                          {subcategory.subcategoria}
-                        </h3>
-                        <p className="text-sm text-magical-starlight/80 font-enchanted">
-                          {subcategory.count} artefato{subcategory.count !== 1 ? 's' : ''} mágico{subcategory.count !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                      <Sparkles className="absolute top-2 right-2 w-4 h-4 text-magical-gold animate-sparkle" />
-                      <div className="absolute top-2 left-2 flex items-center gap-1">
-                        <Star className="w-3 h-3 text-magical-gold fill-current" />
-                        <span className="text-xs text-magical-starlight font-bold">4.8</span>
-                      </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <Button 
-                        className="w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold transition-all duration-300 hover:scale-105 border-0 shadow-lg hover:shadow-xl font-enchanted animate-magical-glow"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSubcategoryClick(subcategory.subcategoria);
-                        }}
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-3">
+                  {subcategories.map((subcategory, index) => (
+                    <CarouselItem 
+                      key={subcategory.subcategoria} 
+                      className="pl-2 md:pl-3 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                    >
+                      <Card 
+                        className="overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer h-full backdrop-blur-sm hover:shadow-magical-gold/20 hover:animate-magical-glow"
+                        onClick={() => handleSubcategoryClick(subcategory.subcategoria)}
                       >
-                        Explorar Coleção
-                        <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        <div className="aspect-square relative overflow-hidden">
+                          <LazyImage 
+                            src={subcategory.sampleImage} 
+                            alt={subcategory.subcategoria} 
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-magical-midnight/80 via-transparent to-transparent" />
+                          <div className="absolute bottom-4 left-4 right-4 text-magical-starlight">
+                            <h3 className="text-lg font-bold mb-1 line-clamp-2 font-magical">
+                              {subcategory.subcategoria}
+                            </h3>
+                            <p className="text-sm text-magical-starlight/80 font-enchanted">
+                              {subcategory.count} artefato{subcategory.count !== 1 ? 's' : ''} mágico{subcategory.count !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                          <Sparkles className="absolute top-2 right-2 w-4 h-4 text-magical-gold animate-sparkle" />
+                          <div className="absolute top-2 left-2 flex items-center gap-1">
+                            <Star className="w-3 h-3 text-magical-gold fill-current" />
+                            <span className="text-xs text-magical-starlight font-bold">4.8</span>
+                          </div>
+                        </div>
+                        <CardContent className="p-4">
+                          <Button 
+                            className="w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold transition-all duration-300 hover:scale-105 border-0 shadow-lg hover:shadow-xl font-enchanted animate-magical-glow"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSubcategoryClick(subcategory.subcategoria);
+                            }}
+                          >
+                            Explorar Coleção
+                            <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2 md:left-4 bg-magical-deepPurple/90 hover:bg-magical-mysticalPurple text-magical-gold border-magical-gold/30 hover:border-magical-gold backdrop-blur-sm" />
+                <CarouselNext className="right-2 md:right-4 bg-magical-deepPurple/90 hover:bg-magical-mysticalPurple text-magical-gold border-magical-gold/30 hover:border-magical-gold backdrop-blur-sm" />
+              </Carousel>
             </>
           )}
         </div>
