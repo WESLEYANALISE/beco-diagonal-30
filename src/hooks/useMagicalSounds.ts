@@ -52,23 +52,5 @@ export const useMagicalSounds = () => {
     
   }, []);
 
-  // Add missing sound functions that were being called in the code
-  const playHoverSound = useCallback(() => {
-    playRandomMagicalSound();
-  }, [playRandomMagicalSound]);
-
-  const playClickSound = useCallback(() => {
-    playRandomMagicalSound();
-  }, [playRandomMagicalSound]);
-
-  const playModalSound = useCallback(() => {
-    playRandomMagicalSound();
-  }, [playRandomMagicalSound]);
-
-  return { 
-    playRandomMagicalSound,
-    playHoverSound,
-    playClickSound,
-    playModalSound
-  };
+  return { playRandomMagicalSound };
 };

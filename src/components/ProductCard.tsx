@@ -202,10 +202,14 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             </div>
           )}
 
-          {/* Favorite button */}
+          {/* Favorite button - versão melhorada para "Mais Vendidos" */}
           {!showBadge && !selectable && (
             <div className={`absolute ${compact ? 'top-1 left-1' : 'top-2 left-2'}`}>
-              <FavoriteButton productId={product.id} showText={false} />
+              <FavoriteButton 
+                productId={product.id} 
+                showText={false} 
+                enhanced={showBadge} // Usar versão melhorada se for "Mais Vendidos"
+              />
             </div>
           )}
         </div>
@@ -226,10 +230,13 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
           
           <div className="space-y-1">
-            {/* Botão de favoritar para produtos com badge */}
+            {/* Botão de favoritar melhorado para produtos com badge */}
             {(showBadge || selectable) && (
               <div className="flex gap-1 mb-1">
-                <FavoriteButton productId={product.id} />
+                <FavoriteButton 
+                  productId={product.id} 
+                  enhanced={showBadge} // Versão melhorada para "Mais Vendidos"
+                />
               </div>
             )}
             

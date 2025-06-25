@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone, Wand2, Crown } from 'lucide-react';
@@ -53,7 +52,6 @@ const Index = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [currentFeaturedCategory, setCurrentFeaturedCategory] = useState<string>('');
   const [categories, setCategories] = useState<string[]>([]);
-  const [subcategories, setSubcategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,7 +121,7 @@ const Index = () => {
 
   const fetchProducts = async () => {
     try {
-      console.log('Fetching magical artifacts from HARRY POTTER table...');
+      console.log('Fetching products...');
       const { data, error } = await supabase
         .from('HARRY POTTER')
         .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso')
@@ -134,10 +132,10 @@ const Index = () => {
         throw error;
       }
 
-      console.log('Raw magical data from Supabase:', data);
+      console.log('Raw data from Supabase:', data);
 
       if (!data || !Array.isArray(data)) {
-        console.warn('No magical artifacts received from Supabase');
+        console.warn('No data received from Supabase');
         setProducts([]);
         setFilteredProducts([]);
         setLoading(false);
@@ -155,7 +153,7 @@ const Index = () => {
         typeof product.categoria === 'string'
       );
 
-      console.log('Valid magical artifacts:', validProducts.length);
+      console.log('Valid products:', validProducts.length);
 
       let processedProducts = shuffleArray(validProducts, true);
       setProducts(processedProducts);
@@ -169,16 +167,8 @@ const Index = () => {
         .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '')
       )];
       
-      // Get all unique subcategories from HARRY POTTER table
-      const uniqueSubcategories = [...new Set(validProducts
-        .map(product => product.subcategoria)
-        .filter(subcat => subcat && typeof subcat === 'string' && subcat.trim() !== '')
-      )];
-      
-      console.log('Magical categories found:', uniqueCategories);
-      console.log('Magical subcategories found:', uniqueSubcategories);
+      console.log('Categories found:', uniqueCategories);
       setCategories(uniqueCategories);
-      setSubcategories(uniqueSubcategories);
 
       if (uniqueCategories.length > 0) {
         setCurrentFeaturedCategory(uniqueCategories[0]);
@@ -356,15 +346,6 @@ const Index = () => {
     return shuffleArray(categoryProducts, false).slice(0, limit);
   }, [filteredProducts, shuffleArray]);
 
-  const getSubcategoryProducts = useCallback((subcategory: string, limit: number = 8) => {
-    if (!subcategory || !Array.isArray(filteredProducts)) return [];
-    
-    const subcategoryProducts = filteredProducts.filter(p => 
-      p && p.subcategoria === subcategory
-    );
-    return shuffleArray(subcategoryProducts, false).slice(0, limit);
-  }, [filteredProducts, shuffleArray]);
-
   // Memoize products with videos for better performance
   const productsWithVideos = useMemo(() => {
     if (!Array.isArray(filteredProducts)) return [];
@@ -427,7 +408,7 @@ const Index = () => {
         <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
       )}
       
-      {/* Category and Subcategory Quick Access Buttons */}
+      {/* Category Quick Access Buttons - SHOWING ALL CATEGORIES from HARRY POTTER table */}
       <section className="px-4 py-2 animate-fade-in">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -458,32 +439,13 @@ const Index = () => {
               );
             })}
           </div>
-          
-          {/* Subcategories row */}
-          {subcategories.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mt-2">
-              <span className="text-xs text-magical-starlight/70 self-center whitespace-nowrap font-enchanted">Subcategorias:</span>
-              {subcategories.map(subcategory => (
-                <Button 
-                  key={subcategory} 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?subcategoria=${encodeURIComponent(subcategory)}&tipo=subcategoria`)} 
-                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-bronze/20 text-magical-starlight border-magical-bronze/40 hover:bg-magical-bronze/30 flex items-center gap-2 font-enchanted shadow-sm hover:shadow-magical-bronze/20 text-xs"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  {subcategory}
-                </Button>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
       {/* Hero Section */}
       <HeroSection productsCount={filteredProducts.length} />
 
-      {/* Video Carousel com produtos da tabela HARRY POTTER */}
+      {/* Video Carousel - Strategic placement after hero */}
       {!showingAI && productsWithVideos.length > 0 && <VideoCarouselHome products={productsWithVideos} />}
 
       {/* Category Product Carousels - show ALL categories when not in AI mode */}
@@ -531,57 +493,6 @@ const Index = () => {
                 </CarouselContent>
                 <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6 shadow-lg" />
                 <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6 shadow-lg" />
-              </Carousel>
-            </div>
-          </section>
-        );
-      })}
-
-      {/* Subcategory Product Carousels */}
-      {!showingAI && Array.isArray(subcategories) && subcategories.slice(0, 4).map((subcategory, index) => {
-        if (!subcategory) return null;
-        
-        const subcategoryProducts = getSubcategoryProducts(subcategory);
-        
-        if (subcategoryProducts.length === 0) return null;
-        return (
-          <section 
-            key={subcategory} 
-            style={{animationDelay: `${(categories.length + index) * 0.1}s`}} 
-            className="md:px-6 py-4 animate-fade-in px-[6px]"
-          >
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-magical-bronze/40 to-magical-silver/40 rounded-xl flex items-center justify-center backdrop-blur-sm border border-magical-bronze/30 shadow-lg">
-                    <Sparkles className="w-4 h-4 text-magical-bronze" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-magical-starlight font-magical">{subcategory}</h3>
-                    <p className="text-xs text-magical-starlight/70 font-enchanted">Subcoleção especial</p>
-                  </div>
-                </div>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?subcategoria=${encodeURIComponent(subcategory)}&tipo=subcategoria`)} 
-                  className="bg-magical-bronze/30 text-magical-starlight border-magical-bronze/40 hover:bg-magical-bronze/40 text-xs px-3 py-1 h-auto font-enchanted shadow-md hover:shadow-magical-bronze/20 transition-all duration-300 hover:scale-105"
-                >
-                  Ver Todos
-                  <ArrowRight className="w-3 h-3 ml-1" />
-                </Button>
-              </div>
-              
-              <Carousel className="w-full">
-                <CarouselContent className="-ml-2 md:-ml-3">
-                  {subcategoryProducts.map(product => (
-                    <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
-                      <ProductCard product={product} compact={true} />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-bronze/30 w-6 h-6 shadow-lg" />
-                <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-bronze/30 w-6 h-6 shadow-lg" />
               </Carousel>
             </div>
           </section>
