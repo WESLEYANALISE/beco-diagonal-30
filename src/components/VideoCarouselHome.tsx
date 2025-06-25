@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { Crown, Play, Zap } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -6,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LazyImage } from '@/components/LazyImage';
-
 interface Product {
   id: number;
   produto: string;
@@ -16,24 +14,21 @@ interface Product {
   link: string;
   categoria: string;
 }
-
 interface VideoCarouselHomeProps {
   products: Product[];
 }
-
-export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({ products }) => {
+export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
+  products
+}) => {
   const handleBuyClick = useCallback((link: string) => {
     if (link) {
       window.open(link, '_blank', 'noopener,noreferrer');
     }
   }, []);
-
   if (!products || products.length === 0) {
     return null;
   }
-
-  return (
-    <section className="px-4 md:px-6 py-8 animate-fade-in bg-gradient-to-r from-red-900/20 via-yellow-600/20 to-red-800/20 border-y border-yellow-500/30">
+  return <section className="px-4 md:px-6 py-8 animate-fade-in bg-gradient-to-r from-red-900/20 via-yellow-600/20 to-red-800/20 border-y border-yellow-500/30">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -50,15 +45,12 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({ products }
 
         <Carousel className="w-full">
           <CarouselContent className="-ml-2 md:-ml-3">
-            {products.map((product, index) => (
-              <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-full md:basis-1/2 lg:basis-1/3">
-                <Card className="group overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-2xl bg-gradient-to-br from-red-900/30 via-yellow-600/20 to-red-800/30 border-yellow-500/40 backdrop-blur-sm animate-fade-in" style={{animationDelay: `${index * 0.1}s`}}>
+            {products.map((product, index) => <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-full md:basis-1/2 lg:basis-1/3">
+                <Card className="group overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-2xl bg-gradient-to-br from-red-900/30 via-yellow-600/20 to-red-800/30 border-yellow-500/40 backdrop-blur-sm animate-fade-in" style={{
+              animationDelay: `${index * 0.1}s`
+            }}>
                   <div className="relative aspect-video overflow-hidden">
-                    <LazyImage
-                      src={product.imagem1}
-                      alt={product.produto}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+                    <LazyImage src={product.imagem1} alt={product.produto} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     
                     {/* Harry Potter themed overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-red-900/80 via-red-900/20 to-transparent" />
@@ -79,7 +71,7 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({ products }
                     </div>
                   </div>
                   
-                  <CardContent className="p-4 bg-gradient-to-br from-red-900/40 to-yellow-600/20">
+                  <CardContent className="p-4 bg-gradient-to-br from-red-900/40 to-yellow-600/20 bg-indigo-800">
                     <div className="space-y-3">
                       <h3 className="font-bold text-magical-starlight text-sm line-clamp-2 group-hover:text-yellow-400 transition-colors duration-300 font-enchanted">
                         {product.produto}
@@ -94,23 +86,18 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({ products }
                         </Badge>
                       </div>
                       
-                      <Button 
-                        onClick={() => handleBuyClick(product.link)}
-                        className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-red-900 hover:from-yellow-400 hover:to-yellow-500 font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-lg hover:shadow-yellow-500/20"
-                      >
+                      <Button onClick={() => handleBuyClick(product.link)} className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-red-900 hover:from-yellow-400 hover:to-yellow-500 font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-lg hover:shadow-yellow-500/20">
                         <Zap className="w-4 h-4 mr-2" />
                         Adquirir Artefato
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              </CarouselItem>
-            ))}
+              </CarouselItem>)}
           </CarouselContent>
           <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-yellow-500/30 shadow-xl" />
           <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-yellow-500/30 shadow-xl" />
         </Carousel>
       </div>
-    </section>
-  );
+    </section>;
 };
