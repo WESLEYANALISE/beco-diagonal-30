@@ -1,4 +1,3 @@
-
 import React, { useState, memo, useCallback } from 'react';
 import { Star, Play, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { LazyImage } from '@/components/LazyImage';
+import { useProductCardLogic } from '@/components/product/ProductCardLogic';
 
 interface Product {
   id: number;
@@ -51,25 +51,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   style
 }) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-
-  const getProductImages = useCallback((product: Product) => {
-    return [
-      product.imagem1, 
-      product.imagem2, 
-      product.imagem3, 
-      product.imagem4, 
-      product.imagem5,
-      product.imagem6,
-      product.imagem7
-    ].filter(Boolean);
-  }, []);
-
-  const formatPrice = useCallback((price: string) => {
-    if (price.includes('R$')) {
-      return price;
-    }
-    return `R$ ${price}`;
-  }, []);
+  const { getProductImages, formatPrice, handleBuyClick } = useProductCardLogic(product);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
     // Evitar abrir o modal se clicar em botões específicos
@@ -82,11 +64,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
       setIsDetailModalOpen(true);
     }
   }, [selectable, onToggle, product]);
-
-  const handleBuyClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    window.open(product.link, '_blank');
-  }, [product.link]);
 
   const images = getProductImages(product);
 
@@ -202,13 +179,12 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             </div>
           )}
 
-          {/* Favorite button - versão melhorada para "Mais Vendidos" */}
           {!showBadge && !selectable && (
             <div className={`absolute ${compact ? 'top-1 left-1' : 'top-2 left-2'}`}>
               <FavoriteButton 
                 productId={product.id} 
                 showText={false} 
-                enhanced={showBadge} // Usar versão melhorada se for "Mais Vendidos"
+                enhanced={showBadge}
               />
             </div>
           )}
@@ -230,12 +206,11 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
           
           <div className="space-y-1">
-            {/* Botão de favoritar melhorado para produtos com badge */}
             {(showBadge || selectable) && (
               <div className="flex gap-1 mb-1">
                 <FavoriteButton 
                   productId={product.id} 
-                  enhanced={showBadge} // Versão melhorada para "Mais Vendidos"
+                  enhanced={showBadge}
                 />
               </div>
             )}

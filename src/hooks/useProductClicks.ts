@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { getStoredDeviceId } from '@/utils/deviceFingerprint';
+import { logger } from '@/utils/logger';
 
 export const useProductClicks = () => {
   const trackProductClick = useCallback(async (productId: number, clickType: string = 'video_view') => {
@@ -16,9 +17,9 @@ export const useProductClicks = () => {
           click_type: clickType
         });
       
-      console.log(`Tracked ${clickType} for product ${productId}`);
+      logger.debug(`Tracked ${clickType} for product ${productId}`, { productId, clickType, deviceId });
     } catch (error) {
-      console.error('Error tracking product click:', error);
+      logger.error('Error tracking product click', { error, productId, clickType });
     }
   }, []);
 
@@ -29,13 +30,14 @@ export const useProductClicks = () => {
       });
       
       if (error) {
-        console.error('Error fetching most clicked products:', error);
+        logger.error('Error fetching most clicked products', { error, limit });
         return [];
       }
       
+      logger.debug('Fetched most clicked products', { count: data?.length || 0, limit });
       return data || [];
     } catch (error) {
-      console.error('Error in getMostClickedProducts:', error);
+      logger.error('Error in getMostClickedProducts', { error, limit });
       return [];
     }
   }, []);

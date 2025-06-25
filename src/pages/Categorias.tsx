@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
 import { supabase } from "@/integrations/supabase/client";
 import { useSequentialMagicalSounds } from '@/hooks/useSequentialMagicalSounds';
+import { logger } from '@/utils/logger';
 
 interface CategoryStats {
   categoria: string;
@@ -57,9 +58,14 @@ const Categorias = () => {
         hasSubcategories: stats.hasSubcategories
       }));
 
+      logger.info('Categories fetched successfully', { 
+        totalCategories: categoryStats.length,
+        withSubcategories: categoryStats.filter(c => c.hasSubcategories).length
+      });
+
       setCategories(categoryStats);
     } catch (error) {
-      console.error('Erro ao buscar categorias:', error);
+      logger.error('Error fetching categories', { error });
     } finally {
       setLoading(false);
     }
