@@ -14,7 +14,6 @@ import CategoriaLista from "./pages/CategoriaLista";
 import SubcategoriaLista from "./pages/SubcategoriaLista";
 import SubcategoriaDetalhes from "./pages/SubcategoriaDetalhes";
 import Explorar from "./pages/Explorar";
-import Magia from "./pages/Magia";
 
 const queryClient = new QueryClient();
 
@@ -33,7 +32,6 @@ const AppContent = () => {
         <Route path="/subcategoria-lista" element={<SubcategoriaLista />} />
         <Route path="/subcategoria-detalhes" element={<SubcategoriaDetalhes />} />
         <Route path="/explorar" element={<Explorar />} />
-        <Route path="/magia" element={<Magia />} />
       </Routes>
       <BottomNavigation />
     </div>
