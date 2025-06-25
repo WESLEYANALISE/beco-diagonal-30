@@ -1,6 +1,7 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ShoppingCart, Crown, Sparkles, Shirt, Smartphone, Wand2 } from 'lucide-react';
+import { ShoppingCart, Crown, Sparkles, Shirt, Smartphone, Wand2, ArrowRight } from 'lucide-react';
 import Header from '@/components/Header';
 import { SearchPreview } from '@/components/SearchPreview';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
@@ -8,6 +9,8 @@ import { AIAnalysisModal } from '@/components/AIAnalysisModal';
 import { HeroSection } from '@/components/HeroSection';
 import { VideoCarouselHome } from '@/components/VideoCarouselHome';
 import { MagicalParticles } from '@/components/MagicalParticles';
+import { ProductGrid } from '@/components/ProductGrid';
+import { Button } from "@/components/ui/button";
 import { CategoryQuickAccess } from '@/components/home/CategoryQuickAccess';
 import { CategoryProductCarousels } from '@/components/home/CategoryProductCarousels';
 import { FeaturedSection } from '@/components/home/FeaturedSection';
