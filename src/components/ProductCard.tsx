@@ -1,3 +1,4 @@
+
 import React, { useState, memo, useCallback } from 'react';
 import { Star, Play, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -58,9 +59,18 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
     if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('[role="button"]') || (e.target as HTMLElement).closest('.carousel-nav')) {
       return;
     }
+    
+    console.log('🎯 ProductCard: Clique no produto detectado', { 
+      productId: product.id, 
+      productName: product.produto,
+      selectable,
+      onToggle: !!onToggle 
+    });
+    
     if (selectable && onToggle) {
       onToggle(product);
     } else {
+      console.log('🎯 ProductCard: Abrindo modal de detalhes');
       setIsDetailModalOpen(true);
     }
   }, [selectable, onToggle, product]);
