@@ -4,7 +4,6 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart, ArrowRight, Sparkles, Star } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Header from '@/components/Header';
 import { LazyImage } from '@/components/LazyImage';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
@@ -100,19 +99,6 @@ const SubcategoriaDetalhes = () => {
         return;
       }
 
-      // Se há apenas 1 subcategoria e muitos produtos, pode ser melhor mostrar diretamente os produtos
-      if (subcategoryMap.size === 1) {
-        const [singleSubcat, subcatData] = Array.from(subcategoryMap.entries())[0];
-        console.log(`ℹ️ Apenas uma subcategoria encontrada: "${singleSubcat}" com ${subcatData.count} produtos`);
-        
-        // Se há muitos produtos em uma única subcategoria, pode ser melhor mostrar diretamente
-        if (subcatData.count > 10) {
-          console.log('📦 Muitos produtos em uma subcategoria, redirecionando para produtos');
-          navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
-          return;
-        }
-      }
-
       const subcategoryList = Array.from(subcategoryMap.entries()).map(([subcategoria, data]) => ({
         subcategoria,
         count: data.count,
@@ -160,9 +146,9 @@ const SubcategoriaDetalhes = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-32 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex gap-4 overflow-x-auto">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-48 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
+                <div key={i} className="w-80 h-48 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30 animate-magical-glow flex-shrink-0"></div>
               ))}
             </div>
           </div>
@@ -201,7 +187,7 @@ const SubcategoriaDetalhes = () => {
         </div>
       </div>
 
-      {/* Carrossel de Subcategorias */}
+      {/* Subcategorias em linha horizontal */}
       <section className="px-4 md:px-6 py-8">
         <div className="max-w-7xl mx-auto">
           {subcategories.length === 0 ? (
@@ -228,57 +214,52 @@ const SubcategoriaDetalhes = () => {
                 </p>
               </div>
               
-              <Carousel className="w-full">
-                <CarouselContent className="-ml-2 md:-ml-3">
+              {/* Scroll horizontal das subcategorias */}
+              <div className="overflow-x-auto pb-4">
+                <div className="flex gap-4 min-w-max">
                   {subcategories.map((subcategory, index) => (
-                    <CarouselItem 
+                    <Card 
                       key={subcategory.subcategoria} 
-                      className="pl-2 md:pl-3 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                      className="w-80 flex-shrink-0 overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer backdrop-blur-sm hover:shadow-magical-gold/20 hover:animate-magical-glow"
+                      onClick={() => handleSubcategoryClick(subcategory.subcategoria)}
                     >
-                      <Card 
-                        className="overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer h-full backdrop-blur-sm hover:shadow-magical-gold/20 hover:animate-magical-glow"
-                        onClick={() => handleSubcategoryClick(subcategory.subcategoria)}
-                      >
-                        <div className="aspect-square relative overflow-hidden">
-                          <LazyImage 
-                            src={subcategory.sampleImage} 
-                            alt={subcategory.subcategoria} 
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-magical-midnight/80 via-transparent to-transparent" />
-                          <div className="absolute bottom-4 left-4 right-4 text-magical-starlight">
-                            <h3 className="text-lg font-bold mb-1 line-clamp-2 font-magical">
-                              {subcategory.subcategoria}
-                            </h3>
-                            <p className="text-sm text-magical-starlight/80 font-enchanted">
-                              {subcategory.count} artefato{subcategory.count !== 1 ? 's' : ''} mágico{subcategory.count !== 1 ? 's' : ''}
-                            </p>
-                          </div>
-                          <Sparkles className="absolute top-2 right-2 w-4 h-4 text-magical-gold animate-sparkle" />
-                          <div className="absolute top-2 left-2 flex items-center gap-1">
-                            <Star className="w-3 h-3 text-magical-gold fill-current" />
-                            <span className="text-xs text-magical-starlight font-bold">4.8</span>
-                          </div>
+                      <div className="aspect-[4/3] relative overflow-hidden">
+                        <LazyImage 
+                          src={subcategory.sampleImage} 
+                          alt={subcategory.subcategoria} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-magical-midnight/80 via-transparent to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4 text-magical-starlight">
+                          <h3 className="text-lg font-bold mb-1 line-clamp-2 font-magical">
+                            {subcategory.subcategoria}
+                          </h3>
+                          <p className="text-sm text-magical-starlight/80 font-enchanted">
+                            {subcategory.count} artefato{subcategory.count !== 1 ? 's' : ''} mágico{subcategory.count !== 1 ? 's' : ''}
+                          </p>
                         </div>
-                        <CardContent className="p-4">
-                          <Button 
-                            className="w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold transition-all duration-300 hover:scale-105 border-0 shadow-lg hover:shadow-xl font-enchanted animate-magical-glow"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSubcategoryClick(subcategory.subcategoria);
-                            }}
-                          >
-                            Explorar Coleção
-                            <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </CarouselItem>
+                        <Sparkles className="absolute top-2 right-2 w-4 h-4 text-magical-gold animate-sparkle" />
+                        <div className="absolute top-2 left-2 flex items-center gap-1">
+                          <Star className="w-3 h-3 text-magical-gold fill-current" />
+                          <span className="text-xs text-magical-starlight font-bold">4.8</span>
+                        </div>
+                      </div>
+                      <CardContent className="p-4">
+                        <Button 
+                          className="w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold transition-all duration-300 hover:scale-105 border-0 shadow-lg hover:shadow-xl font-enchanted animate-magical-glow"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSubcategoryClick(subcategory.subcategoria);
+                          }}
+                        >
+                          Explorar Coleção
+                          <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                        </Button>
+                      </CardContent>
+                    </Card>
                   ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-2 md:left-4 bg-magical-deepPurple/90 hover:bg-magical-mysticalPurple text-magical-gold border-magical-gold/30 hover:border-magical-gold backdrop-blur-sm" />
-                <CarouselNext className="right-2 md:right-4 bg-magical-deepPurple/90 hover:bg-magical-mysticalPurple text-magical-gold border-magical-gold/30 hover:border-magical-gold backdrop-blur-sm" />
-              </Carousel>
+                </div>
+              </div>
             </>
           )}
         </div>
