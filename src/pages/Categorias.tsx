@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, ArrowRight, Sparkles, Home, Gamepad2, Shirt, Smartphone, Zap, Crown, Wand2, ShoppingCart } from 'lucide-react';
@@ -33,7 +34,7 @@ const Categorias = () => {
 
       if (error) throw error;
 
-      // Processar categorias e verificar subcategorias
+      // Process categories and check for subcategories
       const categoryMap = new Map<string, { count: number; hasSubcategories: boolean }>();
       
       (data || []).forEach(item => {
@@ -75,10 +76,10 @@ const Categorias = () => {
     playNextSequentialSound();
     
     if (category.hasSubcategories) {
-      // Redirecionar para página de subcategorias
+      // Navigate to subcategory details page
       navigate(`/subcategoria-detalhes?categoria=${encodeURIComponent(category.categoria)}`);
     } else {
-      // Ir direto para produtos
+      // Go directly to products
       navigate(`/categoria-lista?categoria=${encodeURIComponent(category.categoria)}&tipo=categoria`);
     }
   };
@@ -166,7 +167,7 @@ const Categorias = () => {
                     <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-magical-gold/20 rounded-full transition-transform duration-500 group-hover:scale-110"></div>
                     <div className="absolute -bottom-4 -left-4 w-12 md:w-16 h-12 md:h-16 bg-magical-starlight/10 rounded-full transition-transform duration-500 group-hover:scale-125"></div>
                     
-                    {/* Indicador de subcategorias */}
+                    {/* Subcategory indicator */}
                     {category.hasSubcategories && (
                       <div className="absolute top-1 right-1 w-3 h-3 bg-magical-gold rounded-full animate-pulse" title="Possui subcategorias"></div>
                     )}
@@ -181,7 +182,7 @@ const Categorias = () => {
                         {category.categoria}
                       </h3>
                       <p className="text-xs md:text-sm text-magical-starlight/80 font-enchanted">
-                        {category.count} artefatos mágicos
+                        {category.count} artefato{category.count !== 1 ? 's' : ''} mágico{category.count !== 1 ? 's' : ''}
                       </p>
                     </div>
                   </div>

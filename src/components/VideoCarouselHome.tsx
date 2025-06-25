@@ -35,16 +35,19 @@ interface VideoThumbnailProps {
   onWatchVideo: (product: Product) => void;
   onBuyProduct: (product: Product) => void;
   formatPrice: (price: string) => string;
+  isVisible?: boolean;
 }
 
 const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
   product,
   onWatchVideo,
   onBuyProduct,
-  formatPrice
+  formatPrice,
+  isVisible = false
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [shouldAutoplay, setShouldAutoplay] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Check if video is YouTube or direct MP4
@@ -58,30 +61,44 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
     return match && match[7].length === 11 ? match[7] : null;
   }, []);
 
+  // Auto-play video when component becomes visible
   useEffect(() => {
-    if (!isYouTubeVideo(product.video) && videoRef.current) {
+    if (isVisible && !isYouTubeVideo(product.video)) {
+      setShouldAutoplay(true);
+    }
+  }, [isVisible, product.video, isYouTubeVideo]);
+
+  useEffect(() => {
+    if (!isYouTubeVideo(product.video) && videoRef.current && shouldAutoplay) {
       const video = videoRef.current;
       
       const handleLoadedData = () => {
         setIsLoading(false);
-        video.play().catch(() => {
-          // Se autoplay falhar, apenas esconde o loading
-        });
+        // Auto-play with slight delay to ensure smooth experience
+        setTimeout(() => {
+          video.play().catch((error) => {
+            logger.debug('Video autoplay failed (expected for some browsers)', { error });
+          });
+        }, 200);
       };
 
       const handleError = () => {
         setIsLoading(false);
+        logger.warn('Video failed to load', { videoUrl: product.video });
       };
 
       video.addEventListener('loadeddata', handleLoadedData);
       video.addEventListener('error', handleError);
+
+      // Start loading the video
+      video.load();
 
       return () => {
         video.removeEventListener('loadeddata', handleLoadedData);
         video.removeEventListener('error', handleError);
       };
     }
-  }, [product.video, isYouTubeVideo]);
+  }, [product.video, isYouTubeVideo, shouldAutoplay]);
 
   const renderVideoContent = () => {
     if (isYouTubeVideo(product.video)) {
@@ -89,7 +106,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       if (youtubeId) {
         return (
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isVisible ? 1 : 0}&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&loop=1&playlist=${youtubeId}`}
             className="w-full h-full object-cover"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
@@ -102,7 +119,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       }
     }
 
-    // Vídeo direto (MP4) otimizado para carregamento rápido
+    // Direct video (MP4) with enhanced autoplay
     return (
       <video
         ref={videoRef}
@@ -111,9 +128,10 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
         loop
         muted
         playsInline
-        preload="none" // Carregamento só quando necessário
-        poster={product.imagem1} // Usa imagem como poster
+        preload="metadata"
+        poster={product.imagem1}
         onError={() => setIsLoading(false)}
+        onLoadStart={() => setIsLoading(true)}
       />
     );
   };
@@ -133,13 +151,13 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
 
   return (
     <div className="group relative bg-gradient-to-br from-magical-deepPurple to-magical-mysticalPurple rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-magical-gold/30">
-      {/* Video Container com carregamento otimizado */}
+      {/* Video Container with enhanced autoplay */}
       <div className="relative aspect-video bg-magical-midnight overflow-hidden">
         {product.video ? (
           <>
             {renderVideoContent()}
             
-            {/* Loading Overlay otimizado */}
+            {/* Loading Overlay with better UX */}
             {isLoading && (
               <div className="absolute inset-0 bg-magical-midnight flex items-center justify-center">
                 {!imageError ? (
@@ -171,7 +189,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
           />
         )}
         
-        {/* Video Overlay mágico */}
+        {/* Enhanced Video Overlay */}
         <div className="absolute inset-0 bg-magical-midnight/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             onClick={() => onWatchVideo(product)}
@@ -182,7 +200,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
           </Button>
         </div>
 
-        {/* Category Badge temático */}
+        {/* Category Badge */}
         <div className="absolute top-3 left-3">
           <Badge className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight text-xs font-bold border border-magical-gold/30 flex items-center gap-1">
             <IconComponent className="w-3 h-3" />
@@ -190,7 +208,16 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
           </Badge>
         </div>
 
-        {/* Click count indicator mágico */}
+        {/* Autoplay indicator */}
+        {shouldAutoplay && !isLoading && (
+          <div className="absolute bottom-3 right-3">
+            <Badge className="bg-gradient-to-r from-magical-emerald/80 to-magical-gold/80 text-magical-starlight text-xs font-bold animate-pulse">
+              ▶ Auto-play
+            </Badge>
+          </div>
+        )}
+
+        {/* Click count indicator */}
         {product.click_count && product.click_count > 0 && (
           <div className="absolute bottom-3 left-3">
             <Badge className="bg-gradient-to-r from-magical-crimson to-magical-darkGold text-magical-starlight text-xs font-bold animate-pulse">
@@ -200,7 +227,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
         )}
       </div>
 
-      {/* Product Info temático */}
+      {/* Product Info */}
       <div className="p-4 bg-gradient-to-br from-magical-deepPurple/90 to-magical-mysticalPurple/90">
         <h3 className="font-bold text-magical-starlight mb-2 line-clamp-2 text-sm leading-tight font-enchanted">
           {product.produto}
@@ -241,12 +268,13 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
 
-  // Carregar produtos da tabela HARRY POTTER com vídeos
+  // Load products from HARRY POTTER table with videos
   useEffect(() => {
     const loadFeaturedProducts = async () => {
       try {
-        logger.info('Carregando produtos em destaque da tabela HARRY POTTER');
+        logger.info('Loading featured products from HARRY POTTER table');
         
         const { data, error } = await supabase
           .from('HARRY POTTER')
@@ -257,18 +285,22 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
           .limit(12);
 
         if (error) {
-          logger.error('Erro ao carregar produtos HARRY POTTER:', error);
+          logger.error('Error loading HARRY POTTER products:', error);
           throw error;
         }
 
         if (data && data.length > 0) {
           setFeaturedProducts(data);
-          logger.info(`${data.length} produtos mágicos com vídeo carregados`);
+          logger.info(`${data.length} magical products with video loaded`);
+          
+          // Set first few items as visible to trigger autoplay
+          const initialVisible = new Set(data.slice(0, 3).map(p => p.id));
+          setVisibleItems(initialVisible);
         } else {
-          logger.warn('Nenhum produto com vídeo encontrado na tabela HARRY POTTER');
+          logger.warn('No products with video found in HARRY POTTER table');
         }
       } catch (error) {
-        logger.error('Erro ao carregar produtos em destaque:', error);
+        logger.error('Error loading featured products:', error);
       } finally {
         setLoading(false);
       }
@@ -276,6 +308,35 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
     
     loadFeaturedProducts();
   }, []);
+
+  // Intersection Observer for lazy loading and autoplay
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const productId = parseInt(entry.target.getAttribute('data-product-id') || '0');
+          if (entry.isIntersecting) {
+            setVisibleItems(prev => new Set([...prev, productId]));
+          } else {
+            setVisibleItems(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(productId);
+              return newSet;
+            });
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    // Observe all product cards after initial render
+    const productCards = document.querySelectorAll('[data-product-id]');
+    productCards.forEach(card => observer.observe(card));
+
+    return () => {
+      productCards.forEach(card => observer.unobserve(card));
+    };
+  }, [featuredProducts]);
 
   const handleWatchVideo = useCallback(async (product: Product) => {
     await trackProductClick(product.id, 'video_view');
@@ -328,7 +389,7 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
               🏆 Artefatos Mágicos em Destaque
             </h2>
             <p className="text-base text-magical-starlight/80 animate-slide-in-right font-enchanted">
-              Os artefatos mais poderosos de Hogwarts com demonstrações mágicas
+              Os artefatos mais poderosos de Hogwarts com demonstrações mágicas automáticas
             </p>
           </div>
 
@@ -339,12 +400,14 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
                   key={product.id}
                   className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
+                  data-product-id={product.id}
                 >
                   <VideoThumbnail
                     product={product}
                     onWatchVideo={handleWatchVideo}
                     onBuyProduct={handleBuyProduct}
                     formatPrice={formatPrice}
+                    isVisible={visibleItems.has(product.id)}
                   />
                 </CarouselItem>
               ))}

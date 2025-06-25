@@ -47,27 +47,35 @@ const SubcategoriaDetalhes = () => {
 
       if (error) throw error;
 
-      // Se não houver subcategorias, redirecionar direto para produtos
+      // If no subcategories found, redirect directly to products
       if (!data || data.length === 0) {
         navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
         return;
       }
 
-      // Agrupar por subcategoria e contar
+      // Group by subcategory and count
       const subcategoryMap = new Map<string, { count: number; image: string; product: string }>();
       
       data.forEach(item => {
-        const subcat = item.subcategoria;
-        if (subcategoryMap.has(subcat)) {
-          subcategoryMap.get(subcat)!.count += 1;
-        } else {
-          subcategoryMap.set(subcat, {
-            count: 1,
-            image: item.imagem1 || '',
-            product: item.produto || ''
-          });
+        const subcat = item.subcategoria.trim();
+        if (subcat && subcat !== '') {
+          if (subcategoryMap.has(subcat)) {
+            subcategoryMap.get(subcat)!.count += 1;
+          } else {
+            subcategoryMap.set(subcat, {
+              count: 1,
+              image: item.imagem1 || '',
+              product: item.produto || ''
+            });
+          }
         }
       });
+
+      // If only empty subcategories found, redirect to products
+      if (subcategoryMap.size === 0) {
+        navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
+        return;
+      }
 
       const subcategoryList = Array.from(subcategoryMap.entries()).map(([subcategoria, data]) => ({
         subcategoria,
@@ -81,6 +89,8 @@ const SubcategoriaDetalhes = () => {
     } catch (error) {
       console.error('Erro ao buscar subcategorias:', error);
       showError("Erro ao carregar subcategorias mágicas");
+      // Redirect to products if there's an error
+      navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
     } finally {
       setLoading(false);
     }
@@ -144,7 +154,7 @@ const SubcategoriaDetalhes = () => {
                 {getMagicalCategoryName(categoria)}
               </h1>
               <p className="text-xs sm:text-sm text-magical-starlight/80 truncate font-enchanted">
-                Escolha sua especialização mágica
+                {subcategories.length > 0 ? 'Escolha sua especialização mágica' : 'Carregando especialização...'}
               </p>
             </div>
             <Sparkles className="w-5 h-5 text-magical-gold animate-sparkle" />
@@ -164,59 +174,73 @@ const SubcategoriaDetalhes = () => {
               <h2 className="text-xl sm:text-2xl font-bold text-magical-starlight mb-4 font-magical">
                 Redirecionando para Artefatos Mágicos...
               </h2>
+              <p className="text-magical-starlight/80 font-enchanted">
+                Esta categoria não possui subcategorias. Você será redirecionado para ver todos os artefatos.
+              </p>
             </div>
           ) : (
-            <Carousel className="w-full">
-              <CarouselContent className="-ml-2 md:-ml-3">
-                {subcategories.map((subcategory, index) => (
-                  <CarouselItem 
-                    key={subcategory.subcategoria} 
-                    className="pl-2 md:pl-3 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
-                  >
-                    <Card 
-                      className="overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer h-full backdrop-blur-sm hover:shadow-magical-gold/20 hover:animate-magical-glow"
-                      onClick={() => handleSubcategoryClick(subcategory.subcategoria)}
+            <>
+              <div className="text-center mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 font-magical">
+                  ✨ Escolha sua Especialização Mágica
+                </h2>
+                <p className="text-magical-starlight/80 font-enchanted">
+                  Encontramos {subcategories.length} especialização{subcategories.length !== 1 ? 'ões' : ''} mágica{subcategories.length !== 1 ? 's' : ''} em {categoria}
+                </p>
+              </div>
+              
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-3">
+                  {subcategories.map((subcategory, index) => (
+                    <CarouselItem 
+                      key={subcategory.subcategoria} 
+                      className="pl-2 md:pl-3 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                     >
-                      <div className="aspect-square relative overflow-hidden">
-                        <LazyImage 
-                          src={subcategory.sampleImage} 
-                          alt={subcategory.subcategoria} 
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-magical-midnight/80 via-transparent to-transparent" />
-                        <div className="absolute bottom-4 left-4 right-4 text-magical-starlight">
-                          <h3 className="text-lg font-bold mb-1 line-clamp-2 font-magical">
-                            {subcategory.subcategoria}
-                          </h3>
-                          <p className="text-sm text-magical-starlight/80 font-enchanted">
-                            {subcategory.count} artefatos mágicos
-                          </p>
+                      <Card 
+                        className="overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer h-full backdrop-blur-sm hover:shadow-magical-gold/20 hover:animate-magical-glow"
+                        onClick={() => handleSubcategoryClick(subcategory.subcategoria)}
+                      >
+                        <div className="aspect-square relative overflow-hidden">
+                          <LazyImage 
+                            src={subcategory.sampleImage} 
+                            alt={subcategory.subcategoria} 
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-magical-midnight/80 via-transparent to-transparent" />
+                          <div className="absolute bottom-4 left-4 right-4 text-magical-starlight">
+                            <h3 className="text-lg font-bold mb-1 line-clamp-2 font-magical">
+                              {subcategory.subcategoria}
+                            </h3>
+                            <p className="text-sm text-magical-starlight/80 font-enchanted">
+                              {subcategory.count} artefato{subcategory.count !== 1 ? 's' : ''} mágico{subcategory.count !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                          <Sparkles className="absolute top-2 right-2 w-4 h-4 text-magical-gold animate-sparkle" />
+                          <div className="absolute top-2 left-2 flex items-center gap-1">
+                            <Star className="w-3 h-3 text-magical-gold fill-current" />
+                            <span className="text-xs text-magical-starlight font-bold">4.8</span>
+                          </div>
                         </div>
-                        <Sparkles className="absolute top-2 right-2 w-4 h-4 text-magical-gold animate-sparkle" />
-                        <div className="absolute top-2 left-2 flex items-center gap-1">
-                          <Star className="w-3 h-3 text-magical-gold fill-current" />
-                          <span className="text-xs text-magical-starlight font-bold">4.8</span>
-                        </div>
-                      </div>
-                      <CardContent className="p-4">
-                        <Button 
-                          className="w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold transition-all duration-300 hover:scale-105 border-0 shadow-lg hover:shadow-xl font-enchanted animate-magical-glow"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSubcategoryClick(subcategory.subcategoria);
-                          }}
-                        >
-                          Explorar Coleção
-                          <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-2 md:left-4 bg-magical-deepPurple/90 hover:bg-magical-mysticalPurple text-magical-gold border-magical-gold/30 hover:border-magical-gold backdrop-blur-sm" />
-              <CarouselNext className="right-2 md:right-4 bg-magical-deepPurple/90 hover:bg-magical-mysticalPurple text-magical-gold border-magical-gold/30 hover:border-magical-gold backdrop-blur-sm" />
-            </Carousel>
+                        <CardContent className="p-4">
+                          <Button 
+                            className="w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold transition-all duration-300 hover:scale-105 border-0 shadow-lg hover:shadow-xl font-enchanted animate-magical-glow"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSubcategoryClick(subcategory.subcategoria);
+                            }}
+                          >
+                            Explorar Coleção
+                            <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2 md:left-4 bg-magical-deepPurple/90 hover:bg-magical-mysticalPurple text-magical-gold border-magical-gold/30 hover:border-magical-gold backdrop-blur-sm" />
+                <CarouselNext className="right-2 md:right-4 bg-magical-deepPurple/90 hover:bg-magical-mysticalPurple text-magical-gold border-magical-gold/30 hover:border-magical-gold backdrop-blur-sm" />
+              </Carousel>
+            </>
           )}
         </div>
       </section>

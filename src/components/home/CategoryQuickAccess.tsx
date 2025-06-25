@@ -29,6 +29,11 @@ export const CategoryQuickAccess: React.FC<CategoryQuickAccessProps> = ({ catego
     return iconMap[category] || ShoppingCart;
   };
 
+  const handleCategoryClick = (category: string) => {
+    // Navigate to subcategory details page to check for subcategories first
+    navigate(`/subcategoria-detalhes?categoria=${encodeURIComponent(category)}`);
+  };
+
   return (
     <section className="px-4 py-2 animate-fade-in">
       <div className="max-w-7xl mx-auto">
@@ -50,7 +55,7 @@ export const CategoryQuickAccess: React.FC<CategoryQuickAccessProps> = ({ catego
                 key={category} 
                 size="sm" 
                 variant="outline" 
-                onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                onClick={() => handleCategoryClick(category)} 
                 className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted shadow-md hover:shadow-magical-gold/20"
               >
                 <IconComponent className="w-4 h-4" />
