@@ -20,7 +20,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // Intersection observer otimizado para carregamento mais eficiente
+  // Intersection observer super otimizado para carregamento instantâneo
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -30,8 +30,8 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         }
       },
       { 
-        threshold: 0.05, // Reduzido para carregar mais cedo
-        rootMargin: '100px' // Aumentado para pré-carregar mais imagens
+        threshold: 0.01, // Detecta assim que aparecer na tela
+        rootMargin: '200px' // Carrega 200px antes de aparecer
       }
     );
 
@@ -54,19 +54,21 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   return (
     <div ref={imgRef} className={`relative ${className}`}>
       {!isLoaded && (
-        <Skeleton className="absolute inset-0 w-full h-full animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
+        <Skeleton className="absolute inset-0 w-full h-full animate-pulse bg-gradient-to-r from-magical-gold/20 via-magical-bronze/30 to-magical-gold/20 backdrop-blur-sm" />
       )}
       {isInView && (
         <img
           src={hasError ? (placeholder || '/placeholder.svg') : src}
           alt={alt}
-          className={`${className} transition-all duration-500 ${
+          className={`${className} transition-all duration-300 ${
             isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}
           onLoad={handleLoad}
           onError={handleError}
           loading="lazy"
           decoding="async"
+          // Otimizações para carregamento super rápido
+          fetchPriority="high"
         />
       )}
     </div>

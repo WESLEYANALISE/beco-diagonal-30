@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ShoppingCart, Crown, Sparkles, Shirt, Smartphone, Wand2, ArrowRight } from 'lucide-react';
@@ -113,7 +112,7 @@ const Index = () => {
         setCurrentFeaturedCategory(randomCategory);
         const categoryProducts = products.filter(p => p.categoria === randomCategory);
         const shuffledProducts = shuffleArray(categoryProducts, true);
-        setFeaturedProducts(shuffledProducts.slice(0, 6));
+        setFeaturedProducts(shuffledProducts.slice(0, 8));
       }, 20000);
       return () => clearInterval(interval);
     }
@@ -160,7 +159,7 @@ const Index = () => {
       let processedProducts = shuffleArray(validProducts, true);
       setProducts(processedProducts);
 
-      const initialFeatured = shuffleArray(processedProducts, true).slice(0, 6);
+      const initialFeatured = shuffleArray(processedProducts, true).slice(0, 8);
       setFeaturedProducts(initialFeatured);
       
       // Get all unique categories from HARRY POTTER table
@@ -405,7 +404,7 @@ const Index = () => {
         />
       )}
 
-      {/* Novidades Carousel */}
+      {/* Novidades Carousel with 30 products */}
       {Array.isArray(filteredProducts) && filteredProducts.length > 0 && (
         <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
       )}
@@ -416,8 +415,8 @@ const Index = () => {
       {/* Hero Section */}
       <HeroSection productsCount={filteredProducts.length} />
 
-      {/* Video Carousel - Strategic placement after hero */}
-      {!showingAI && productsWithVideos.length > 0 && <VideoCarouselHome products={productsWithVideos} />}
+      {/* Video Carousel with Harry Potter themed products */}
+      {!showingAI && <VideoCarouselHome products={[]} />}
 
       {/* Category Product Carousels */}
       <CategoryProductCarousels 

@@ -1,12 +1,14 @@
 
 import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
-import { Play, ShoppingCart } from 'lucide-react';
+import { Play, ShoppingCart, Sparkles, Crown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useNavigate } from 'react-router-dom';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface Product {
   id: number;
@@ -63,7 +65,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       const handleLoadedData = () => {
         setIsLoading(false);
         video.play().catch(() => {
-          // If autoplay fails, just hide loading
+          // Se autoplay falhar, apenas esconde o loading
         });
       };
 
@@ -87,19 +89,20 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
       if (youtubeId) {
         return (
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1`}
             className="w-full h-full object-cover"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
             allowFullScreen
             title={product.produto}
             onLoad={() => setIsLoading(false)}
+            loading="lazy"
           />
         );
       }
     }
 
-    // Direct video (MP4)
+    // Vídeo direto (MP4) otimizado para carregamento rápido
     return (
       <video
         ref={videoRef}
@@ -108,39 +111,52 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
         loop
         muted
         playsInline
-        preload="metadata"
-        autoPlay
+        preload="none" // Carregamento só quando necessário
+        poster={product.imagem1} // Usa imagem como poster
         onError={() => setIsLoading(false)}
       />
     );
   };
 
+  const getCategoryIcon = () => {
+    switch (product.categoria) {
+      case 'Itens Colecionáveis':
+        return Crown;
+      case 'Bonecas e Brinquedos de Pelúcia':
+        return Sparkles;
+      default:
+        return Crown;
+    }
+  };
+
+  const IconComponent = getCategoryIcon();
+
   return (
-    <div className="group relative bg-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
-      {/* Video Container */}
-      <div className="relative aspect-video bg-gray-900 overflow-hidden">
+    <div className="group relative bg-gradient-to-br from-magical-deepPurple to-magical-mysticalPurple rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 border border-magical-gold/30">
+      {/* Video Container com carregamento otimizado */}
+      <div className="relative aspect-video bg-magical-midnight overflow-hidden">
         {product.video ? (
           <>
             {renderVideoContent()}
             
-            {/* Loading Overlay */}
+            {/* Loading Overlay otimizado */}
             {isLoading && (
-              <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
+              <div className="absolute inset-0 bg-magical-midnight flex items-center justify-center">
                 {!imageError ? (
                   <img
                     src={product.imagem1}
                     alt={product.produto}
-                    className="w-full h-full object-cover opacity-50"
+                    className="w-full h-full object-cover opacity-70"
                     loading="lazy"
                     onError={() => setImageError(true)}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                    <div className="text-white text-sm">Carregando...</div>
+                  <div className="w-full h-full bg-magical-deepPurple flex items-center justify-center">
+                    <div className="text-magical-starlight text-sm font-enchanted">Carregando magia...</div>
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-magical-gold"></div>
                 </div>
               </div>
             )}
@@ -155,40 +171,41 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
           />
         )}
         
-        {/* Video Overlay */}
-        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {/* Video Overlay mágico */}
+        <div className="absolute inset-0 bg-magical-midnight/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             onClick={() => onWatchVideo(product)}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-full p-4"
+            className="bg-magical-gold/20 hover:bg-magical-gold/30 backdrop-blur-sm border border-magical-gold/30 rounded-full p-4 animate-magical-glow"
             size="sm"
           >
-            <Play className="w-6 h-6 text-white fill-white" />
+            <Play className="w-6 h-6 text-magical-gold fill-magical-gold" />
           </Button>
         </div>
 
-        {/* Category Badge */}
+        {/* Category Badge temático */}
         <div className="absolute top-3 left-3">
-          <Badge className="bg-orange-500 text-white text-xs">
+          <Badge className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight text-xs font-bold border border-magical-gold/30 flex items-center gap-1">
+            <IconComponent className="w-3 h-3" />
             {product.categoria}
           </Badge>
         </div>
 
-        {/* Click count indicator for popular products */}
+        {/* Click count indicator mágico */}
         {product.click_count && product.click_count > 0 && (
           <div className="absolute bottom-3 left-3">
-            <Badge className="bg-green-600 text-white text-xs">
-              🔥 {product.click_count} views
+            <Badge className="bg-gradient-to-r from-magical-crimson to-magical-darkGold text-magical-starlight text-xs font-bold animate-pulse">
+              ⚡ {product.click_count} visualizações
             </Badge>
           </div>
         )}
       </div>
 
-      {/* Product Info */}
-      <div className="p-4">
-        <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
+      {/* Product Info temático */}
+      <div className="p-4 bg-gradient-to-br from-magical-deepPurple/90 to-magical-mysticalPurple/90">
+        <h3 className="font-bold text-magical-starlight mb-2 line-clamp-2 text-sm leading-tight font-enchanted">
           {product.produto}
         </h3>
-        <p className="text-orange-600 font-bold text-lg mb-3">
+        <p className="text-magical-gold font-bold text-lg mb-3 font-magical">
           Menos de {formatPrice(product.valor)}
         </p>
         
@@ -197,18 +214,18 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
             onClick={() => onWatchVideo(product)}
             variant="outline"
             size="sm"
-            className="flex-1 border-orange-500 text-orange-600 hover:bg-orange-50"
+            className="flex-1 border-magical-gold text-magical-gold hover:bg-magical-gold/20 font-enchanted"
           >
             <Play className="w-3 h-3 mr-1" />
-            Ver Mais
+            Ver Magia
           </Button>
           <Button
             onClick={() => onBuyProduct(product)}
             size="sm"
-            className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+            className="flex-1 bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-bold font-enchanted"
           >
             <ShoppingCart className="w-3 h-3 mr-1" />
-            Comprar
+            Adquirir
           </Button>
         </div>
       </div>
@@ -218,46 +235,54 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
 
 VideoThumbnail.displayName = 'VideoThumbnail';
 
-export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(({
-  products: fallbackProducts
-}) => {
+export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(() => {
   const navigate = useNavigate();
-  const { trackProductClick, getMostClickedProducts } = useProductClicks();
+  const { trackProductClick } = useProductClicks();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Load most clicked products on mount
+  // Carregar produtos da tabela HARRY POTTER com vídeos
   useEffect(() => {
     const loadFeaturedProducts = async () => {
       try {
-        const mostClicked = await getMostClickedProducts(8); // Reduced from 12 to 8 for better performance
-        if (mostClicked.length > 0) {
-          setFeaturedProducts(mostClicked);
+        logger.info('Carregando produtos em destaque da tabela HARRY POTTER');
+        
+        const { data, error } = await supabase
+          .from('HARRY POTTER')
+          .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, link, categoria')
+          .not('video', 'is', null)
+          .neq('video', '')
+          .order('id', { ascending: false })
+          .limit(12);
+
+        if (error) {
+          logger.error('Erro ao carregar produtos HARRY POTTER:', error);
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          setFeaturedProducts(data);
+          logger.info(`${data.length} produtos mágicos com vídeo carregados`);
         } else {
-          // Fallback to provided products if no click data
-          setFeaturedProducts(fallbackProducts.slice(0, 8)); // Limit to 8 products
+          logger.warn('Nenhum produto com vídeo encontrado na tabela HARRY POTTER');
         }
       } catch (error) {
-        console.error('Error loading featured products:', error);
-        setFeaturedProducts(fallbackProducts.slice(0, 8));
+        logger.error('Erro ao carregar produtos em destaque:', error);
       } finally {
         setLoading(false);
       }
     };
     
     loadFeaturedProducts();
-  }, [getMostClickedProducts, fallbackProducts]);
+  }, []);
 
   const handleWatchVideo = useCallback(async (product: Product) => {
-    // Track the click
     await trackProductClick(product.id, 'video_view');
-    // Open product detail modal
     setSelectedProduct(product);
   }, [trackProductClick]);
 
   const handleBuyProduct = useCallback(async (product: Product) => {
-    // Track the click
     await trackProductClick(product.id, 'buy_click');
     window.open(product.link, '_blank');
   }, [trackProductClick]);
@@ -270,20 +295,19 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(({
   }, []);
 
   const handleExploreClick = useCallback(async () => {
-    // Track exploration click
     await trackProductClick(0, 'explore_products');
     navigate('/explorar');
   }, [trackProductClick, navigate]);
 
   if (loading) {
     return (
-      <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 backdrop-blur-sm px-0">
+      <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-deepPurple/30 via-magical-mysticalPurple/30 to-magical-darkBlue/30 backdrop-blur-sm px-0">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-white/20 rounded-2xl"></div>
+            <div className="h-32 bg-magical-gold/20 rounded-2xl backdrop-blur-sm"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-64 bg-white/20 rounded-2xl"></div>
+                <div key={i} className="h-64 bg-magical-gold/20 rounded-2xl backdrop-blur-sm animate-shimmer"></div>
               ))}
             </div>
           </div>
@@ -296,14 +320,15 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(({
 
   return (
     <>
-      <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 backdrop-blur-sm px-0">
-        <div className="max-w-7xl mx-auto">
+      <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-deepPurple/30 via-magical-mysticalPurple/30 to-magical-darkBlue/30 backdrop-blur-sm px-0 relative overflow-hidden">
+        <div className="absolute inset-0 bg-magical-midnight/10"></div>
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-              🏆 Produtos em Destaque
+            <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
+              🏆 Artefatos Mágicos em Destaque
             </h2>
-            <p className="text-base text-white/80 animate-slide-in-right">
-              Os produtos mais visualizados pelos usuários
+            <p className="text-base text-magical-starlight/80 animate-slide-in-right font-enchanted">
+              Os artefatos mais poderosos de Hogwarts com demonstrações mágicas
             </p>
           </div>
 
@@ -324,17 +349,17 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(({
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-            <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
+            <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-2xl" />
+            <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-2xl" />
           </Carousel>
 
           <div className="text-center mt-6 animate-fade-in">
             <Button
               onClick={handleExploreClick}
-              className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-2xl"
             >
-              Explorar Produtos
-              <Play className="w-4 h-4 ml-2" />
+              Explorar Mais Artefatos
+              <Sparkles className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </div>
