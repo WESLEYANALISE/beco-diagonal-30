@@ -8,17 +8,10 @@ const MAGICAL_SOUNDS = [
   'https://www.dropbox.com/scl/fi/xabqbuofmg3dabws578ew/avadaqub.mp3?rlkey=ny15g8832nzngpwu9sxpmpes8&st=mtswqo9p&dl=1'
 ];
 
-// Additional magical sound effects
-const INTERACTION_SOUNDS = {
-  hover: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmhZCzOM1O/SgiMAE0DL9Nlt', // Hover whoosh
-  click: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmhZCzOM1O/SgiMAE0DL9Nlt', // Click sparkle
-  modal: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmhZCzOM1O/SgiMAE0DL9Nlt' // Portal/Modal open
-};
-
 export const useMagicalSounds = () => {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const lastPlayedRef = useRef<number>(0);
-  const cooldownMs = 500; // Reduced cooldown for more responsive feedback
+  const cooldownMs = 1000; // 1 second cooldown between sounds
 
   const playRandomMagicalSound = useCallback(() => {
     const now = Date.now();
@@ -40,7 +33,7 @@ export const useMagicalSounds = () => {
     
     // Create and play audio
     const audio = new Audio(selectedSound);
-    audio.volume = 0.12; // Slightly reduced volume
+    audio.volume = 0.15; // Reduced volume from 0.3 to 0.15
     audio.preload = 'auto';
     
     audio.play().catch(() => {
@@ -59,51 +52,5 @@ export const useMagicalSounds = () => {
     
   }, []);
 
-  const playMagicalEffect = useCallback((type: 'hover' | 'click' | 'modal') => {
-    const now = Date.now();
-    
-    // Shorter cooldown for interaction sounds
-    if (now - lastPlayedRef.current < 200) {
-      return;
-    }
-
-    // Stop current audio if playing
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current = null;
-    }
-
-    try {
-      const audio = new Audio(INTERACTION_SOUNDS[type]);
-      audio.volume = 0.08; // Lower volume for interaction sounds
-      audio.preload = 'auto';
-      
-      audio.play().catch(() => {
-        // Silent fail for autoplay restrictions
-      });
-      
-      currentAudioRef.current = audio;
-      lastPlayedRef.current = now;
-      
-      // Clean up when audio ends
-      audio.addEventListener('ended', () => {
-        if (currentAudioRef.current === audio) {
-          currentAudioRef.current = null;
-        }
-      });
-    } catch (error) {
-      // Silent fail if sound creation fails
-    }
-  }, []);
-
-  const playHoverSound = useCallback(() => playMagicalEffect('hover'), [playMagicalEffect]);
-  const playClickSound = useCallback(() => playMagicalEffect('click'), [playMagicalEffect]);
-  const playModalSound = useCallback(() => playMagicalEffect('modal'), [playMagicalEffect]);
-
-  return { 
-    playRandomMagicalSound,
-    playHoverSound,
-    playClickSound,
-    playModalSound
-  };
+  return { playRandomMagicalSound };
 };
