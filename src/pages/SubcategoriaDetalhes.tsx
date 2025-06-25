@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart, ArrowRight, Sparkles, Star } from 'lucide-react';
@@ -37,46 +38,79 @@ const SubcategoriaDetalhes = () => {
 
   const fetchSubcategories = async () => {
     try {
-      console.log('🔍 Fetching subcategories for categoria:', categoria);
+      console.log('🔍 Buscando subcategorias para categoria:', categoria);
       
       const { data, error } = await supabase
         .from('HARRY POTTER')
         .select('subcategoria, imagem1, produto')
-        .eq('categoria', categoria)
-        .not('subcategoria', 'is', null);
+        .eq('categoria', categoria);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro na consulta:', error);
+        throw error;
+      }
 
-      console.log('📊 Raw data from database:', data);
+      console.log('📊 Dados brutos do banco:', data);
+      console.log('📊 Total de registros:', data?.length || 0);
 
-      // Filter out empty or null subcategories and group by subcategory
+      if (!data || data.length === 0) {
+        console.log('❌ Nenhum produto encontrado para a categoria:', categoria);
+        navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
+        return;
+      }
+
+      // Agrupar por subcategoria e contar produtos
       const subcategoryMap = new Map<string, { count: number; image: string; product: string }>();
       
-      (data || []).forEach(item => {
-        const subcat = item.subcategoria?.trim();
-        console.log('Processing subcategoria:', subcat);
+      data.forEach((item, index) => {
+        console.log(`📝 Processando item ${index + 1}:`, {
+          produto: item.produto,
+          subcategoria: item.subcategoria,
+          imagem: item.imagem1 ? 'presente' : 'ausente'
+        });
         
-        // Only process non-empty subcategories
-        if (subcat && subcat !== '' && subcat.toLowerCase() !== 'null' && subcat !== 'undefined') {
+        const subcat = item.subcategoria?.trim();
+        
+        // Aceitar qualquer subcategoria que não seja null, undefined ou string vazia
+        if (subcat && subcat !== '' && subcat !== 'null' && subcat !== 'undefined' && subcat.toLowerCase() !== 'null') {
           if (subcategoryMap.has(subcat)) {
-            subcategoryMap.get(subcat)!.count += 1;
+            const existing = subcategoryMap.get(subcat)!;
+            existing.count += 1;
+            console.log(`➕ Incrementando contador para "${subcat}": ${existing.count}`);
           } else {
             subcategoryMap.set(subcat, {
               count: 1,
               image: item.imagem1 || '',
               product: item.produto || ''
             });
+            console.log(`🆕 Nova subcategoria encontrada: "${subcat}"`);
           }
+        } else {
+          console.log(`⚠️ Subcategoria inválida ignorada:`, subcat);
         }
       });
 
-      console.log('📈 Processed subcategories map:', Array.from(subcategoryMap.entries()));
+      console.log('📈 Mapa final de subcategorias:', Array.from(subcategoryMap.entries()));
+      console.log('📊 Total de subcategorias únicas:', subcategoryMap.size);
 
-      // If no valid subcategories found, redirect directly to products
+      // Se não há subcategorias válidas, redirecionar para produtos
       if (subcategoryMap.size === 0) {
-        console.log('❌ No subcategories found, redirecting to products');
+        console.log('❌ Nenhuma subcategoria válida encontrada, redirecionando para produtos');
         navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
         return;
+      }
+
+      // Se há apenas 1 subcategoria e muitos produtos, pode ser melhor mostrar diretamente os produtos
+      if (subcategoryMap.size === 1) {
+        const [singleSubcat, subcatData] = Array.from(subcategoryMap.entries())[0];
+        console.log(`ℹ️ Apenas uma subcategoria encontrada: "${singleSubcat}" com ${subcatData.count} produtos`);
+        
+        // Se há muitos produtos em uma única subcategoria, pode ser melhor mostrar diretamente
+        if (subcatData.count > 10) {
+          console.log('📦 Muitos produtos em uma subcategoria, redirecionando para produtos');
+          navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
+          return;
+        }
       }
 
       const subcategoryList = Array.from(subcategoryMap.entries()).map(([subcategoria, data]) => ({
@@ -86,13 +120,13 @@ const SubcategoriaDetalhes = () => {
         sampleProduct: data.product
       }));
 
-      console.log('✅ Final subcategory list:', subcategoryList);
+      console.log('✅ Lista final de subcategorias:', subcategoryList);
       setSubcategories(subcategoryList);
-      showSuccess("Subcategorias mágicas carregadas!");
+      showSuccess(`${subcategoryList.length} subcategorias mágicas encontradas!`);
     } catch (error) {
       console.error('❌ Erro ao buscar subcategorias:', error);
       showError("Erro ao carregar subcategorias mágicas");
-      // Redirect to products if there's an error
+      // Redirecionar para produtos se há erro
       navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&tipo=categoria`);
     } finally {
       setLoading(false);
@@ -100,6 +134,7 @@ const SubcategoriaDetalhes = () => {
   };
 
   const handleSubcategoryClick = (subcategoria: string) => {
+    console.log('🔍 Navegando para subcategoria:', subcategoria);
     playNextSequentialSound();
     navigate(`/categoria-lista?categoria=${encodeURIComponent(categoria)}&subcategoria=${encodeURIComponent(subcategoria)}&tipo=subcategoria`);
   };
@@ -112,7 +147,8 @@ const SubcategoriaDetalhes = () => {
       'Colares': 'Joias e Amuletos Encantados',
       'Moletons e Suéteres': 'Vestes das Casas de Hogwarts',
       'Capinhas': 'Proteções Místicas Portáteis',
-      'Canecas': 'Cálices e Poções Mágicas'
+      'Canecas': 'Cálices e Poções Mágicas',
+      'Livros': 'Grimórios e Tomos Mágicos'
     };
     return nameMap[category] || category;
   };
