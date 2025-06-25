@@ -42,11 +42,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 }) => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const { getProductImages, formatPrice, handleBuyClick } = useProductCardLogic(product);
-  const { playModalOpen, playButtonClick, playHover } = useMagicalSounds();
+  const { playModalSound, playClickSound, playHoverSound } = useMagicalSounds();
 
   useEffect(() => {
     if (isOpen) {
-      playModalOpen();
+      playModalSound();
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -55,24 +55,24 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, playModalOpen]);
+  }, [isOpen, playModalSound]);
 
   if (!isOpen) return null;
 
   const images = getProductImages(product);
 
   const handleVideoClick = () => {
-    playButtonClick();
+    playClickSound();
     setIsVideoModalOpen(true);
   };
 
   const handleCloseClick = () => {
-    playButtonClick();
+    playClickSound();
     onClose();
   };
 
   const handleBuyClickWithSound = () => {
-    playButtonClick();
+    playClickSound();
     handleBuyClick();
   };
 
@@ -94,7 +94,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             size="sm"
             className="absolute top-3 right-3 z-10 text-magical-starlight hover:text-magical-gold hover:bg-magical-gold/20 transition-all duration-300 rounded-full w-8 h-8 p-0"
             onClick={handleCloseClick}
-            onMouseEnter={playHover}
+            onMouseEnter={playHoverSound}
           >
             <X className="w-4 h-4" />
           </Button>
@@ -135,7 +135,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         size="sm"
                         className="bg-magical-crimson/90 hover:bg-magical-crimson text-magical-starlight border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                         onClick={handleVideoClick}
-                        onMouseEnter={playHover}
+                        onMouseEnter={playHoverSound}
                       >
                         <Play className="w-4 h-4 mr-2" />
                         Assistir Vídeo
@@ -241,7 +241,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     <Button 
                       className="flex-1 bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold text-sm sm:text-base transition-all duration-300 hover:scale-105 border-0 shadow-lg hover:shadow-xl font-enchanted"
                       onClick={handleBuyClickWithSound}
-                      onMouseEnter={playHover}
+                      onMouseEnter={playHoverSound}
                     >
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       Adquirir Relíquia Mágica
@@ -252,13 +252,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     <FavoriteButton 
                       productId={product.id} 
                       enhanced={true}
-                      className="flex-1"
                     />
                     <Button
                       variant="outline"
                       size="sm"
                       className="flex-1 bg-magical-starlight/10 border-magical-gold/30 text-magical-starlight hover:bg-magical-gold/20 hover:text-magical-gold transition-all duration-300"
-                      onMouseEnter={playHover}
+                      onMouseEnter={playHoverSound}
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       Compartilhar Magia
@@ -278,11 +277,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           onClose={() => setIsVideoModalOpen(false)}
           videoUrl={product.video}
           productName={product.produto}
+          productPrice={product.valor}
+          productLink={product.link}
         />
       )}
 
       {/* Custom Scrollbar Styles */}
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
