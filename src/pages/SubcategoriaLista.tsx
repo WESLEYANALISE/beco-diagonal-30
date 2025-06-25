@@ -46,11 +46,11 @@ export const SubcategoriaLista = () => {
         return;
       }
 
-      // Agrupar e contar subcategorias
+      // Group and count subcategories
       const subcategoryMap = new Map<string, Subcategory>();
       
       data?.forEach((item) => {
-        if (item.subcategoria) {
+        if (item.subcategoria && item.subcategoria.trim() !== '') {
           const existing = subcategoryMap.get(item.subcategoria);
           if (existing) {
             existing.count++;
@@ -83,7 +83,7 @@ export const SubcategoriaLista = () => {
   }, [fetchSubcategories]);
 
   const handleSubcategoryClick = useCallback((subcategoria: string) => {
-    // Som mágico APENAS quando clicar em subcategorias
+    // Magic sound ONLY when clicking on subcategories
     playRandomMagicalSound();
     navigate(`/categoria/${categoria}/subcategoria/${encodeURIComponent(subcategoria)}`);
   }, [categoria, navigate, playRandomMagicalSound]);

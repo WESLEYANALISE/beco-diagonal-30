@@ -1,12 +1,11 @@
 
-import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
-import { Play, ShoppingCart } from 'lucide-react';
+import React, { useCallback } from 'react';
+import { Crown, Play, Zap } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { useNavigate } from 'react-router-dom';
-import { useProductClicks } from '@/hooks/useProductClicks';
-import { ProductDetailModal } from '@/components/ProductDetailModal';
+import { LazyImage } from '@/components/LazyImage';
 
 interface Product {
   id: number;
@@ -14,342 +13,104 @@ interface Product {
   valor: string;
   video: string;
   imagem1: string;
-  imagem2: string;
-  imagem3: string;
-  imagem4: string;
-  imagem5: string;
   link: string;
   categoria: string;
-  uso?: string;
-  click_count?: number;
 }
 
 interface VideoCarouselHomeProps {
   products: Product[];
 }
 
-interface VideoThumbnailProps {
-  product: Product;
-  onWatchVideo: (product: Product) => void;
-  onBuyProduct: (product: Product) => void;
-  formatPrice: (price: string) => string;
-}
-
-const VideoThumbnail: React.FC<VideoThumbnailProps> = memo(({
-  product,
-  onWatchVideo,
-  onBuyProduct,
-  formatPrice
-}) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Check if video is YouTube or direct MP4
-  const isYouTubeVideo = useCallback((url: string) => {
-    return url.includes('youtube.com') || url.includes('youtu.be');
+export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({ products }) => {
+  const handleBuyClick = useCallback((link: string) => {
+    if (link) {
+      window.open(link, '_blank', 'noopener,noreferrer');
+    }
   }, []);
 
-  const getYouTubeVideoId = useCallback((url: string) => {
-    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-    const match = url.match(regExp);
-    return match && match[7].length === 11 ? match[7] : null;
-  }, []);
-
-  useEffect(() => {
-    if (!isYouTubeVideo(product.video) && videoRef.current) {
-      const video = videoRef.current;
-      
-      const handleLoadedData = () => {
-        setIsLoading(false);
-        video.play().catch(() => {
-          // If autoplay fails, just hide loading
-        });
-      };
-
-      const handleError = () => {
-        setIsLoading(false);
-      };
-
-      video.addEventListener('loadeddata', handleLoadedData);
-      video.addEventListener('error', handleError);
-
-      return () => {
-        video.removeEventListener('loadeddata', handleLoadedData);
-        video.removeEventListener('error', handleError);
-      };
-    }
-  }, [product.video, isYouTubeVideo]);
-
-  const renderVideoContent = () => {
-    if (isYouTubeVideo(product.video)) {
-      const youtubeId = getYouTubeVideoId(product.video);
-      if (youtubeId) {
-        return (
-          <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&rel=0&loop=1&playlist=${youtubeId}&enablejsapi=1`}
-            className="w-full h-full object-cover"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-            allowFullScreen
-            title={product.produto}
-            onLoad={() => setIsLoading(false)}
-          />
-        );
-      }
-    }
-
-    // Direct video (MP4)
-    return (
-      <video
-        ref={videoRef}
-        src={product.video}
-        className="w-full h-full object-cover"
-        loop
-        muted
-        playsInline
-        preload="metadata"
-        autoPlay
-        onError={() => setIsLoading(false)}
-      />
-    );
-  };
-
-  return (
-    <div className="group relative bg-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
-      {/* Video Container */}
-      <div className="relative aspect-video bg-gray-900 overflow-hidden">
-        {product.video ? (
-          <>
-            {renderVideoContent()}
-            
-            {/* Loading Overlay */}
-            {isLoading && (
-              <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-                {!imageError ? (
-                  <img
-                    src={product.imagem1}
-                    alt={product.produto}
-                    className="w-full h-full object-cover opacity-50"
-                    loading="lazy"
-                    onError={() => setImageError(true)}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                    <div className="text-white text-sm">Carregando...</div>
-                  </div>
-                )}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <img
-            src={product.imagem1}
-            alt={product.produto}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            loading="lazy"
-            onError={() => setImageError(true)}
-          />
-        )}
-        
-        {/* Video Overlay */}
-        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
-            onClick={() => onWatchVideo(product)}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-full p-4"
-            size="sm"
-          >
-            <Play className="w-6 h-6 text-white fill-white" />
-          </Button>
-        </div>
-
-        {/* Category Badge */}
-        <div className="absolute top-3 left-3">
-          <Badge className="bg-orange-500 text-white text-xs">
-            {product.categoria}
-          </Badge>
-        </div>
-
-        {/* Click count indicator for popular products */}
-        {product.click_count && product.click_count > 0 && (
-          <div className="absolute bottom-3 left-3">
-            <Badge className="bg-green-600 text-white text-xs">
-              🔥 {product.click_count} views
-            </Badge>
-          </div>
-        )}
-      </div>
-
-      {/* Product Info */}
-      <div className="p-4">
-        <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
-          {product.produto}
-        </h3>
-        <p className="text-orange-600 font-bold text-lg mb-3">
-          Menos de {formatPrice(product.valor)}
-        </p>
-        
-        <div className="flex gap-2">
-          <Button
-            onClick={() => onWatchVideo(product)}
-            variant="outline"
-            size="sm"
-            className="flex-1 border-orange-500 text-orange-600 hover:bg-orange-50"
-          >
-            <Play className="w-3 h-3 mr-1" />
-            Ver Mais
-          </Button>
-          <Button
-            onClick={() => onBuyProduct(product)}
-            size="sm"
-            className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
-          >
-            <ShoppingCart className="w-3 h-3 mr-1" />
-            Comprar
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-});
-
-VideoThumbnail.displayName = 'VideoThumbnail';
-
-export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = memo(({
-  products: fallbackProducts
-}) => {
-  const navigate = useNavigate();
-  const { trackProductClick, getMostClickedProducts } = useProductClicks();
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-
-  // Load most clicked products on mount
-  useEffect(() => {
-    const loadFeaturedProducts = async () => {
-      try {
-        const mostClicked = await getMostClickedProducts(8); // Reduced from 12 to 8 for better performance
-        if (mostClicked.length > 0) {
-          setFeaturedProducts(mostClicked);
-        } else {
-          // Fallback to provided products if no click data
-          setFeaturedProducts(fallbackProducts.slice(0, 8)); // Limit to 8 products
-        }
-      } catch (error) {
-        console.error('Error loading featured products:', error);
-        setFeaturedProducts(fallbackProducts.slice(0, 8));
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadFeaturedProducts();
-  }, [getMostClickedProducts, fallbackProducts]);
-
-  const handleWatchVideo = useCallback(async (product: Product) => {
-    // Track the click
-    await trackProductClick(product.id, 'video_view');
-    // Open product detail modal
-    setSelectedProduct(product);
-  }, [trackProductClick]);
-
-  const handleBuyProduct = useCallback(async (product: Product) => {
-    // Track the click
-    await trackProductClick(product.id, 'buy_click');
-    window.open(product.link, '_blank');
-  }, [trackProductClick]);
-
-  const formatPrice = useCallback((price: string) => {
-    if (price.includes('R$')) {
-      return price;
-    }
-    return `R$ ${price}`;
-  }, []);
-
-  const handleExploreClick = useCallback(async () => {
-    // Track exploration click
-    await trackProductClick(0, 'explore_products');
-    navigate('/explorar');
-  }, [trackProductClick, navigate]);
-
-  if (loading) {
-    return (
-      <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 backdrop-blur-sm px-0">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-white/20 rounded-2xl"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-64 bg-white/20 rounded-2xl"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-    );
+  if (!products || products.length === 0) {
+    return null;
   }
 
-  if (featuredProducts.length === 0) return null;
-
   return (
-    <>
-      <section className="md:px-6 py-8 md:py-12 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 backdrop-blur-sm px-0">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 animate-slide-in-left">
-              🏆 Produtos em Destaque
+    <section className="px-4 md:px-6 py-8 animate-fade-in bg-gradient-to-r from-red-900/20 via-yellow-600/20 to-red-800/20 border-y border-yellow-500/30">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Crown className="w-8 h-8 text-yellow-500 animate-bounce" />
+            <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight font-magical">
+              🏆 Artefatos em Destaque
             </h2>
-            <p className="text-base text-white/80 animate-slide-in-right">
-              Os produtos mais visualizados pelos usuários
-            </p>
+            <Zap className="w-8 h-8 text-yellow-500 animate-pulse" />
           </div>
-
-          <Carousel className="w-full animate-scale-in">
-            <CarouselContent className="-ml-2 md:-ml-3">
-              {featuredProducts.map((product, index) => (
-                <CarouselItem
-                  key={product.id}
-                  className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <VideoThumbnail
-                    product={product}
-                    onWatchVideo={handleWatchVideo}
-                    onBuyProduct={handleBuyProduct}
-                    formatPrice={formatPrice}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-2 md:left-4 bg-white/90 hover:bg-white border-orange-200" />
-            <CarouselNext className="right-2 md:right-4 bg-white/90 hover:bg-white border-orange-200" />
-          </Carousel>
-
-          <div className="text-center mt-6 animate-fade-in">
-            <Button
-              onClick={handleExploreClick}
-              className="bg-white text-red-600 hover:bg-gray-100 font-semibold transition-all duration-300 hover:scale-105"
-            >
-              Explorar Produtos
-              <Play className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
+          <p className="text-magical-starlight/90 text-lg font-enchanted">
+            Os artefatos mais visualizados pelos usuários
+          </p>
         </div>
-      </section>
 
-      {/* Product Detail Modal */}
-      {selectedProduct && (
-        <ProductDetailModal
-          isOpen={!!selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-          product={selectedProduct}
-        />
-      )}
-    </>
+        <Carousel className="w-full">
+          <CarouselContent className="-ml-2 md:-ml-3">
+            {products.map((product, index) => (
+              <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-full md:basis-1/2 lg:basis-1/3">
+                <Card className="group overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-2xl bg-gradient-to-br from-red-900/30 via-yellow-600/20 to-red-800/30 border-yellow-500/40 backdrop-blur-sm animate-fade-in" style={{animationDelay: `${index * 0.1}s`}}>
+                  <div className="relative aspect-video overflow-hidden">
+                    <LazyImage
+                      src={product.imagem1}
+                      alt={product.produto}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    
+                    {/* Harry Potter themed overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-red-900/80 via-red-900/20 to-transparent" />
+                    
+                    {/* Featured badge */}
+                    <div className="absolute top-3 left-3">
+                      <Badge className="bg-yellow-500/90 text-red-900 font-bold border border-yellow-400 shadow-lg">
+                        <Crown className="w-3 h-3 mr-1" />
+                        DESTAQUE
+                      </Badge>
+                    </div>
+                    
+                    {/* Play button overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-16 h-16 bg-yellow-500/90 rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-yellow-400 shadow-xl animate-pulse">
+                        <Play className="w-6 h-6 text-red-900 ml-1" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <CardContent className="p-4 bg-gradient-to-br from-red-900/40 to-yellow-600/20">
+                    <div className="space-y-3">
+                      <h3 className="font-bold text-magical-starlight text-sm line-clamp-2 group-hover:text-yellow-400 transition-colors duration-300 font-enchanted">
+                        {product.produto}
+                      </h3>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-yellow-400 font-bold text-lg font-magical">
+                          {product.valor}
+                        </span>
+                        <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                          {product.categoria}
+                        </Badge>
+                      </div>
+                      
+                      <Button 
+                        onClick={() => handleBuyClick(product.link)}
+                        className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-red-900 hover:from-yellow-400 hover:to-yellow-500 font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-lg hover:shadow-yellow-500/20"
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        Adquirir Artefato
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-yellow-500/30 shadow-xl" />
+          <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-yellow-500/30 shadow-xl" />
+        </Carousel>
+      </div>
+    </section>
   );
-});
-
-VideoCarouselHome.displayName = 'VideoCarouselHome';
+};
