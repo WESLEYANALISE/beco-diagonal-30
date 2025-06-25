@@ -9,6 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { X, ShoppingCart, Heart, Star, Play, Lightbulb, Sparkles, Wand2 } from 'lucide-react';
 import { ImageZoomModal } from '@/components/ImageZoomModal';
 import { ProductVideoModal } from '@/components/ProductVideoModal';
+import { useMagicalSounds } from '@/hooks/useMagicalSounds';
 
 interface Product {
   id: number;
@@ -43,16 +44,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = memo(({
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const { playModalSound, playClickSound } = useMagicalSounds();
 
-  // Auto-play video quando modal abre (se houver vídeo)
+  // Remove auto-play video quando modal abre
   useEffect(() => {
-    if (isOpen && product.video) {
-      const timer = setTimeout(() => {
-        setIsVideoOpen(true);
-      }, 500);
-      return () => clearTimeout(timer);
+    if (isOpen) {
+      playModalSound();
     }
-  }, [isOpen, product.video]);
+  }, [isOpen, playModalSound]);
 
   const getProductImages = () => {
     return [
@@ -76,15 +75,27 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = memo(({
   const handleImageClick = (index: number) => {
     setSelectedImageIndex(index);
     setIsZoomOpen(true);
+    playClickSound();
   };
 
   const handleBuyClick = () => {
     window.open(product.link, '_blank');
+    playClickSound();
+  };
+
+  const handleVideoClick = () => {
+    setIsVideoOpen(true);
+    playClickSound();
+  };
+
+  const handleVideoClose = () => {
+    setIsVideoOpen(false);
+    // Modal do produto continua aberto
   };
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen && !isVideoOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-magical-deepPurple via-magical-mysticalPurple to-magical-midnight border border-magical-gold/30 shadow-2xl shadow-magical-gold/20">
           {/* Header mágico com botão de fechar */}
           <div className="relative bg-gradient-to-r from-magical-mysticalPurple via-magical-deepPurple to-magical-mysticalPurple text-magical-starlight p-4 flex items-center justify-between z-50 border-b border-magical-gold/30">
@@ -148,7 +159,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = memo(({
                 
                 {product.video && (
                   <Button
-                    onClick={() => setIsVideoOpen(true)}
+                    onClick={handleVideoClick}
                     className="absolute bottom-4 right-4 bg-gradient-to-r from-magical-crimson to-magical-gold hover:from-magical-gold hover:to-magical-crimson rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
                   >
                     <Play className="w-5 h-5 text-magical-starlight" />
@@ -294,7 +305,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = memo(({
       {product.video && (
         <ProductVideoModal
           isOpen={isVideoOpen}
-          onClose={() => setIsVideoOpen(false)}
+          onClose={handleVideoClose}
           videoUrl={product.video}
           productName={product.produto}
           productPrice={formatPrice(product.valor)}
