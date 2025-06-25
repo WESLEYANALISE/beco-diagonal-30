@@ -63,7 +63,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Magical Harry Potter color palette
+				// Enhanced Magical Harry Potter color palette
 				magical: {
 					gold: '#D4AF37',
 					darkGold: '#B8860B',
@@ -107,28 +107,122 @@ export default {
 				},
 				'magical-glow': {
 					'0%, 100%': {
-						boxShadow: '0 0 5px #D4AF37, 0 0 10px #D4AF37, 0 0 15px #D4AF37'
+						boxShadow: '0 0 5px #D4AF37, 0 0 10px #D4AF37, 0 0 15px #D4AF37',
+						filter: 'brightness(1)'
 					},
 					'50%': {
-						boxShadow: '0 0 10px #D4AF37, 0 0 20px #D4AF37, 0 0 30px #D4AF37'
+						boxShadow: '0 0 10px #D4AF37, 0 0 20px #D4AF37, 0 0 30px #D4AF37, 0 0 40px #D4AF37',
+						filter: 'brightness(1.2)'
 					}
 				},
 				'sparkle': {
 					'0%, 100%': {
 						opacity: '0.3',
-						transform: 'scale(0.8)'
+						transform: 'scale(0.8) rotate(0deg)'
 					},
 					'50%': {
 						opacity: '1',
-						transform: 'scale(1.2)'
+						transform: 'scale(1.2) rotate(180deg)'
 					}
 				},
 				'levitate': {
 					'0%, 100%': {
-						transform: 'translateY(0px)'
+						transform: 'translateY(0px) rotate(0deg)'
+					},
+					'33%': {
+						transform: 'translateY(-8px) rotate(120deg)'
+					},
+					'66%': {
+						transform: 'translateY(-4px) rotate(240deg)'
+					}
+				},
+				'shimmer': {
+					'0%': {
+						backgroundPosition: '-200% 0'
+					},
+					'100%': {
+						backgroundPosition: '200% 0'
+					}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'scale-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'scale(0.9)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'scale(1)'
+					}
+				},
+				'slide-in-left': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateX(-30px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateX(0)'
+					}
+				},
+				'slide-in-right': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateX(30px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateX(0)'
+					}
+				},
+				'magical-entrance': {
+					'0%': {
+						opacity: '0',
+						transform: 'scale(0.3) rotate(-180deg)',
+						filter: 'blur(4px)'
 					},
 					'50%': {
-						transform: 'translateY(-10px)'
+						opacity: '0.7',
+						transform: 'scale(1.1) rotate(0deg)',
+						filter: 'blur(1px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'scale(1) rotate(0deg)',
+						filter: 'blur(0px)'
+					}
+				},
+				'wand-wave': {
+					'0%, 100%': {
+						transform: 'rotate(-5deg) translateY(0px)'
+					},
+					'25%': {
+						transform: 'rotate(5deg) translateY(-2px)'
+					},
+					'50%': {
+						transform: 'rotate(-3deg) translateY(-4px)'
+					},
+					'75%': {
+						transform: 'rotate(3deg) translateY(-2px)'
+					}
+				},
+				'magical-pulse': {
+					'0%, 100%': {
+						transform: 'scale(1)',
+						boxShadow: '0 0 0 0 rgba(212, 175, 55, 0.7)'
+					},
+					'50%': {
+						transform: 'scale(1.05)',
+						boxShadow: '0 0 0 10px rgba(212, 175, 55, 0)'
 					}
 				}
 			},
@@ -137,7 +231,15 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'magical-glow': 'magical-glow 2s ease-in-out infinite',
 				'sparkle': 'sparkle 1.5s ease-in-out infinite',
-				'levitate': 'levitate 3s ease-in-out infinite'
+				'levitate': 'levitate 3s ease-in-out infinite',
+				'shimmer': 'shimmer 2s linear infinite',
+				'fade-in': 'fade-in 0.6s ease-out',
+				'scale-in': 'scale-in 0.4s ease-out',
+				'slide-in-left': 'slide-in-left 0.6s ease-out',
+				'slide-in-right': 'slide-in-right 0.6s ease-out',
+				'magical-entrance': 'magical-entrance 0.8s ease-out',
+				'wand-wave': 'wand-wave 2s ease-in-out infinite',
+				'magical-pulse': 'magical-pulse 2s ease-in-out infinite'
 			}
 		}
 	},
