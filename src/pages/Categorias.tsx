@@ -69,8 +69,8 @@ const Categorias = () => {
     playNextSequentialSound();
     
     if (category.hasSubcategories) {
-      // Redirecionar para página de subcategorias
-      navigate(`/subcategoria-detalhes?categoria=${encodeURIComponent(category.categoria)}`);
+      // Redirecionar para página de subcategorias usando a nova rota
+      navigate(`/categoria/${encodeURIComponent(category.categoria)}`);
     } else {
       // Ir direto para produtos
       navigate(`/categoria-lista?categoria=${encodeURIComponent(category.categoria)}&tipo=categoria`);

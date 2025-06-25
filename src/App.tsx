@@ -29,7 +29,8 @@ const AppContent = () => {
         <Route path="/favoritos" element={<Favoritos />} />
         <Route path="/novos" element={<Novos />} />
         <Route path="/categoria-lista" element={<CategoriaLista />} />
-        <Route path="/subcategoria-lista" element={<SubcategoriaLista />} />
+        <Route path="/categoria/:categoria" element={<SubcategoriaLista />} />
+        <Route path="/categoria/:categoria/subcategoria/:subcategoria" element={<SubcategoriaDetalhes />} />
         <Route path="/subcategoria-detalhes" element={<SubcategoriaDetalhes />} />
         <Route path="/explorar" element={<Explorar />} />
       </Routes>
