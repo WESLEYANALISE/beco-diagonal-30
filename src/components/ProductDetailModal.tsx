@@ -42,11 +42,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 }) => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const { getProductImages, formatPrice, handleBuyClick } = useProductCardLogic(product);
-  const { playModalSound, playClickSound, playHoverSound } = useMagicalSounds();
+  const { playRandomMagicalSound, playClickSound, playHoverSound } = useMagicalSounds();
 
   useEffect(() => {
     if (isOpen) {
-      playModalSound();
+      playRandomMagicalSound();
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -55,7 +55,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, playModalSound]);
+  }, [isOpen, playRandomMagicalSound]);
 
   if (!isOpen) return null;
 
