@@ -6,10 +6,16 @@ export interface Product {
   imagem1: string;
   imagem2?: string;
   imagem3?: string;
+  imagem4?: string;
+  imagem5?: string;
+  imagem6?: string;
+  imagem7?: string;
   video?: string;
+  link: string;
   categoria: string;
   subcategoria?: string;
   descricao?: string;
+  uso?: string;
   clicks?: number;
   created_at?: string;
   updated_at?: string;
