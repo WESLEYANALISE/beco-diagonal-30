@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Header } from '@/components/Header';
+import Header from '@/components/Header';
 import { HeroSection } from '@/components/home/HeroSection';
 import { FeaturedSection } from '@/components/home/FeaturedSection';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
@@ -77,8 +78,7 @@ const Index = () => {
       logger.info('Fetching categories from Supabase');
       const { data, error } = await supabase
         .from('HARRY POTTER')
-        .select('categoria')
-        .distinct()
+        .select('categoria');
 
       if (error) {
         logger.error('Error fetching categories:', error);
@@ -86,9 +86,9 @@ const Index = () => {
       }
 
       if (data) {
-        const categoryNames = data.map(item => item.categoria).filter(Boolean) as string[];
-        setCategories(categoryNames);
-        logger.info(`Fetched ${categoryNames.length} categories`);
+        const uniqueCategories = [...new Set(data.map(item => item.categoria).filter(Boolean))] as string[];
+        setCategories(uniqueCategories);
+        logger.info(`Fetched ${uniqueCategories.length} categories`);
       }
     } catch (error) {
       logger.error('Error fetching categories:', error);

@@ -10,8 +10,7 @@ export const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { getFavoritesCount } = useFavorites();
-  const favoritesCount = getFavoritesCount();
+  const { favoritesCount } = useFavorites();
 
   // Hide bottom navigation on /explorar page
   if (location.pathname === '/explorar') {
