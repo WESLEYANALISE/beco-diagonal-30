@@ -57,6 +57,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     };
   }, [isOpen, playRandomMagicalSound]);
 
+  // Cleanup when video modal closes to ensure proper state management
+  useEffect(() => {
+    if (!isVideoModalOpen && isOpen) {
+      // Ensure the product modal remains visible and body overflow is maintained
+      document.body.style.overflow = 'hidden';
+    }
+  }, [isVideoModalOpen, isOpen]);
+
   if (!isOpen) return null;
 
   const images = getProductImages(product);
@@ -76,16 +84,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     handleBuyClick();
   };
 
+  const handleVideoClose = () => {
+    setIsVideoModalOpen(false);
+    // Ensure the product modal remains visible after closing video
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
   return (
     <>
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-magical-midnight/90 backdrop-blur-sm z-50 animate-fade-in"
-        onClick={handleCloseClick}
-      />
+      {/* Backdrop - Only show when video modal is closed */}
+      {!isVideoModalOpen && (
+        <div 
+          className="fixed inset-0 bg-magical-midnight/90 backdrop-blur-sm z-50 animate-fade-in"
+          onClick={handleCloseClick}
+        />
+      )}
       
-      {/* Modal Container - Fixed positioning with proper responsive behavior */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6">
+      {/* Modal Container - Adjust z-index when video is open */}
+      <div className={`fixed inset-0 flex items-center justify-center p-2 sm:p-4 md:p-6 ${isVideoModalOpen ? 'z-40' : 'z-50'}`}>
         <div className="relative w-full max-w-4xl max-h-[95vh] bg-gradient-to-br from-magical-deepPurple/95 to-magical-mysticalPurple/95 backdrop-blur-md border border-magical-gold/30 rounded-2xl shadow-2xl animate-magical-entrance overflow-hidden">
           
           {/* Close Button */}
@@ -274,7 +292,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       {product.video && (
         <ProductVideoModal
           isOpen={isVideoModalOpen}
-          onClose={() => setIsVideoModalOpen(false)}
+          onClose={handleVideoClose}
           videoUrl={product.video}
           productName={product.produto}
           productPrice={product.valor}
