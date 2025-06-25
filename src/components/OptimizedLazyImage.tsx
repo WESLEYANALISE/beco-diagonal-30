@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
+import { imageCache } from '@/utils/imageCache';
 
 interface OptimizedLazyImageProps {
   src: string;
@@ -8,6 +9,7 @@ interface OptimizedLazyImageProps {
   className?: string;
   placeholder?: string;
   priority?: boolean;
+  compress?: boolean;
 }
 
 const OptimizedLazyImageComponent: React.FC<OptimizedLazyImageProps> = ({ 
@@ -15,14 +17,14 @@ const OptimizedLazyImageComponent: React.FC<OptimizedLazyImageProps> = ({
   alt, 
   className = "", 
   placeholder,
-  priority = false
+  priority = false,
+  compress = true
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState<string>('');
   const imgRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
 
   // Ultra-optimized intersection observer
   useEffect(() => {
@@ -36,8 +38,8 @@ const OptimizedLazyImageComponent: React.FC<OptimizedLazyImageProps> = ({
         }
       },
       { 
-        threshold: 0.01, // Load as soon as 1% is visible
-        rootMargin: '50px' // Reduced from 100px for better performance
+        threshold: 0.01,
+        rootMargin: '50px'
       }
     );
 
@@ -48,44 +50,23 @@ const OptimizedLazyImageComponent: React.FC<OptimizedLazyImageProps> = ({
     return () => observer.disconnect();
   }, [priority, isInView]);
 
-  // Optimized image loading with progressive enhancement
+  // Load image using advanced cache
   const loadImage = useCallback(async () => {
     if (!src || !isInView) return;
 
     try {
-      // Create new image for preloading
-      const img = new Image();
-      img.decoding = 'async';
-      img.loading = 'lazy';
-      
-      img.onload = () => {
-        setCurrentSrc(src);
-        setIsLoaded(true);
-        setHasError(false);
-      };
-
-      img.onerror = () => {
-        setHasError(true);
-        setIsLoaded(true);
-      };
-
-      img.src = src;
-      imageRef.current = img;
+      const cachedUrl = await imageCache.getImage(src, compress);
+      setCurrentSrc(cachedUrl);
+      setIsLoaded(true);
+      setHasError(false);
     } catch (error) {
       setHasError(true);
       setIsLoaded(true);
     }
-  }, [src, isInView]);
+  }, [src, isInView, compress]);
 
   useEffect(() => {
     loadImage();
-    
-    return () => {
-      if (imageRef.current) {
-        imageRef.current.onload = null;
-        imageRef.current.onerror = null;
-      }
-    };
   }, [loadImage]);
 
   return (
