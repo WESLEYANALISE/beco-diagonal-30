@@ -1,21 +1,23 @@
-import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
-import { BookOpen, Gamepad2, ShoppingBag, Wand2, Sparkles, Crown, Star } from 'lucide-react';
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone, Wand2, Crown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from '@/components/Header';
-import { OptimizedCarousel } from '@/components/OptimizedCarousel';
-import { DesktopSidebar } from '@/components/DesktopSidebar';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { useSupabaseCache } from '@/hooks/useSupabaseCache';
-import { useSequentialMagicalSounds } from '@/hooks/useSequentialMagicalSounds';
+import { SearchPreview } from '@/components/SearchPreview';
+import { CategoryCarousel } from '@/components/CategoryCarousel';
+import { ProductSelector } from '@/components/ProductSelector';
+import { AIAnalysisModal } from '@/components/AIAnalysisModal';
+import { HeroSection } from '@/components/HeroSection';
+import { TabNavigation } from '@/components/TabNavigation';
+import { ProductCard } from '@/components/ProductCard';
+import { ProductGrid } from '@/components/ProductGrid';
+import { VideoCarouselHome } from '@/components/VideoCarouselHome';
+import { MagicalParticles } from '@/components/MagicalParticles';
 import { useProductClicks } from '@/hooks/useProductClicks';
+import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from 'react-router-dom';
-
-// Lazy load components for better performance
-const VideoCarouselHome = lazy(() => import('@/components/VideoCarouselHome').then(module => ({ default: module.VideoCarouselHome })));
-const ProductDetailModal = lazy(() => import('@/components/ProductDetailModal').then(module => ({ default: module.ProductDetailModal })));
 
 interface Product {
   id: number;
@@ -32,161 +34,256 @@ interface Product {
   link: string;
   categoria: string;
   subcategoria?: string;
-  descricao?: string;
   uso?: string;
 }
 
-interface CategoryStats {
-  categoria: string;
-  count: number;
-  hasSubcategories: boolean;
-}
-
 const Index = () => {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { playNextSequentialSound } = useSequentialMagicalSounds();
-  const { trackProductClick } = useProductClicks();
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
+  // Initialize background music for the entire app - no manual control
+  useBackgroundMusic();
+  
+  const categoryFromUrl = searchParams.get('categoria');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [currentFeaturedCategory, setCurrentFeaturedCategory] = useState<string>('');
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [showingAI, setShowingAI] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
+  const [priceFilter, setPriceFilter] = useState<{
+    min: number;
+    max: number;
+  }>({
+    min: 0,
+    max: 1000
+  });
 
-  // Optimized products query with specific field selection and caching
-  const productsQuery = async () => {
-    const { data, error } = await supabase
-      .from('HARRY POTTER')
-      .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso')
-      .not('imagem1', 'is', null)
-      .not('produto', 'is', null)
-      .not('valor', 'is', null)
-      .limit(50); // Limit for better performance
-    
-    return { data: data || [], error };
+  // Optimize shuffle function with memoization
+  const shuffleArray = useCallback(<T,>(array: T[], shouldShuffle: boolean = true): T[] => {
+    if (!shouldShuffle) return array;
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, []);
+
+  // Parse price from string to number
+  const parsePrice = useCallback((priceString: string): number => {
+    const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
+    return parseFloat(cleanPrice) || 0;
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [categoryFromUrl]);
+
+  useEffect(() => {
+    filterProducts();
+  }, [selectedCategory, filteredProducts, searchTerm, sortBy, sortOrder]);
+
+  useEffect(() => {
+    applyPriceFilter();
+  }, [products, priceFilter]);
+
+  // Auto-rotate featured products by category every 20 seconds
+  useEffect(() => {
+    if (categories.length > 0 && products.length > 0 && !categoryFromUrl) {
+      const interval = setInterval(() => {
+        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+        setCurrentFeaturedCategory(randomCategory);
+        const categoryProducts = products.filter(p => p.categoria === randomCategory);
+        const shuffledProducts = shuffleArray(categoryProducts, true);
+        setFeaturedProducts(shuffledProducts.slice(0, 6));
+      }, 20000);
+      return () => clearInterval(interval);
+    }
+  }, [categories, products, categoryFromUrl, shuffleArray]);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('HARRY POTTER')
+        .select('*')
+        .order('id');
+      
+      if (error) throw error;
+
+      let processedProducts = shuffleArray(data || [], true);
+      setProducts(processedProducts);
+
+      const initialFeatured = shuffleArray(processedProducts, true).slice(0, 6);
+      setFeaturedProducts(initialFeatured);
+      
+      // Get all unique categories from HARRY POTTER table
+      const uniqueCategories = [...new Set((data || []).map(product => product.categoria).filter(Boolean))];
+      setCategories(uniqueCategories);
+
+      if (uniqueCategories.length > 0) {
+        setCurrentFeaturedCategory(uniqueCategories[0]);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar artefatos mágicos:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Optimized categories query with minimal field selection
-  const categoriesQuery = async () => {
-    const { data, error } = await supabase
-      .from('HARRY POTTER')
-      .select('categoria, subcategoria')
-      .not('categoria', 'is', null);
-    
-    return { data: data || [], error };
-  };
+  const applyPriceFilter = useCallback(() => {
+    const filtered = products.filter(product => {
+      const price = parsePrice(product.valor);
+      return price >= priceFilter.min && price <= priceFilter.max;
+    });
+    setFilteredProducts(filtered);
+  }, [products, priceFilter, parsePrice]);
 
-  const { data: products = [], loading: productsLoading } = useSupabaseCache<Product[]>(
-    productsQuery,
-    'home-products',
-    []
-  );
+  const filterProducts = useCallback(() => {
+    let filtered = filteredProducts;
+    if (selectedCategory !== 'todas') {
+      filtered = filtered.filter(product => product.categoria === selectedCategory);
+    }
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(product => product.produto.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
 
-  const { data: categoriesData = [], loading: categoriesLoading } = useSupabaseCache<any[]>(
-    categoriesQuery,
-    'home-categories',
-    []
-  );
-
-  // Memoized categories processing
-  const categories = useMemo(() => {
-    const categoryMap = new Map<string, { count: number; hasSubcategories: boolean }>();
-    
-    categoriesData.forEach(item => {
-      const cat = item.categoria;
-      if (categoryMap.has(cat)) {
-        const existing = categoryMap.get(cat)!;
-        existing.count += 1;
-        if (item.subcategoria && item.subcategoria.trim() !== '') {
-          existing.hasSubcategories = true;
-        }
+    // Apply sorting
+    filtered.sort((a, b) => {
+      if (sortBy === 'nome') {
+        const comparison = a.produto.localeCompare(b.produto);
+        return sortOrder === 'asc' ? comparison : -comparison;
       } else {
-        categoryMap.set(cat, {
-          count: 1,
-          hasSubcategories: !!(item.subcategoria && item.subcategoria.trim() !== '')
-        });
+        const priceA = parsePrice(a.valor);
+        const priceB = parsePrice(b.valor);
+        const comparison = priceA - priceB;
+        return sortOrder === 'asc' ? comparison : -comparison;
       }
     });
+    setDisplayedProducts(filtered);
+  }, [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder, parsePrice]);
 
-    return Array.from(categoryMap.entries()).map(([categoria, stats]) => ({
-      categoria,
-      count: stats.count,
-      hasSubcategories: stats.hasSubcategories
-    })).slice(0, 6); // Limit to 6 for performance
-  }, [categoriesData]);
+  // Debounced search function for better performance
+  const handleSearch = useCallback((term: string) => {
+    setSearchTerm(term);
+  }, []);
 
-  // Memoized valid products
-  const validProducts = useMemo(() => 
-    products.filter(product => 
-      product && 
-      product.produto && 
-      product.valor && 
-      product.imagem1 &&
-      typeof product.produto === 'string' &&
-      typeof product.valor === 'string'
-    ), [products]
-  );
+  const handlePriceFilter = useCallback((min: number, max: number) => {
+    setPriceFilter({
+      min,
+      max
+    });
+  }, []);
 
-  const handleProductClick = async (productId: number) => {
-    playNextSequentialSound();
-    await trackProductClick(productId, 'home_carousel_click');
-    
-    const product = validProducts.find(p => p.id === productId);
-    if (product) {
-      setSelectedProduct(product);
+  const {
+    trackProductClick
+  } = useProductClicks();
+
+  const handleProductClick = useCallback(async (productId: number) => {
+    await trackProductClick(productId, 'product_view');
+    const productElement = document.getElementById(`product-${productId}`);
+    if (productElement) {
+      productElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+      setSearchTerm('');
+    }
+  }, [trackProductClick]);
+
+  const handleTabChange = useCallback((tab: 'featured' | 'ai') => {
+    setShowingAI(tab === 'ai');
+  }, []);
+
+  const handleProductToggle = useCallback((product: Product) => {
+    setSelectedProducts(prev => {
+      const isSelected = prev.some(p => p.id === product.id);
+      if (isSelected) {
+        return prev.filter(p => p.id !== product.id);
+      } else {
+        if (prev.length >= 5) {
+          return prev;
+        }
+        return [...prev, product];
+      }
+    });
+  }, []);
+
+  const handleAnalyze = useCallback(() => {
+    if (selectedProducts.length > 0) {
+      setShowAnalysisModal(true);
+    }
+  }, [selectedProducts.length]);
+
+  const analyzeProducts = async (products: Product[]): Promise<string> => {
+    try {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('analyze-products', {
+        body: {
+          products,
+          userPreferences: questionnaireAnswers
+        }
+      });
+      if (error) {
+        console.error('Error calling analyze-products function:', error);
+        throw new Error(error.message || 'Erro ao analisar produtos');
+      }
+      return data.analysis || 'Análise não disponível';
+    } catch (error) {
+      console.error('Error in analyzeProducts:', error);
+      throw error;
     }
   };
 
-  const handleCategoryClick = (category: CategoryStats) => {
-    playNextSequentialSound();
-    
-    if (category.hasSubcategories) {
-      navigate(`/subcategoria-detalhes?categoria=${encodeURIComponent(category.categoria)}`);
-    } else {
-      navigate(`/categoria-lista?categoria=${encodeURIComponent(category.categoria)}&tipo=categoria`);
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIcon = useCallback((category: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
       'Itens Colecionáveis': Crown,
       'Bonecas e Brinquedos de Pelúcia': Sparkles,
       'Luminária': Wand2,
       'Colares': Crown,
-      'Moletons e Suéteres': ShoppingBag,
-      'Capinhas': ShoppingBag,
-      'Canecas': ShoppingBag
+      'Moletons e Suéteres': Shirt,
+      'Capinhas': Smartphone,
+      'Canecas': ShoppingCart
     };
-    return iconMap[category] || BookOpen;
-  };
+    return iconMap[category] || ShoppingCart;
+  }, []);
 
-  const getCategoryGradient = (index: number) => {
-    const gradients = [
-      'from-magical-mysticalPurple to-magical-deepPurple',
-      'from-magical-gold to-magical-bronze',
-      'from-magical-emerald to-magical-mysticalPurple',
-      'from-magical-crimson to-magical-gold',
-      'from-magical-silver to-magical-deepPurple',
-      'from-magical-bronze to-magical-mysticalPurple'
-    ];
-    return gradients[index % gradients.length];
-  };
+  const getCategoryProducts = useCallback((category: string, limit: number = 8) => {
+    const categoryProducts = filteredProducts.filter(p => p.categoria === category);
+    return shuffleArray(categoryProducts, false).slice(0, limit);
+  }, [filteredProducts, shuffleArray]);
 
-  const loading = productsLoading || categoriesLoading;
+  // Memoize products with videos for better performance
+  const productsWithVideos = useMemo(() => {
+    return shuffleArray(filteredProducts.filter(product => product.video && product.video.trim() !== ''), false).slice(0, 8);
+  }, [filteredProducts, shuffleArray]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple">
-        <Header />
-        <div className="flex">
-          <div className="flex-1">
-            <div className="animate-pulse space-y-8 p-4">
-              <div className="h-64 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30"></div>
-              <div className="h-32 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30"></div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="h-48 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="hidden lg:block">
-            <DesktopSidebar />
+      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20 relative">
+        <MagicalParticles />
+        <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-32 bg-magical-gold/20 rounded-2xl animate-shimmer backdrop-blur-sm border border-magical-gold/30"></div>
+            <ProductGrid loading={true} products={[]} />
           </div>
         </div>
       </div>
@@ -194,130 +291,337 @@ const Index = () => {
   }
 
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20">
-        <Header />
-        
-        <div className="flex">
-          <div className="flex-1">
-            {/* Hero Section - Otimizado */}
-            <section className="md:px-6 md:py-16 px-[15px] py-[26px]">
-              <div className="max-w-7xl mx-auto">
-                <div className="text-center space-y-6 mb-12">
-                  <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-magical-gold/30 to-magical-bronze/30 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-levitate shadow-2xl backdrop-blur-sm border border-magical-gold/40">
-                    <Wand2 className="w-10 h-10 md:w-12 md:h-12 text-magical-gold" />
-                    <Sparkles className="w-4 h-4 text-magical-gold absolute top-2 right-2 animate-sparkle" />
-                  </div>
-                  <h1 className="text-3xl md:text-5xl font-bold text-magical-starlight mb-4 leading-tight font-magical">
-                    Bem-vindo ao <span className="text-magical-gold animate-magical-glow">Mundo Mágico</span>
-                  </h1>
-                  <p className="text-lg md:text-xl text-magical-starlight/90 mb-8 max-w-3xl mx-auto leading-relaxed font-enchanted">
-                    Descubra artefatos mágicos únicos, poções encantadas e relíquias místicas
-                  </p>
-                </div>
-              </div>
-            </section>
+    <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20 relative overflow-hidden">
+      {/* Magical background particles */}
+      <MagicalParticles />
 
-            {/* Carousel de Produtos Otimizado */}
-            {validProducts.length > 0 && (
-              <OptimizedCarousel 
-                products={validProducts}
-                onProductClick={handleProductClick}
-                autoScrollInterval={6000}
-                itemsToShow={2}
-              />
-            )}
+      {/* Enhanced magical background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 w-3 h-3 bg-magical-gold rounded-full animate-magical-glow opacity-60"></div>
+        <div className="absolute top-32 right-20 w-4 h-4 bg-magical-bronze rounded-full animate-sparkle opacity-40" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-64 left-1/4 w-2 h-2 bg-magical-silver rounded-full animate-levitate opacity-70" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-96 right-1/3 w-5 h-5 bg-magical-gold rounded-full animate-magical-glow opacity-30" style={{animationDelay: '3s'}}></div>
+        <div className="absolute bottom-64 left-20 w-3 h-3 bg-magical-bronze rounded-full animate-sparkle opacity-50" style={{animationDelay: '4s'}}></div>
+        <div className="absolute bottom-32 right-10 w-2 h-2 bg-magical-silver rounded-full animate-levitate opacity-80" style={{animationDelay: '5s'}}></div>
+      </div>
+      
+      <Header onSearch={handleSearch} onPriceFilter={handlePriceFilter} />
+      
+      {/* Search Preview */}
+      {searchTerm && <SearchPreview searchTerm={searchTerm} products={filteredProducts.filter(p => p.produto.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)} onProductClick={handleProductClick} />}
 
-            {/* Video Carousel com Suspense */}
-            <Suspense fallback={
-              <div className="h-64 bg-magical-gold/20 rounded-2xl animate-pulse mx-4 my-8"></div>
-            }>
-              <VideoCarouselHome products={validProducts} />
-            </Suspense>
-
-            {/* Categories Grid Otimizado */}
-            <section className="px-4 md:px-6 py-8">
-              <div className="max-w-6xl mx-auto">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 font-magical">
-                    Explorar por <span className="text-magical-gold">Categorias</span>
-                  </h2>
-                  <p className="text-magical-starlight/90 font-enchanted">
-                    Descubra artefatos organizados pelos mestres de Hogwarts
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                  {categories.map((category, index) => {
-                    const IconComponent = getCategoryIcon(category.categoria);
-                    
-                    return (
-                      <Card 
-                        key={category.categoria} 
-                        className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer animate-fade-in hover:-translate-y-1 backdrop-blur-sm hover:shadow-magical-gold/20 will-change-transform" 
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                        onClick={() => handleCategoryClick(category)}
-                      >
-                        <div className={`bg-gradient-to-br ${getCategoryGradient(index)} p-4 md:p-6 text-magical-starlight relative overflow-hidden`}>
-                          <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-magical-gold/20 rounded-full transition-transform duration-300 group-hover:scale-110 will-change-transform"></div>
-                          <div className="absolute -bottom-4 -left-4 w-12 md:w-16 h-12 md:h-16 bg-magical-starlight/10 rounded-full transition-transform duration-300 group-hover:scale-125 will-change-transform"></div>
-                          
-                          {category.hasSubcategories && (
-                            <div className="absolute top-1 right-1 w-3 h-3 bg-magical-gold rounded-full animate-pulse" title="Possui subcategorias"></div>
-                          )}
-                          
-                          <Star className="absolute top-1 left-1 w-3 h-3 text-magical-gold animate-sparkle" />
-                          
-                          <div className="relative z-10">
-                            <div className="mb-3 md:mb-4 transform transition-transform duration-200 group-hover:scale-110 will-change-transform">
-                              <IconComponent className="w-8 h-8 md:w-12 md:h-12 text-magical-starlight drop-shadow-lg" />
-                            </div>
-                            <h3 className="text-sm md:text-xl font-bold mb-1 md:mb-2 line-clamp-2 font-magical">
-                              {category.categoria}
-                            </h3>
-                            <p className="text-xs md:text-sm text-magical-starlight/80 font-enchanted">
-                              {category.count} artefatos mágicos
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <CardContent className="p-3 md:p-6">
-                          <Button 
-                            className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold transition-all duration-200 hover:scale-105 text-xs md:text-sm py-2 md:py-3 shadow-lg hover:shadow-xl font-enchanted border-0 will-change-transform" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCategoryClick(category);
-                            }}
-                          >
-                            {category.hasSubcategories ? 'Explorar Coleção' : 'Ver Artefatos'}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
-          </div>
-
-          {/* Desktop Sidebar */}
-          <div className="hidden lg:block">
-            <DesktopSidebar />
+      {/* Novidades Carousel */}
+      <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
+      
+      {/* Category Quick Access Buttons - SHOWING ALL CATEGORIES from HARRY POTTER table */}
+      <section className="px-4 py-2 animate-fade-in">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} 
+              className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/30 text-magical-starlight border-magical-gold/50 hover:bg-magical-gold/40 flex items-center gap-2 font-enchanted shadow-lg hover:shadow-magical-gold/20"
+            >
+              <Wand2 className="w-4 h-4" />
+              Todos os Artefatos Mágicos
+            </Button>
+            {/* Show ALL categories from the HARRY POTTER table */}
+            {categories.map(category => {
+              const IconComponent = getCategoryIcon(category);
+              return (
+                <Button 
+                  key={category} 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted shadow-md hover:shadow-magical-gold/20"
+                >
+                  <IconComponent className="w-4 h-4" />
+                  {category}
+                </Button>
+              );
+            })}
           </div>
         </div>
+      </section>
 
-        {/* Product Detail Modal com Suspense */}
-        {selectedProduct && (
-          <Suspense fallback={null}>
-            <ProductDetailModal 
-              isOpen={!!selectedProduct} 
-              onClose={() => setSelectedProduct(null)} 
-              product={selectedProduct} 
-            />
-          </Suspense>
-        )}
-      </div>
-    </ErrorBoundary>
+      {/* Hero Section */}
+      <HeroSection productsCount={filteredProducts.length} />
+
+      {/* Video Carousel - Strategic placement after hero */}
+      {!showingAI && productsWithVideos.length > 0 && <VideoCarouselHome products={productsWithVideos} />}
+
+      {/* Category Product Carousels - show ALL categories when not in AI mode */}
+      {!showingAI && categories.map((category, index) => {
+        const categoryProducts = getCategoryProducts(category);
+        const IconComponent = getCategoryIcon(category);
+        
+        if (categoryProducts.length === 0) return null;
+        return (
+          <section 
+            key={category} 
+            style={{animationDelay: `${index * 0.1}s`}} 
+            className="md:px-6 py-4 animate-fade-in px-[6px]"
+          >
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-magical-gold/40 to-magical-bronze/40 rounded-xl flex items-center justify-center backdrop-blur-sm border border-magical-gold/30 shadow-lg animate-magical-glow">
+                    <IconComponent className="w-4 h-4 text-magical-gold" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-magical-starlight font-magical">{category}</h3>
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  className="bg-magical-gold/30 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/40 text-xs px-3 py-1 h-auto font-enchanted shadow-md hover:shadow-magical-gold/20 transition-all duration-300 hover:scale-105"
+                >
+                  Explorar Coleção
+                  <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+              </div>
+              
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-3">
+                  {categoryProducts.map(product => (
+                    <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
+                      <ProductCard product={product} compact={true} />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6 shadow-lg" />
+                <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 w-6 h-6 shadow-lg" />
+              </Carousel>
+            </div>
+          </section>
+        );
+      })}
+
+      {/* Enhanced Featured Products Carousel with Toggle - TEMÁTICO SEM LARANJA */}
+      <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-mysticalPurple/30 via-magical-deepPurple/30 to-magical-mysticalPurple/30 backdrop-blur-sm animate-fade-in border-y border-magical-gold/40 shadow-2xl relative overflow-hidden">
+        {/* Magical background overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/30 via-magical-mysticalPurple/30 to-magical-darkBlue/30"></div>
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-8">
+            <TabNavigation showingAI={showingAI} onTabChange={handleTabChange} />
+            
+            {showingAI ? (
+              <div className="prose prose-invert max-w-none">
+                <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
+                  🔮 Oráculo das Relíquias
+                </h2>
+                <div className="text-base text-magical-starlight/90 animate-slide-in-right space-y-2 font-enchanted">
+                  <p><strong>Selecione até 5 artefatos mágicos</strong> e nosso <strong>Oráculo</strong> revelará qual possui o poder mais adequado para você</p>
+                  <p className="text-sm">✨ <em>Consulta baseada na magia ancestral de Hogwarts</em></p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
+                  ⚡ Relíquias Lendárias de Hogwarts
+                </h2>
+                <p className="text-base text-magical-starlight/80 animate-slide-in-right font-enchanted">
+                  {currentFeaturedCategory ? `Os tesouros mais procurados em ${currentFeaturedCategory}` : 'Os artefatos favoritos dos bruxos mais poderosos'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {showingAI ? (
+            <>
+              <div className="max-w-md mx-auto mb-6 animate-scale-in">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="bg-magical-starlight/90 border-magical-gold/40 text-magical-midnight font-enchanted shadow-lg">
+                    <SelectValue placeholder="Selecione uma Casa de Hogwarts" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
+                    <SelectItem value="todas">Todas as Casas</SelectItem>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <ProductSelector 
+                products={displayedProducts.slice(0, 20)} 
+                selectedProducts={selectedProducts} 
+                onProductToggle={handleProductToggle} 
+                onAnalyze={handleAnalyze} 
+                onQuestionnaireChange={setQuestionnaireAnswers} 
+              />
+            </>
+          ) : (
+            <>
+              <Carousel className="w-full animate-scale-in mb-6">
+                <CarouselContent className="-ml-2 md:-ml-3">
+                  {featuredProducts.map((product, index) => (
+                    <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-3/4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 animate-fade-in" style={{animationDelay: `${index * 0.1}s`}}>
+                      <ProductCard product={product} showBadge={true} badgeText="RELÍQUIA" compact={false} />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2 md:left-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-xl" />
+                <CarouselNext className="right-2 md:right-4 bg-magical-starlight/90 hover:bg-magical-starlight border-magical-gold/30 shadow-xl" />
+              </Carousel>
+              
+              <div className="text-center animate-fade-in">
+                <Button 
+                  onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} 
+                  className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-2xl hover:shadow-magical-gold/30"
+                >
+                  Explorar Mais Relíquias
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Category Filter and Products Grid - only show when not in AI mode */}
+      {!showingAI && (
+        <section className="px-4 md:px-6 py-8 md:py-12 animate-fade-in">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="text-center flex-1">
+                <h2 className="text-2xl md:text-3xl font-bold text-magical-starlight mb-3 animate-slide-in-left font-magical">
+                  🏰 Explorar Relíquias Mágicas
+                </h2>
+                <p className="text-base text-magical-starlight/80 mb-4 animate-slide-in-right font-enchanted">
+                  {searchTerm ? `Artefatos encontrados para "${searchTerm}"` : 'Navegue por nossa coleção completa de relíquias ancestrais'}
+                </p>
+              </div>
+              
+              <div className="flex gap-2 animate-slide-in-right">
+                <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>
+                  <SelectTrigger className="bg-magical-starlight text-magical-midnight border-0 w-32 font-enchanted shadow-md">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
+                    <SelectItem value="nome">
+                      <div className="flex items-center gap-2">
+                        <SortAsc className="w-4 h-4" />
+                        Nome
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="preco">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        Valor
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} 
+                  className="bg-magical-starlight text-magical-midnight border-0 hover:bg-magical-silver/20 transition-all duration-300 hover:scale-105 shadow-md"
+                >
+                  {sortOrder === 'asc' ? '↑' : '↓'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="max-w-md mx-auto mb-6 animate-scale-in">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="bg-magical-starlight/90 border-magical-gold/40 text-magical-midnight font-enchanted shadow-lg">
+                  <SelectValue placeholder="Selecione uma Casa de Hogwarts" />
+                </SelectTrigger>
+                <SelectContent className="bg-magical-starlight border-magical-gold/30 z-50">
+                  <SelectItem value="todas">Todas as Casas</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <ProductGrid products={displayedProducts.slice(0, 20)} compact={true} />
+
+            {displayedProducts.length === 0 && (
+              <div className="text-center py-16 animate-fade-in">
+                <div className="w-32 h-32 bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-levitate border border-magical-gold/30 shadow-2xl">
+                  <Wand2 className="w-16 h-16 text-magical-gold/50" />
+                </div>
+                <h2 className="text-2xl font-bold text-magical-starlight mb-4 font-magical">
+                  Nenhuma relíquia encontrada
+                </h2>
+                <p className="text-magical-starlight/80 mb-6 font-enchanted">
+                  {searchTerm ? `Não encontramos relíquias para "${searchTerm}"` : 'Não há relíquias nesta Casa de Hogwarts'}
+                </p>
+                {searchTerm && (
+                  <Button 
+                    onClick={() => setSearchTerm('')} 
+                    className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-xl"
+                  >
+                    Ver Todas as Relíquias
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {displayedProducts.length > 20 && (
+              <div className="text-center mt-8 animate-fade-in">
+                <Button 
+                  onClick={() => navigate(`/categoria-lista?categoria=${selectedCategory}&tipo=categoria`)} 
+                  className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-xl hover:shadow-magical-gold/30"
+                >
+                  Ver Todas as {displayedProducts.length} Relíquias
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* CTA Section - only show when not in AI mode */}
+      {!showingAI && (
+        <section className="px-4 md:px-6 py-12 md:py-16 bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-darkBlue relative overflow-hidden animate-fade-in border-t border-magical-gold/30 shadow-2xl">
+          <div className="absolute inset-0 bg-magical-midnight/20"></div>
+          <div className="max-w-4xl mx-auto text-center relative z-10">
+            <div className="space-y-6">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-magical-gold/40 to-magical-bronze/40 rounded-3xl flex items-center justify-center mx-auto animate-levitate border border-magical-gold/30 backdrop-blur-sm shadow-2xl">
+                <Wand2 className="w-8 h-8 md:w-10 md:h-10 text-magical-gold animate-magical-glow" />
+              </div>
+              <h2 className="text-2xl md:text-4xl font-bold mb-4 text-magical-starlight animate-slide-in-left font-magical">
+                ⚡ Não Perca Nenhuma Magia!
+              </h2>
+              <p className="text-magical-starlight/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed animate-slide-in-right font-enchanted">
+                Descubra as relíquias mais poderosas de Hogwarts com preços encantados
+              </p>
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze py-4 px-8 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 font-enchanted" 
+                onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
+              >
+                Explorar Relíquias Mágicas
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* AI Analysis Modal */}
+      <AIAnalysisModal 
+        isOpen={showAnalysisModal} 
+        onClose={() => setShowAnalysisModal(false)} 
+        selectedProducts={selectedProducts} 
+        onAnalyze={analyzeProducts} 
+      />
+    </div>
   );
 };
 

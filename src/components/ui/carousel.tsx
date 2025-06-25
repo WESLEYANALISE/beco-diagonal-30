@@ -61,9 +61,9 @@ const Carousel = React.forwardRef<
       {
         ...opts,
         axis: orientation === "horizontal" ? "x" : "y",
-        duration: 20, // Faster transition for better performance
-        dragFree: false, // Better performance with snapping
-        skipSnaps: false,
+        duration: 25, // Faster transition for better performance
+        dragFree: true,
+        skipSnaps: false, // Optimize snapping
       },
       plugins
     )
@@ -142,7 +142,6 @@ const Carousel = React.forwardRef<
           className={cn("relative", className)}
           role="region"
           aria-roledescription="carousel"
-          style={{ willChange: 'transform' }}
           {...props}
         >
           {children}
@@ -164,11 +163,10 @@ const CarouselContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "flex transition-transform duration-200 ease-out will-change-transform", // Faster transition
+          "flex transition-transform duration-300 ease-out", // Faster transition
           orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
           className
         )}
-        style={{ willChange: 'transform' }}
         {...props}
       />
     </div>
@@ -192,7 +190,6 @@ const CarouselItem = React.forwardRef<
         orientation === "horizontal" ? "pl-4" : "pt-4",
         className
       )}
-      style={{ willChange: 'transform' }}
       {...props}
     />
   )
@@ -211,13 +208,12 @@ const CarouselPrevious = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute h-8 w-8 rounded-full transition-all duration-150 hover:scale-110 will-change-transform", // Faster button transition
+        "absolute h-8 w-8 rounded-full transition-all duration-200 hover:scale-110", // Faster button transition
         orientation === "horizontal"
           ? "-left-12 top-1/2 -translate-y-1/2"
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
-      style={{ willChange: 'transform' }}
       disabled={!canScrollPrev}
       onClick={scrollPrev}
       {...props}
@@ -241,13 +237,12 @@ const CarouselNext = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute h-8 w-8 rounded-full transition-all duration-150 hover:scale-110 will-change-transform", // Faster button transition
+        "absolute h-8 w-8 rounded-full transition-all duration-200 hover:scale-110", // Faster button transition
         orientation === "horizontal"
           ? "-right-12 top-1/2 -translate-y-1/2"
           : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
-      style={{ willChange: 'transform' }}
       disabled={!canScrollNext}
       onClick={scrollNext}
       {...props}

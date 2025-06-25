@@ -16,15 +16,9 @@ export const useProductClicks = () => {
           click_type: clickType
         });
       
-      // Only log in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Tracked ${clickType} for product ${productId}`);
-      }
+      console.log(`Tracked ${clickType} for product ${productId}`);
     } catch (error) {
-      // Only log in development
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error tracking product click:', error);
-      }
+      console.error('Error tracking product click:', error);
     }
   }, []);
 
@@ -35,17 +29,13 @@ export const useProductClicks = () => {
       });
       
       if (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching most clicked products:', error);
-        }
+        console.error('Error fetching most clicked products:', error);
         return [];
       }
       
       return data || [];
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error in getMostClickedProducts:', error);
-      }
+      console.error('Error in getMostClickedProducts:', error);
       return [];
     }
   }, []);

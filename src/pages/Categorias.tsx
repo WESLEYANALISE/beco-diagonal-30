@@ -5,19 +5,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
 import { supabase } from "@/integrations/supabase/client";
-import { useSequentialMagicalSounds } from '@/hooks/useSequentialMagicalSounds';
+import { useMagicalSounds } from '@/hooks/useMagicalSounds';
 
 interface CategoryStats {
   categoria: string;
   count: number;
-  hasSubcategories: boolean;
 }
 
 const Categorias = () => {
   const [categories, setCategories] = useState<CategoryStats[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { playNextSequentialSound } = useSequentialMagicalSounds();
+  const { playRandomMagicalSound } = useMagicalSounds();
 
   useEffect(() => {
     fetchCategories();
@@ -27,34 +26,21 @@ const Categorias = () => {
     try {
       const { data, error } = await supabase
         .from('HARRY POTTER')
-        .select('categoria, subcategoria')
+        .select('categoria')
         .not('categoria', 'is', null);
 
       if (error) throw error;
 
-      // Processar categorias e verificar subcategorias
-      const categoryMap = new Map<string, { count: number; hasSubcategories: boolean }>();
-      
-      (data || []).forEach(item => {
+      // Count products per category
+      const categoryCount = (data || []).reduce((acc: Record<string, number>, item) => {
         const cat = item.categoria;
-        if (categoryMap.has(cat)) {
-          const existing = categoryMap.get(cat)!;
-          existing.count += 1;
-          if (item.subcategoria && item.subcategoria.trim() !== '') {
-            existing.hasSubcategories = true;
-          }
-        } else {
-          categoryMap.set(cat, {
-            count: 1,
-            hasSubcategories: !!(item.subcategoria && item.subcategoria.trim() !== '')
-          });
-        }
-      });
+        acc[cat] = (acc[cat] || 0) + 1;
+        return acc;
+      }, {});
 
-      const categoryStats = Array.from(categoryMap.entries()).map(([categoria, stats]) => ({
+      const categoryStats = Object.entries(categoryCount).map(([categoria, count]) => ({
         categoria,
-        count: stats.count,
-        hasSubcategories: stats.hasSubcategories
+        count: count as number
       }));
 
       setCategories(categoryStats);
@@ -65,16 +51,10 @@ const Categorias = () => {
     }
   };
 
-  const handleCategoryClick = (category: CategoryStats) => {
-    playNextSequentialSound();
-    
-    if (category.hasSubcategories) {
-      // Redirecionar para página de subcategorias
-      navigate(`/subcategoria-detalhes?categoria=${encodeURIComponent(category.categoria)}`);
-    } else {
-      // Ir direto para produtos
-      navigate(`/categoria-lista?categoria=${encodeURIComponent(category.categoria)}&tipo=categoria`);
-    }
+  const handleCategoryClick = (category: string) => {
+    // Play magical sound when clicking on category
+    playRandomMagicalSound();
+    navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -154,18 +134,14 @@ const Categorias = () => {
                   key={category.categoria} 
                   className="overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 border border-magical-gold/30 shadow-lg group cursor-pointer animate-fade-in hover:-translate-y-1 backdrop-blur-sm hover:shadow-magical-gold/20 hover:animate-magical-glow" 
                   style={{ animationDelay: `${index * 0.1}s` }}
-                  onClick={() => handleCategoryClick(category)}
+                  onClick={() => handleCategoryClick(category.categoria)}
                 >
                   <div className={`bg-gradient-to-br ${getCategoryGradient(index)} p-4 md:p-6 text-magical-starlight relative overflow-hidden`}>
                     <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-magical-gold/20 rounded-full transition-transform duration-500 group-hover:scale-110"></div>
                     <div className="absolute -bottom-4 -left-4 w-12 md:w-16 h-12 md:h-16 bg-magical-starlight/10 rounded-full transition-transform duration-500 group-hover:scale-125"></div>
                     
-                    {/* Indicador de subcategorias */}
-                    {category.hasSubcategories && (
-                      <div className="absolute top-1 right-1 w-3 h-3 bg-magical-gold rounded-full animate-pulse" title="Possui subcategorias"></div>
-                    )}
-                    
-                    <Zap className="absolute top-1 left-1 w-3 h-3 text-magical-gold animate-sparkle" />
+                    {/* Magical sparkles */}
+                    <Zap className="absolute top-1 right-1 w-3 h-3 text-magical-gold animate-sparkle" />
                     
                     <div className="relative z-10">
                       <div className="mb-3 md:mb-4 transform transition-transform duration-300 group-hover:scale-110">
@@ -185,10 +161,10 @@ const Categorias = () => {
                       className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze hover:from-magical-darkGold hover:to-magical-bronze text-magical-midnight font-semibold transition-all duration-300 hover:scale-105 text-xs md:text-sm py-2 md:py-3 shadow-lg hover:shadow-xl font-enchanted border-0" 
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCategoryClick(category);
+                        handleCategoryClick(category.categoria);
                       }}
                     >
-                      {category.hasSubcategories ? 'Explorar Coleção' : 'Ver Artefatos Mágicos'}
+                      Ver Artefatos Mágicos
                       <ArrowRight className="w-3 h-3 md:w-4 md:h-4 ml-1 md:ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                     </Button>
                   </CardContent>

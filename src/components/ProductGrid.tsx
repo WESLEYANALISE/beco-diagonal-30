@@ -42,6 +42,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
   if (loading) {
     return (
       <div className="space-y-4">
+        {/* View mode controls for mobile/tablet only */}
         {isMobile && (
           <div className="flex justify-end gap-2 px-4">
             <Button
@@ -67,7 +68,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
           ? 'space-y-4 px-4' 
           : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3'}`}>
           {Array.from({ length: 12 }).map((_, index) => (
-            <div key={index} className={`bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-2xl animate-pulse backdrop-blur-sm border border-magical-gold/20 will-change-transform ${
+            <div key={index} className={`bg-gradient-to-br from-magical-gold/20 to-magical-bronze/20 rounded-2xl animate-pulse backdrop-blur-sm border border-magical-gold/20 ${
               viewMode === 'list' && isMobile ? 'h-32' : 'h-64'
             }`}></div>
           ))}
@@ -94,13 +95,14 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* View mode controls - only show on mobile/tablet */}
       {isMobile && (
         <div className="flex justify-end gap-2 px-4">
           <Button
             variant={viewMode === 'grid' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('grid')}
-            className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30 will-change-transform"
+            className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30"
           >
             <Grid className="w-4 h-4" />
           </Button>
@@ -108,13 +110,14 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
             variant={viewMode === 'list' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('list')}
-            className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30 will-change-transform"
+            className="bg-magical-gold/20 text-magical-starlight border-magical-gold/30 hover:bg-magical-gold/30"
           >
             <List className="w-4 h-4" />
           </Button>
         </div>
       )}
 
+      {/* Products container */}
       <div className={`${
         viewMode === 'list' && isMobile 
           ? 'space-y-4 px-4' 
@@ -133,10 +136,7 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
             selectable={selectable}
             selected={selectedProducts.some(p => p.id === product.id)}
             onToggle={onProductToggle}
-            style={{ 
-              animationDelay: `${index * 0.05}s`,
-              willChange: 'transform'
-            }}
+            style={{ animationDelay: `${index * 0.05}s` }}
           />
         ))}
       </div>
