@@ -1,15 +1,18 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, Filter, Grid, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from '@/components/Header';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
+import { FavoriteButton } from '@/components/FavoriteButton';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { ProductGrid } from '@/components/ProductGrid';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
-import { useSubcategories } from '@/hooks/useSubcategories';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -42,79 +45,110 @@ const CategoriaLista = () => {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'nome' | 'preco'>('nome');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
-  const { subcategories, loading: subcategoriesLoading, hasSubcategories } = useSubcategories(categoria);
-  const { showSuccess, showError } = useToastNotifications();
-
-  // Redirect to subcategories if they exist and we're not already showing them
-  useEffect(() => {
-    if (!subcategoriesLoading && hasSubcategories && !subcategoria && tipo === 'categoria') {
-      navigate(`/subcategoria-lista?categoria=${encodeURIComponent(categoria)}`);
-      return;
-    }
-  }, [subcategoriesLoading, hasSubcategories, subcategoria, categoria, tipo, navigate]);
+  const {
+    showSuccess,
+    showError
+  } = useToastNotifications();
 
   useEffect(() => {
-    if (!subcategoriesLoading && (!hasSubcategories || subcategoria)) {
-      fetchProducts();
-    }
-  }, [categoria, subcategoria, tipo, subcategoriesLoading, hasSubcategories]);
+    fetchProducts();
+  }, [categoria, subcategoria, tipo]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [products, sortBy, sortOrder]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
-      setLoading(true);
+      console.log('Fetching products for categoria:', categoria, 'subcategoria:', subcategoria, 'tipo:', tipo);
+      
       let query = supabase
         .from('HARRY POTTER')
         .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso');
       
       if (tipo === 'categoria' && categoria && categoria !== 'todas') {
         query = query.eq('categoria', categoria);
-        if (subcategoria) {
-          query = query.eq('subcategoria', subcategoria);
-        }
-      } else if (tipo === 'mais-vendidos') {
+      }
+      
+      if (tipo === 'subcategoria' && subcategoria) {
+        query = query.eq('categoria', categoria).eq('subcategoria', subcategoria);
+      }
+      
+      if (tipo === 'mais-vendidos') {
         query = query.order('id').limit(20);
       }
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      setProducts(data || []);
-      showSuccess("Artefatos mágicos carregados!");
+      console.log('Raw data:', data);
+      
+      if (!data || !Array.isArray(data)) {
+        console.warn('No data received');
+        setProducts([]);
+        showError("Nenhum artefato mágico encontrado");
+        return;
+      }
+
+      // Filter out invalid products
+      const validProducts = data.filter(product => 
+        product && 
+        product.produto && 
+        product.valor && 
+        product.categoria &&
+        typeof product.produto === 'string' &&
+        typeof product.valor === 'string' &&
+        typeof product.categoria === 'string'
+      );
+
+      console.log('Valid products found:', validProducts.length);
+      setProducts(validProducts);
+      
+      if (validProducts.length > 0) {
+        showSuccess("Artefatos mágicos carregados com sucesso!");
+      } else {
+        showError("Nenhum artefato mágico válido encontrado");
+      }
     } catch (error) {
+      console.error('Erro ao buscar artefatos mágicos:', error);
       showError("Erro ao carregar artefatos mágicos");
+      setProducts([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoria, subcategoria, tipo, showSuccess, showError]);
 
-  const applyFilters = () => {
+  // Memoized filtered and sorted products for better performance
+  const filteredProducts = useMemo(() => {
+    if (!Array.isArray(products)) return [];
+    
     let filtered = [...products];
     
     filtered.sort((a, b) => {
+      if (!a || !b) return 0;
+      
       if (sortBy === 'nome') {
-        const comparison = a.produto.localeCompare(b.produto);
+        const nameA = a.produto || '';
+        const nameB = b.produto || '';
+        const comparison = nameA.localeCompare(nameB);
         return sortOrder === 'asc' ? comparison : -comparison;
       } else {
-        const priceA = parseFloat(a.valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-        const priceB = parseFloat(b.valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        const priceA = parseFloat((a.valor || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        const priceB = parseFloat((b.valor || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
         const comparison = priceA - priceB;
         return sortOrder === 'asc' ? comparison : -comparison;
       }
     });
 
-    setFilteredProducts(filtered);
-  };
+    return filtered;
+  }, [products, sortBy, sortOrder]);
 
-  const getMagicalCategoryName = (category: string) => {
+  const getMagicalCategoryName = useCallback((category: string) => {
+    if (!category) return '';
+    
     const nameMap: Record<string, string> = {
       'Itens Colecionáveis': 'Artefatos Colecionáveis',
       'Bonecas e Brinquedos de Pelúcia': 'Criaturas Mágicas',
@@ -125,48 +159,40 @@ const CategoriaLista = () => {
       'Canecas': 'Cálices Encantados'
     };
     return nameMap[category] || category;
-  };
+  }, []);
 
-  const getTitle = () => {
+  const getTitle = useCallback(() => {
     if (tipo === 'mais-vendidos') {
       return 'Artefatos Mais Procurados';
     }
-    if (subcategoria) {
+    if (tipo === 'subcategoria' && subcategoria) {
       return `${getMagicalCategoryName(categoria)} - ${subcategoria}`;
     }
     return categoria ? getMagicalCategoryName(categoria) : 'Artefatos Mágicos';
-  };
+  }, [tipo, subcategoria, categoria, getMagicalCategoryName]);
 
-  const getSubtitle = () => {
+  const getSubtitle = useCallback(() => {
     if (tipo === 'mais-vendidos') {
       return 'Os artefatos favoritos dos nossos magos';
     }
-    if (subcategoria) {
+    if (tipo === 'subcategoria' && subcategoria) {
       return `Explore todos os artefatos de ${subcategoria}`;
     }
     return `Explore todos os artefatos de ${getMagicalCategoryName(categoria)}`;
-  };
+  }, [tipo, subcategoria, categoria, getMagicalCategoryName]);
 
-  // Show loading while checking for subcategories
-  if (subcategoriesLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple">
-        <Header />
-        <div className="flex">
-          <div className="flex-1 container mx-auto px-4 py-8">
-            <div className="animate-pulse space-y-4">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="h-24 bg-magical-gold/20 rounded-lg backdrop-blur-sm border border-magical-gold/30"></div>
-              ))}
-            </div>
-          </div>
-          <div className="hidden lg:block">
-            <DesktopSidebar />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const getBackRoute = useCallback(() => {
+    if (tipo === 'subcategoria') {
+      return `/subcategoria-detalhes?categoria=${encodeURIComponent(categoria)}`;
+    }
+    return '/categorias';
+  }, [tipo, categoria]);
+
+  const handleProductClick = useCallback((product: Product) => {
+    if (!product) return;
+    setSelectedProduct(product);
+    setIsDetailModalOpen(true);
+  }, []);
 
   if (loading) {
     return (
@@ -176,7 +202,7 @@ const CategoriaLista = () => {
           <div className="flex-1 container mx-auto px-4 py-8">
             <div className="animate-pulse space-y-4">
               {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="h-24 bg-magical-gold/20 rounded-lg backdrop-blur-sm border border-magical-gold/30"></div>
+                <div key={index} className="h-24 bg-magical-gold/20 rounded-lg backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
               ))}
             </div>
           </div>
@@ -201,13 +227,7 @@ const CategoriaLista = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => {
-                    if (subcategoria) {
-                      navigate(`/subcategoria-lista?categoria=${encodeURIComponent(categoria)}`);
-                    } else {
-                      navigate('/categorias');
-                    }
-                  }} 
+                  onClick={() => navigate(getBackRoute())} 
                   className="text-magical-gold hover:text-magical-darkGold hover:bg-magical-gold/20 p-1 sm:p-2 transition-all duration-300"
                 >
                   <ArrowLeft className="w-4 h-4 sm:mr-2" />
@@ -241,6 +261,10 @@ const CategoriaLista = () => {
                     {sortOrder === 'asc' ? '↑' : '↓'}
                   </Button>
                 </div>
+                
+                <Badge className="bg-magical-gold/20 text-magical-gold border-magical-gold/30 text-xs font-enchanted">
+                  {filteredProducts.length} artefatos encontrados
+                </Badge>
               </div>
             </div>
           </div>

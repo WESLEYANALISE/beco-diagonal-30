@@ -9,7 +9,6 @@ import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { LazyImage } from '@/components/LazyImage';
-import { formatPrice, validateProductData } from '@/utils/dataValidation';
 
 interface Product {
   id: number;
@@ -53,72 +52,43 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 }) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  // Early validation to prevent rendering invalid products
-  if (!validateProductData(product)) {
-    console.warn('ProductCard: Invalid product data, not rendering:', product);
-    return null;
-  }
-
   const getProductImages = useCallback((product: Product) => {
-    try {
-      const images = [
-        product.imagem1, 
-        product.imagem2, 
-        product.imagem3, 
-        product.imagem4, 
-        product.imagem5,
-        product.imagem6,
-        product.imagem7
-      ].filter(Boolean);
-      
-      // Ensure at least one image exists
-      return images.length > 0 ? images : ['/placeholder.svg'];
-    } catch (error) {
-      console.error('Error getting product images:', error);
-      return ['/placeholder.svg'];
+    return [
+      product.imagem1, 
+      product.imagem2, 
+      product.imagem3, 
+      product.imagem4, 
+      product.imagem5,
+      product.imagem6,
+      product.imagem7
+    ].filter(Boolean);
+  }, []);
+
+  const formatPrice = useCallback((price: string) => {
+    if (price.includes('R$')) {
+      return price;
     }
+    return `R$ ${price}`;
   }, []);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
-    try {
-      // Evitar abrir o modal se clicar em botões específicos
-      if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('[role="button"]') || (e.target as HTMLElement).closest('.carousel-nav')) {
-        return;
-      }
-      
-      if (!validateProductData(product)) {
-        console.warn('Invalid product data, cannot proceed with click');
-        return;
-      }
-      
-      if (selectable && onToggle) {
-        onToggle(product);
-      } else {
-        setIsDetailModalOpen(true);
-      }
-    } catch (error) {
-      console.error('Error handling card click:', error);
+    // Evitar abrir o modal se clicar em botões específicos
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('[role="button"]') || (e.target as HTMLElement).closest('.carousel-nav')) {
+      return;
+    }
+    if (selectable && onToggle) {
+      onToggle(product);
+    } else {
+      setIsDetailModalOpen(true);
     }
   }, [selectable, onToggle, product]);
 
   const handleBuyClick = useCallback((e: React.MouseEvent) => {
-    try {
-      e.stopPropagation();
-      
-      if (!product.link || typeof product.link !== 'string') {
-        console.warn('Invalid product link:', product.link);
-        return;
-      }
-      
-      window.open(product.link, '_blank');
-    } catch (error) {
-      console.error('Error handling buy click:', error);
-    }
+    e.stopPropagation();
+    window.open(product.link, '_blank');
   }, [product.link]);
 
   const images = getProductImages(product);
-  const productName = product.produto || 'Produto sem nome';
-  const productCategory = product.categoria || 'Categoria desconhecida';
 
   if (listView) {
     return (
@@ -134,7 +104,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             <div className="flex gap-3">
               {/* Image */}
               <div className="relative w-24 h-24 flex-shrink-0">
-                <LazyImage src={images[0]} alt={productName} className="w-full h-full object-cover rounded-lg border border-magical-gold/20" />
+                <LazyImage src={product.imagem1} alt={product.produto} className="w-full h-full object-cover rounded-lg border border-magical-gold/20" />
                 {product.video && (
                   <div className="absolute top-1 right-1">
                     <div className="bg-magical-midnight/70 rounded-full p-1 border border-magical-gold/30">
@@ -147,7 +117,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-magical-starlight text-sm line-clamp-2 mb-2 font-enchanted">
-                  {productName}
+                  {product.produto}
                 </h3>
                 
                 <div className="flex items-center justify-between mb-2">
@@ -193,7 +163,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               {images.map((image, index) => (
                 <CarouselItem key={index}>
                   <div className="aspect-square overflow-hidden">
-                    <LazyImage src={image} alt={`${productName} - ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <LazyImage src={image} alt={`${product.produto} - ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   </div>
                 </CarouselItem>
               ))}
@@ -216,10 +186,10 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             </div>
           )}
 
-          {productCategory && !showBadge && compact && (
+          {product.categoria && !showBadge && compact && (
             <div className="absolute bottom-1 left-1">
               <Badge variant="secondary" className="text-xs bg-magical-starlight/90 text-magical-midnight px-1 py-0 border border-magical-gold/20">
-                {productCategory}
+                {product.categoria}
               </Badge>
             </div>
           )}
@@ -246,7 +216,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
         <CardContent className={compact ? "p-2" : "p-3"}>
           <h3 className={`font-medium text-magical-starlight mb-2 line-clamp-2 hover:text-magical-gold transition-colors font-enchanted ${compact ? 'text-xs leading-tight' : 'text-sm'}`}>
-            {productName}
+            {product.produto}
           </h3>
           
           <div className="flex items-center justify-between mb-2">
@@ -270,7 +240,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               </div>
             )}
             
-            <ProductPhotosModal images={images} productName={productName} productPrice={formatPrice(product.valor)} productLink={product.link} videoUrl={product.video} />
+            <ProductPhotosModal images={images} productName={product.produto} productPrice={formatPrice(product.valor)} productLink={product.link} videoUrl={product.video} />
             
             <Button size="sm" className={`w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold text-xs hover:scale-105 transition-all duration-300 border-0 shadow-md hover:shadow-lg font-enchanted ${compact ? 'py-1' : ''}`} onClick={handleBuyClick}>
               <ShoppingCart className="w-3 h-3 mr-1" />
