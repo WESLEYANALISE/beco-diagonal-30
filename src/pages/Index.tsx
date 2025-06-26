@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Wand2, Crown, Shirt, Smartphone, Video } from 'lucide-react';
+import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Wand2, Crown, Shirt, Smartphone } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,12 +11,13 @@ import { ProductSelector } from '@/components/ProductSelector';
 import { AIAnalysisModal } from '@/components/AIAnalysisModal';
 import { HeroSection } from '@/components/HeroSection';
 import { TabNavigation } from '@/components/TabNavigation';
-import { ProductCard } from '@/components/ProductCard';
-import { ProductGrid } from '@/components/ProductGrid';
+import { OptimizedProductCard } from '@/components/OptimizedProductCard';
+import { VirtualizedGrid } from '@/components/VirtualizedGrid';
 import { MagicalParticles } from '@/components/MagicalParticles';
 import { VideoCarouselHome } from '@/components/VideoCarouselHome';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
+import { usePerformanceOptimization } from '@/hooks/usePerformanceOptimization';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -43,6 +43,7 @@ const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { addToHistory } = useNavigationHistory();
+  const { debounce, throttle } = usePerformanceOptimization();
   const categoryFromUrl = searchParams.get('categoria');
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -62,6 +63,7 @@ const Index = () => {
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
   const [priceFilter, setPriceFilter] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
 
+  // Memoized functions for better performance
   const shuffleArray = useCallback(<T,>(array: T[]): T[] => {
     if (!Array.isArray(array)) return [];
     const shuffled = [...array];
@@ -78,13 +80,14 @@ const Index = () => {
     return parseFloat(cleanPrice) || 0;
   }, []);
 
+  // Optimized data fetching with reduced data transfer
   const fetchProducts = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('HARRY POTTER')
-        .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso')
+        .select('id, produto, valor, video, imagem1, link, categoria')
         .order('id')
-        .limit(80);
+        .limit(60); // Reduced initial load
 
       if (error) throw error;
       if (!data || !Array.isArray(data)) {
@@ -102,10 +105,10 @@ const Index = () => {
       setProducts(processedProducts);
       setFilteredProducts(processedProducts);
       
-      const initialFeatured = processedProducts.slice(0, 8);
+      const initialFeatured = processedProducts.slice(0, 6); // Reduced featured items
       setFeaturedProducts(initialFeatured);
 
-      const withVideos = processedProducts.filter(product => product.video).slice(0, 8);
+      const withVideos = processedProducts.filter(product => product.video).slice(0, 6);
       setVideoProducts(withVideos);
       
       const uniqueCategories = [...new Set(validProducts.map(product => product.categoria).filter(cat => cat?.trim()))];
@@ -119,47 +122,51 @@ const Index = () => {
     }
   }, [shuffleArray]);
 
-  const filterProducts = useCallback(() => {
-    if (!Array.isArray(filteredProducts)) {
-      setDisplayedProducts([]);
-      return;
-    }
-    
-    let filtered = [...filteredProducts];
-    
-    if (selectedCategory && selectedCategory !== 'todas') {
-      filtered = filtered.filter(product => product?.categoria === selectedCategory);
-    }
-    
-    if (searchTerm?.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(product => 
-        product?.produto?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Apply price filter
-    filtered = filtered.filter(product => {
-      const price = parsePrice(product.valor || '');
-      return price >= priceFilter.min && price <= priceFilter.max;
-    });
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      if (!a || !b) return 0;
-      if (sortBy === 'nome') {
-        const comparison = (a.produto || '').localeCompare(b.produto || '');
-        return sortOrder === 'asc' ? comparison : -comparison;
-      } else {
-        const priceA = parsePrice(a.valor || '');
-        const priceB = parsePrice(b.valor || '');
-        const comparison = priceA - priceB;
-        return sortOrder === 'asc' ? comparison : -comparison;
+  // Optimized filtering with debouncing
+  const debouncedFilterProducts = useCallback(
+    debounce('filterProducts', () => {
+      if (!Array.isArray(filteredProducts)) {
+        setDisplayedProducts([]);
+        return;
       }
-    });
-    
-    setDisplayedProducts(filtered.slice(0, 24));
-  }, [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder, parsePrice, priceFilter]);
+      
+      let filtered = [...filteredProducts];
+      
+      if (selectedCategory && selectedCategory !== 'todas') {
+        filtered = filtered.filter(product => product?.categoria === selectedCategory);
+      }
+      
+      if (searchTerm?.trim()) {
+        const searchLower = searchTerm.toLowerCase();
+        filtered = filtered.filter(product => 
+          product?.produto?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // Apply price filter
+      filtered = filtered.filter(product => {
+        const price = parsePrice(product.valor || '');
+        return price >= priceFilter.min && price <= priceFilter.max;
+      });
+
+      // Apply sorting
+      filtered.sort((a, b) => {
+        if (!a || !b) return 0;
+        if (sortBy === 'nome') {
+          const comparison = (a.produto || '').localeCompare(b.produto || '');
+          return sortOrder === 'asc' ? comparison : -comparison;
+        } else {
+          const priceA = parsePrice(a.valor || '');
+          const priceB = parsePrice(b.valor || '');
+          const comparison = priceA - priceB;
+          return sortOrder === 'asc' ? comparison : -comparison;
+        }
+      });
+      
+      setDisplayedProducts(filtered.slice(0, 18)); // Reduced displayed items
+    }, 150),
+    [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder, parsePrice, priceFilter]
+  );
 
   useEffect(() => {
     fetchProducts();
@@ -173,27 +180,31 @@ const Index = () => {
   }, [categoryFromUrl]);
 
   useEffect(() => {
-    filterProducts();
-  }, [filterProducts]);
+    debouncedFilterProducts();
+  }, [debouncedFilterProducts]);
 
+  // Memoized components and handlers
   const { trackProductClick } = useProductClicks();
   
-  const handleProductClick = useCallback(async (productId: number) => {
-    if (!productId) return;
-    try {
-      trackProductClick(productId, 'product_view').catch(console.error);
-      const productElement = document.getElementById(`product-${productId}`);
-      if (productElement) {
-        productElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-        setSearchTerm('');
+  const handleProductClick = useCallback(
+    throttle('productClick', async (productId: number) => {
+      if (!productId) return;
+      try {
+        trackProductClick(productId, 'product_view').catch(console.error);
+        const productElement = document.getElementById(`product-${productId}`);
+        if (productElement) {
+          productElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+          setSearchTerm('');
+        }
+      } catch (error) {
+        console.error('Error handling product click:', error);
       }
-    } catch (error) {
-      console.error('Error handling product click:', error);
-    }
-  }, [trackProductClick]);
+    }, 100),
+    [trackProductClick]
+  );
 
   const handleTabChange = useCallback((tab: 'featured' | 'ai') => {
     setShowingAI(tab === 'ai');
@@ -244,7 +255,7 @@ const Index = () => {
     return iconMap[category] || ShoppingCart;
   }, []);
 
-  const getCategoryProducts = useCallback((category: string, limit: number = 8) => {
+  const getCategoryProducts = useCallback((category: string, limit: number = 6) => {
     if (!category || !Array.isArray(filteredProducts)) return [];
     const categoryProducts = filteredProducts.filter(p => p?.categoria === category);
     return shuffleArray(categoryProducts).slice(0, limit);
@@ -275,10 +286,11 @@ const Index = () => {
     setPriceFilter({ min: minPrice, max: maxPrice });
   }, []);
 
+  // Memoized category carousel
   const memoizedCategoryCarousel = useMemo(() => 
     Array.isArray(filteredProducts) && filteredProducts.length > 0 && (
       <CategoryCarousel 
-        products={filteredProducts.slice(0, 20)} 
+        products={filteredProducts.slice(0, 12)} 
         onProductClick={handleProductClick} 
       />
     ), [filteredProducts, handleProductClick]);
@@ -291,7 +303,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-32 bg-magical-gold/20 rounded-2xl backdrop-blur-sm border border-magical-gold/30"></div>
-            <ProductGrid loading={true} products={[]} />
+            <VirtualizedGrid products={[]} compact={true} />
           </div>
         </div>
       </div>
@@ -318,7 +330,7 @@ const Index = () => {
       
       <section className="px-4 py-4 animate-fade-in">
         <div className="max-w-7xl mx-auto">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             <Button 
               size="sm" 
               variant="outline" 
@@ -386,7 +398,7 @@ const Index = () => {
                 <CarouselContent className="-ml-2 md:-ml-3">
                   {categoryProducts.map(product => (
                     <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
-                      <ProductCard product={product} compact={true} />
+                      <OptimizedProductCard product={product} compact={true} />
                     </CarouselItem>
                   ))}
                 </CarouselContent>
@@ -521,7 +533,11 @@ const Index = () => {
               </Select>
             </div>
 
-            <ProductGrid products={displayedProducts} compact={true} />
+            <VirtualizedGrid 
+              products={displayedProducts} 
+              compact={true}
+              itemsPerPage={18}
+            />
 
             {displayedProducts.length === 0 && (
               <div className="text-center py-16">

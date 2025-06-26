@@ -94,11 +94,6 @@ const Header = ({
     onPriceFilter(0, 1000);
   };
 
-  const handleEvaluateApp = () => {
-    window.open('https://play.google.com/store/apps/details?id=br.com.app.gpu3121847.gpu5864a3ed792bc282cc5655927ef358d2', '_blank');
-    setIsOpen(false);
-  };
-
   return (
     <>
       <header className="bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-darkBlue text-magical-starlight shadow-2xl sticky top-0 z-50 backdrop-blur-sm border-b border-magical-gold/20">
@@ -134,7 +129,7 @@ const Header = ({
                     <Menu className="w-6 h-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-80 bg-gradient-to-b from-magical-deepPurple to-magical-mysticalPurple text-magical-starlight border-l border-magical-gold/30">
+                <SheetContent side="right" className="w-80 bg-gradient-to-b from-magical-deepPurple to-magical-mysticalPurple text-magical-starlight border-l border-magical-gold/30 overflow-y-auto">
                   <div className="py-6">
                     <div className="flex items-center space-x-3 mb-8 px-2">
                       <MagicalLogo size="md" showText={true} />
@@ -147,6 +142,17 @@ const Header = ({
                     )}
                     
                     <nav className="space-y-2">
+                      {navItems.map(item => (
+                        <button
+                          key={item.path}
+                          onClick={() => handleNavigation(item.path)}
+                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="font-medium">{item.label}</span>
+                        </button>
+                      ))}
+
                       <Dialog>
                         <DialogTrigger asChild>
                           <button className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted">
@@ -209,7 +215,7 @@ const Header = ({
                       
                       <div className="px-4 py-2">
                         <h3 className="text-sm font-semibold text-magical-gold mb-3 font-magical">
-                          🏰 Casas de Hogwarts
+                          🏰 Todas as Casas de Hogwarts
                         </h3>
                         <div className="space-y-2 max-h-64 overflow-y-auto">
                           {categories.map(category => {
