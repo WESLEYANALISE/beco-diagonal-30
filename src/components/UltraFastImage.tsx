@@ -1,7 +1,7 @@
 
-import React, { useState, useCallback, memo, useEffect } from 'react';
+import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
 
-interface FastImageProps {
+interface UltraFastImageProps {
   src: string;
   alt: string;
   className?: string;
@@ -11,7 +11,7 @@ interface FastImageProps {
   priority?: boolean;
 }
 
-export const FastImage = memo<FastImageProps>(({ 
+export const UltraFastImage = memo<UltraFastImageProps>(({ 
   src, 
   alt, 
   className = '', 
@@ -22,6 +22,7 @@ export const FastImage = memo<FastImageProps>(({
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -51,6 +52,7 @@ export const FastImage = memo<FastImageProps>(({
 
   return (
     <img
+      ref={imgRef}
       src={src}
       alt={alt}
       className={`${className} transition-opacity duration-150 ${
@@ -68,4 +70,4 @@ export const FastImage = memo<FastImageProps>(({
   );
 });
 
-FastImage.displayName = 'FastImage';
+UltraFastImage.displayName = 'UltraFastImage';
