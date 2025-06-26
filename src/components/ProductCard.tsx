@@ -8,7 +8,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
-import { LazyImage } from '@/components/LazyImage';
+import { ProductImage } from '@/components/ProductImage';
 
 interface Product {
   id: number;
@@ -93,18 +93,28 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   if (listView) {
     return (
       <>
-        <Card id={`product-${product.id}`} style={style} className={`
+        <Card 
+          id={`product-${product.id}`} 
+          style={style} 
+          className={`
             overflow-hidden hover:shadow-xl transition-all duration-300 
             bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 
             border border-magical-gold/30 shadow-lg group animate-fade-in cursor-pointer
             backdrop-blur-sm hover:border-magical-gold/50 hover:shadow-magical-gold/20
             ${selected ? 'ring-2 ring-magical-gold' : ''}
-          `} onClick={handleCardClick}>
+          `} 
+          onClick={handleCardClick}
+        >
           <CardContent className="p-3">
             <div className="flex gap-3">
               {/* Image */}
               <div className="relative w-24 h-24 flex-shrink-0">
-                <LazyImage src={product.imagem1} alt={product.produto} className="w-full h-full object-cover rounded-lg border border-magical-gold/20" />
+                <ProductImage 
+                  src={product.imagem1} 
+                  alt={product.produto} 
+                  className="w-full h-full rounded-lg border border-magical-gold/20"
+                  priority={true}
+                />
                 {product.video && (
                   <div className="absolute top-1 right-1">
                     <div className="bg-magical-midnight/70 rounded-full p-1 border border-magical-gold/30">
@@ -132,7 +142,11 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
                 <div className="flex gap-2">
                   <FavoriteButton productId={product.id} showText={false} />
-                  <Button size="sm" className="flex-1 bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold text-xs border-0 shadow-md hover:shadow-lg transition-all duration-300 font-enchanted" onClick={handleBuyClick}>
+                  <Button 
+                    size="sm" 
+                    className="flex-1 bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold text-xs border-0 shadow-md hover:shadow-lg transition-all duration-300 font-enchanted" 
+                    onClick={handleBuyClick}
+                  >
                     <ShoppingCart className="w-3 h-3 mr-1" />
                     Comprar
                   </Button>
@@ -142,28 +156,42 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </CardContent>
         </Card>
 
-        <ProductDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} product={product} />
+        <ProductDetailModal 
+          isOpen={isDetailModalOpen} 
+          onClose={() => setIsDetailModalOpen(false)} 
+          product={product} 
+        />
       </>
     );
   }
 
   return (
     <>
-      <Card id={`product-${product.id}`} style={style} className={`
+      <Card 
+        id={`product-${product.id}`} 
+        style={style} 
+        className={`
           overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 
           bg-gradient-to-br from-magical-deepPurple/80 to-magical-mysticalPurple/60 
           border border-magical-gold/30 shadow-lg group animate-fade-in cursor-pointer
           backdrop-blur-sm hover:border-magical-gold/50 hover:shadow-magical-gold/20
           ${selected ? 'ring-2 ring-magical-gold' : ''}
           ${showBadge ? 'hover:animate-magical-glow' : ''}
-        `} onClick={handleCardClick}>
+        `} 
+        onClick={handleCardClick}
+      >
         <div className="relative">
           <Carousel className="w-full">
             <CarouselContent>
               {images.map((image, index) => (
                 <CarouselItem key={index}>
                   <div className="aspect-square overflow-hidden">
-                    <LazyImage src={image} alt={`${product.produto} - ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <ProductImage 
+                      src={image} 
+                      alt={`${product.produto} - ${index + 1}`} 
+                      className="w-full h-full transition-transform duration-500 group-hover:scale-110"
+                      priority={index === 0 && showBadge} // Priorizar primeira imagem de produtos em destaque
+                    />
                   </div>
                 </CarouselItem>
               ))}
@@ -174,7 +202,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           
           {product.video && (
             <div className={`absolute ${compact ? 'top-1 right-1' : 'top-2 right-2'}`}>
-              {/* Video indicator */}
+              <div className="bg-magical-midnight/70 rounded-full p-2 border border-magical-gold/30">
+                <Play className="w-4 h-4 text-magical-gold" />
+              </div>
             </div>
           )}
           
@@ -208,7 +238,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               <FavoriteButton 
                 productId={product.id} 
                 showText={false} 
-                enhanced={showBadge} // Usar versão melhorada se for "Mais Vendidos"
+                enhanced={showBadge}
               />
             </div>
           )}
@@ -235,14 +265,24 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               <div className="flex gap-1 mb-1">
                 <FavoriteButton 
                   productId={product.id} 
-                  enhanced={showBadge} // Versão melhorada para "Mais Vendidos"
+                  enhanced={showBadge}
                 />
               </div>
             )}
             
-            <ProductPhotosModal images={images} productName={product.produto} productPrice={formatPrice(product.valor)} productLink={product.link} videoUrl={product.video} />
+            <ProductPhotosModal 
+              images={images} 
+              productName={product.produto} 
+              productPrice={formatPrice(product.valor)} 
+              productLink={product.link} 
+              videoUrl={product.video} 
+            />
             
-            <Button size="sm" className={`w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold text-xs hover:scale-105 transition-all duration-300 border-0 shadow-md hover:shadow-lg font-enchanted ${compact ? 'py-1' : ''}`} onClick={handleBuyClick}>
+            <Button 
+              size="sm" 
+              className={`w-full bg-gradient-to-r from-magical-mysticalPurple to-magical-deepPurple hover:from-magical-deepPurple hover:to-magical-mysticalPurple text-magical-starlight font-semibold text-xs hover:scale-105 transition-all duration-300 border-0 shadow-md hover:shadow-lg font-enchanted ${compact ? 'py-1' : ''}`} 
+              onClick={handleBuyClick}
+            >
               <ShoppingCart className="w-3 h-3 mr-1" />
               Adquirir Relíquia
             </Button>
@@ -250,7 +290,11 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         </CardContent>
       </Card>
 
-      <ProductDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} product={product} />
+      <ProductDetailModal 
+        isOpen={isDetailModalOpen} 
+        onClose={() => setIsDetailModalOpen(false)} 
+        product={product} 
+      />
     </>
   );
 };

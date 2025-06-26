@@ -9,6 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { X, ShoppingCart, Heart, Star, Play, Lightbulb, Sparkles, Wand2 } from 'lucide-react';
 import { ImageZoomModal } from '@/components/ImageZoomModal';
 import { ProductVideoModal } from '@/components/ProductVideoModal';
+import { ProductImage } from '@/components/ProductImage';
 
 interface Product {
   id: number;
@@ -130,11 +131,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = memo(({
                           className="h-full cursor-pointer relative group"
                           onClick={() => handleImageClick(index)}
                         >
-                          <img
+                          <ProductImage
                             src={image}
                             alt={`${product.produto} - ${index + 1}`}
-                            className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
+                            className="w-full h-full hover:scale-105 transition-transform duration-300"
+                            priority={index === 0} // Priorizar primeira imagem
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-magical-midnight/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           <Sparkles className="absolute top-2 right-2 w-4 h-4 text-magical-gold animate-sparkle opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -164,11 +165,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = memo(({
                     className="flex-shrink-0 w-16 h-16 rounded-lg border-2 border-magical-gold/20 hover:border-magical-gold/60 overflow-hidden transition-all duration-300 hover:scale-105 shadow-md"
                     onClick={() => handleImageClick(index)}
                   >
-                    <img
+                    <ProductImage
                       src={image}
                       alt={`Miniatura ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
+                      className="w-full h-full"
+                      priority={index < 3} // Priorizar primeiras 3 miniaturas
                     />
                   </button>
                 ))}

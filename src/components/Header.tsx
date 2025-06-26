@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Crown, Wand2, Home, Search, Grid3X3, Sparkles, Info, Star, ShoppingCart, Shirt, Smartphone, Package } from 'lucide-react';
@@ -9,10 +10,12 @@ import { PriceFilter } from '@/components/PriceFilter';
 import { useFavorites } from '@/hooks/useFavorites';
 import { MagicalLogo } from '@/components/MagicalLogo';
 import { supabase } from "@/integrations/supabase/client";
+
 interface HeaderProps {
   onSearch?: (searchTerm: string) => void;
   onPriceFilter?: (minPrice: number, maxPrice: number) => void;
 }
+
 const Header = ({
   onSearch = () => {},
   onPriceFilter = () => {}
@@ -20,50 +23,56 @@ const Header = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
+  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, string[]>>({});
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    favoritesCount
-  } = useFavorites();
-  const navItems = [{
-    path: '/',
-    label: 'Salão Principal',
-    icon: Home
-  }, {
-    path: '/categorias',
-    label: 'Escolas de Magia',
-    icon: Grid3X3
-  }, {
-    path: '/favoritos',
-    label: 'Grimório Pessoal',
-    icon: Crown
-  }, {
-    path: '/novos',
-    label: 'Novos Encantamentos',
-    icon: Sparkles
-  }, {
-    path: '/explorar',
-    label: 'Mapa do Maroto',
-    icon: Search
-  }];
+  const { favoritesCount } = useFavorites();
+
+  const navItems = [
+    { path: '/', label: 'Salão Principal', icon: Home },
+    { path: '/categorias', label: 'Escolas de Magia', icon: Grid3X3 },
+    { path: '/favoritos', label: 'Grimório Pessoal', icon: Crown },
+    { path: '/novos', label: 'Novos Encantamentos', icon: Sparkles },
+    { path: '/explorar', label: 'Mapa do Maroto', icon: Search }
+  ];
+
   useEffect(() => {
-    fetchCategories();
+    fetchCategoriesAndSubcategories();
   }, []);
-  const fetchCategories = async () => {
+
+  const fetchCategoriesAndSubcategories = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('HARRY POTTER').select('categoria').not('categoria', 'is', null).not('categoria', 'eq', '');
+      const { data, error } = await supabase
+        .from('HARRY POTTER')
+        .select('categoria, subcategoria')
+        .not('categoria', 'is', null)
+        .not('categoria', 'eq', '');
+
       if (error) throw error;
+
       if (data) {
         const uniqueCategories = [...new Set(data.map(item => item.categoria))];
         setCategories(uniqueCategories);
+
+        // Group subcategories by category
+        const subcatMap: Record<string, string[]> = {};
+        data.forEach(item => {
+          if (item.categoria && item.subcategoria) {
+            if (!subcatMap[item.categoria]) {
+              subcatMap[item.categoria] = [];
+            }
+            if (!subcatMap[item.categoria].includes(item.subcategoria)) {
+              subcatMap[item.categoria].push(item.subcategoria);
+            }
+          }
+        });
+        setSubcategoriesMap(subcatMap);
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
+
   const getCategoryIcon = (category: string) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
       'Itens Colecionáveis': Crown,
@@ -76,32 +85,45 @@ const Header = ({
     };
     return iconMap[category] || Package;
   };
+
   const handleNavigation = (path: string) => {
     navigate(path);
     setIsOpen(false);
   };
+
   const handleCategoryNavigation = (category: string) => {
     navigate(`/categoria/${encodeURIComponent(category)}`);
     setIsOpen(false);
   };
+
+  const handleSubcategoryNavigation = (category: string, subcategory: string) => {
+    navigate(`/categoria/${encodeURIComponent(category)}/subcategoria/${encodeURIComponent(subcategory)}`);
+    setIsOpen(false);
+  };
+
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     onSearch(value);
   };
+
   const handlePriceFilterChange = (minPrice: number, maxPrice: number) => {
     onPriceFilter(minPrice, maxPrice);
   };
+
   const handleClearFilter = () => {
     onPriceFilter(0, 1000);
   };
+
   const handleEvaluateApp = () => {
     window.open('https://play.google.com/store/apps/details?id=br.com.app.gpu3121847.gpu5864a3ed792bc282cc5655927ef358d2', '_blank');
     setIsOpen(false);
   };
-  return <>
+
+  return (
+    <>
       {/* Desktop/Mobile Header */}
       <header className="bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-darkBlue text-magical-starlight shadow-2xl sticky top-0 z-50 backdrop-blur-sm border-b border-magical-gold/20">
-        <div className="px-4 py-3">
+        <div className="px-4 py-2 md:py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
               <MagicalLogo size="md" showText={true} />
@@ -110,16 +132,28 @@ const Header = ({
             <div className="flex items-center space-x-2">
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center space-x-2">
-                {navItems.slice(1).map(item => <Button key={item.path} variant="ghost" size="sm" className="text-magical-starlight hover:bg-magical-gold/20 rounded-xl relative font-enchanted hover:text-magical-gold transition-all duration-300" onClick={() => handleNavigation(item.path)}>
+                {navItems.slice(1).map(item => (
+                  <Button
+                    key={item.path}
+                    variant="ghost"
+                    size="sm"
+                    className="text-magical-starlight hover:bg-magical-gold/20 rounded-xl relative font-enchanted hover:text-magical-gold transition-all duration-300"
+                    onClick={() => handleNavigation(item.path)}
+                  >
                     <item.icon className="w-4 h-4 mr-2" />
                     {item.label}
-                  </Button>)}
+                  </Button>
+                ))}
               </div>
 
               {/* Mobile Menu */}
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="md:hidden text-magical-starlight hover:bg-magical-gold/20 p-2 rounded-xl">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="md:hidden text-magical-starlight hover:bg-magical-gold/20 p-2 rounded-xl"
+                  >
                     <Menu className="w-6 h-6" />
                   </Button>
                 </SheetTrigger>
@@ -130,9 +164,11 @@ const Header = ({
                     </div>
                     
                     {/* Price Filter - Only show on homepage */}
-                    {location.pathname === '/' && <div className="mb-6 mx-2">
+                    {location.pathname === '/' && (
+                      <div className="mb-6 mx-2">
                         <PriceFilter onFilter={handlePriceFilterChange} onClear={handleClearFilter} />
-                      </div>}
+                      </div>
+                    )}
                     
                     <nav className="space-y-2">
                       {/* About App - First item */}
@@ -195,27 +231,66 @@ const Header = ({
                       </Dialog>
 
                       {/* Navigation Items */}
-                      {navItems.map(item => <button key={item.path} onClick={() => handleNavigation(item.path)} className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 relative font-enchanted">
+                      {navItems.map(item => (
+                        <button
+                          key={item.path}
+                          onClick={() => handleNavigation(item.path)}
+                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 relative font-enchanted"
+                        >
                           <item.icon className="w-5 h-5" />
                           <span className="font-medium">{item.label}</span>
-                        </button>)}
+                        </button>
+                      ))}
                       
                       {/* Separator */}
                       <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
                       
-                      {/* Product Categories */}
+                      {/* Product Categories and Subcategories */}
                       <div className="px-4 py-2">
                         <h3 className="text-sm font-semibold text-magical-gold mb-3 font-magical">
                           🏰 Casas de Hogwarts
                         </h3>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {categories.map(category => {
-                          const IconComponent = getCategoryIcon(category);
-                          return <button key={category} onClick={() => handleCategoryNavigation(category)} className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-300 w-full text-left hover:bg-magical-gold/20 text-sm font-enchanted">
-                                <IconComponent className="w-4 h-4 text-magical-bronze" />
-                                <span className="font-medium">{category}</span>
-                              </button>;
-                        })}
+                            const IconComponent = getCategoryIcon(category);
+                            const subcategories = subcategoriesMap[category] || [];
+                            
+                            return (
+                              <div key={category} className="space-y-1">
+                                <button
+                                  onClick={() => handleCategoryNavigation(category)}
+                                  className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-300 w-full text-left hover:bg-magical-gold/20 text-sm font-enchanted"
+                                >
+                                  <IconComponent className="w-4 h-4 text-magical-bronze" />
+                                  <span className="font-medium">{category}</span>
+                                </button>
+                                
+                                {/* Subcategories */}
+                                {subcategories.length > 0 && (
+                                  <div className="ml-6 space-y-1">
+                                    {subcategories.slice(0, 3).map(subcategory => (
+                                      <button
+                                        key={subcategory}
+                                        onClick={() => handleSubcategoryNavigation(category, subcategory)}
+                                        className="flex items-center space-x-2 px-3 py-1 rounded-md transition-all duration-300 w-full text-left hover:bg-magical-gold/10 text-xs text-magical-starlight/80 font-enchanted"
+                                      >
+                                        <div className="w-2 h-2 bg-magical-gold/50 rounded-full"></div>
+                                        <span>{subcategory}</span>
+                                      </button>
+                                    ))}
+                                    {subcategories.length > 3 && (
+                                      <button
+                                        onClick={() => handleCategoryNavigation(category)}
+                                        className="flex items-center space-x-2 px-3 py-1 rounded-md transition-all duration-300 w-full text-left hover:bg-magical-gold/10 text-xs text-magical-gold font-enchanted"
+                                      >
+                                        <span>+ {subcategories.length - 3} mais...</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                       
@@ -223,7 +298,10 @@ const Header = ({
                       <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
                       
                       {/* Rate App */}
-                      <button onClick={handleEvaluateApp} className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted">
+                      <button
+                        onClick={handleEvaluateApp}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted"
+                      >
                         <Star className="w-5 h-5" />
                         <span className="font-medium">Avaliar Universo</span>
                       </button>
@@ -236,18 +314,22 @@ const Header = ({
         </div>
 
         {/* Search Bar - Always visible at top - Smaller on desktop */}
-        {location.pathname === '/' && <div className="px-4 pb-3">
+        {location.pathname === '/' && (
+          <div className="px-4 pb-3">
             <div className="relative w-full max-w-md mx-auto md:max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-magical-gold/70 w-5 h-5" />
-              <Input placeholder="Buscar artefatos mágicos..." value={searchTerm} onChange={e => handleSearch(e.target.value)} className="pl-10 bg-magical-starlight/90 border-magical-gold/30 text-magical-midnight placeholder:text-magical-deepPurple/60 focus:bg-magical-starlight focus:border-magical-gold" />
+              <Input
+                placeholder="Buscar artefatos mágicos..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-10 bg-magical-starlight/90 border-magical-gold/30 text-magical-midnight placeholder:text-magical-deepPurple/60 focus:bg-magical-starlight focus:border-magical-gold"
+              />
             </div>
-          </div>}
+          </div>
+        )}
       </header>
-
-      {/* Bottom Navigation for Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-magical-deepPurple to-magical-mysticalPurple border-t border-magical-gold/30 z-50 shadow-2xl">
-        
-      </div>
-    </>;
+    </>
+  );
 };
+
 export default Header;
