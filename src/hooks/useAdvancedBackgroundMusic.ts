@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface MusicTrack {
   id: number;
-  titulo: string;
   intro: string;
   explorar_categoria: string;
 }
@@ -28,7 +27,7 @@ export const useAdvancedBackgroundMusic = () => {
     try {
       const { data, error } = await supabase
         .from('musicasharrypotter')
-        .select('id, titulo, intro, explorar_categoria')
+        .select('id, intro, explorar_categoria')
         .not('intro', 'is', null)
         .not('explorar_categoria', 'is', null);
 
