@@ -84,7 +84,7 @@ const Index = () => {
         .from('HARRY POTTER')
         .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso')
         .order('id')
-        .limit(80);
+        .limit(100); // Increased limit for better performance
 
       if (error) throw error;
       if (!data || !Array.isArray(data)) {
@@ -318,12 +318,12 @@ const Index = () => {
       
       <section className="px-4 py-4 animate-fade-in">
         <div className="max-w-7xl mx-auto">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollBehavior: 'smooth' }}>
             <Button 
               size="sm" 
               variant="outline" 
               onClick={() => handleExplorarColecaoClick('todas')} 
-              className="whitespace-nowrap bg-magical-gold/30 text-magical-starlight border-magical-gold/50 hover:bg-magical-gold/40 flex items-center gap-2 font-enchanted"
+              className="whitespace-nowrap bg-magical-gold/30 text-magical-starlight border-magical-gold/50 hover:bg-magical-gold/40 flex items-center gap-2 font-enchanted transition-all duration-200"
             >
               <Wand2 className="w-4 h-4" />
               Todos os Artefatos
@@ -336,7 +336,7 @@ const Index = () => {
                   size="sm" 
                   variant="outline" 
                   onClick={() => handleExplorarColecaoClick(category)} 
-                  className="whitespace-nowrap bg-magical-gold/20 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted"
+                  className="whitespace-nowrap bg-magical-gold/20 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted transition-all duration-200"
                 >
                   <IconComponent className="w-4 h-4" />
                   {category}
@@ -360,7 +360,7 @@ const Index = () => {
         return (
           <section 
             key={category} 
-            style={{ animationDelay: `${index * 0.1}s` }} 
+            style={{ animationDelay: `${index * 0.05}s` }} 
             className="md:px-6 py-4 animate-fade-in px-[6px]"
           >
             <div className="max-w-7xl mx-auto">
@@ -375,14 +375,23 @@ const Index = () => {
                   size="sm" 
                   variant="outline" 
                   onClick={() => handleExplorarColecaoClick(category)} 
-                  className="bg-magical-gold/30 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/40 text-xs px-3 py-1 h-auto font-enchanted"
+                  className="bg-magical-gold/30 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/40 text-xs px-3 py-1 h-auto font-enchanted transition-all duration-200"
                 >
                   Explorar
                   <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
               </div>
               
-              <Carousel className="w-full">
+              <Carousel 
+                className="w-full"
+                opts={{
+                  align: "start",
+                  loop: false,
+                  skipSnaps: false,
+                  dragFree: true,
+                  duration: 15
+                }}
+              >
                 <CarouselContent className="-ml-2 md:-ml-3">
                   {categoryProducts.map(product => (
                     <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">

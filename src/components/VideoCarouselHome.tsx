@@ -1,5 +1,5 @@
 
-import React, { useCallback, memo } from 'react';
+import React, { useCallback, memo, useMemo } from 'react';
 import { Crown, ShoppingCart, Zap } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { UltraFastImage } from '@/components/UltraFastImage';
 import { UltraFastVideo } from '@/components/UltraFastVideo';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
-import { useOptimizedInteractions } from '@/hooks/useOptimizedInteractions';
+import { useUltraPerformance } from '@/hooks/useUltraPerformance';
 
 interface Product {
   id: number;
@@ -29,16 +29,14 @@ interface VideoCarouselHomeProps {
   products: Product[];
 }
 
-export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({
-  products
-}) => {
-  const { instantAction } = useOptimizedInteractions();
+export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({ products }) => {
+  const { optimizedAction, throttledAction } = useUltraPerformance();
 
-  const handleBuyClick = instantAction(useCallback((link: string) => {
+  const handleBuyClick = throttledAction(useCallback((link: string) => {
     if (link) {
       window.open(link, '_blank', 'noopener,noreferrer');
     }
-  }, []));
+  }, []), 150);
 
   const getProductImages = useCallback((product: Product) => {
     const images = [];
@@ -50,7 +48,9 @@ export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({
     return images;
   }, []);
 
-  if (!products || products.length === 0) {
+  const memoizedProducts = useMemo(() => products.slice(0, 8), [products]);
+
+  if (!memoizedProducts || memoizedProducts.length === 0) {
     return null;
   }
 
@@ -70,19 +70,33 @@ export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({
           </p>
         </div>
 
-        <Carousel className="w-full">
+        <Carousel 
+          className="w-full"
+          opts={{
+            align: "start",
+            loop: true,
+            skipSnaps: false,
+            dragFree: false,
+            duration: 20
+          }}
+        >
           <CarouselContent className="-ml-2 md:-ml-3">
-            {products.map((product, index) => (
+            {memoizedProducts.map((product, index) => (
               <CarouselItem key={product.id} className="pl-2 md:pl-3 basis-full md:basis-1/2 lg:basis-1/3">
-                <Card className="group overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br from-red-900/30 via-yellow-600/20 to-red-800/30 border-yellow-500/40 backdrop-blur-sm animate-fade-in" style={{
-                  animationDelay: `${index * 0.05}s`
-                }}>
+                <Card 
+                  className="group overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br from-red-900/30 via-yellow-600/20 to-red-800/30 border-yellow-500/40 backdrop-blur-sm"
+                  style={{
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    willChange: 'transform'
+                  }}
+                >
                   <div className="relative aspect-video overflow-hidden">
                     {product.video ? (
                       <UltraFastVideo
                         src={product.video}
-                        className="w-full h-full transition-transform duration-500 group-hover:scale-105"
-                        autoPlay={true}
+                        className="w-full h-full transition-transform duration-300 group-hover:scale-105"
+                        autoPlay={false}
                         muted={true}
                         loop={true}
                         preload="metadata"
@@ -93,7 +107,7 @@ export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({
                         <UltraFastImage 
                           src={product.imagem1} 
                           alt={product.produto} 
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           loading={index < 3 ? "eager" : "lazy"}
                           priority={index < 3}
                         />
@@ -141,7 +155,7 @@ export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({
                         />
                         
                         <Button 
-                          onClick={() => handleBuyClick(product.link)} 
+                          onClick={optimizedAction(() => handleBuyClick(product.link))}
                           className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-red-900 hover:from-yellow-400 hover:to-yellow-500 font-semibold transition-all duration-200 hover:scale-[1.02] font-enchanted shadow-lg hover:shadow-yellow-500/20 text-sm py-2 active:scale-[0.98]"
                         >
                           <ShoppingCart className="w-3 h-3 mr-1" />

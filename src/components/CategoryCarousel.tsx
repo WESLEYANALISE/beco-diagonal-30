@@ -1,9 +1,10 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LazyImage } from '@/components/LazyImage';
+import { UltraFastImage } from '@/components/UltraFastImage';
+import { useUltraPerformance } from '@/hooks/useUltraPerformance';
 
 interface Product {
   id: number;
@@ -18,52 +19,59 @@ interface CategoryCarouselProps {
   onProductClick: (productId: number) => void;
 }
 
-export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselProps) => {
+export const CategoryCarousel = memo<CategoryCarouselProps>(({ products, onProductClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const { optimizedAction, throttledAction } = useUltraPerformance();
 
-  useEffect(() => {
-    // Pega os 8 artefatos mais recentes
-    const newest = [...products]
+  // Memoize recent products to avoid recalculation
+  const recentProducts = useMemo(() => {
+    return [...products]
       .sort((a, b) => b.id - a.id)
       .slice(0, 8);
-    setRecentProducts(newest);
   }, [products]);
 
-  // Auto-scroll otimizado
+  const maxIndex = useMemo(() => Math.ceil(recentProducts.length / 2) - 1, [recentProducts.length]);
+
+  // Ultra-optimized auto-scroll
   useEffect(() => {
-    if (recentProducts.length === 0 || !isAutoScrolling) return;
+    if (recentProducts.length === 0 || !isAutoScrolling || isTransitioning) return;
     
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => {
-        const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
-        return prev >= maxIndex ? 0 : prev + 1;
-      });
-    }, 4000);
+      setCurrentIndex((prev) => prev >= maxIndex ? 0 : prev + 1);
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [recentProducts.length, isAutoScrolling]);
+  }, [recentProducts.length, isAutoScrolling, isTransitioning, maxIndex]);
 
-  const nextSlide = useCallback(() => {
+  const handleSlideChange = useCallback((direction: 'next' | 'prev') => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
     setIsAutoScrolling(false);
-    const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
-    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-    // Reativar auto-scroll após 10 segundos
-    setTimeout(() => setIsAutoScrolling(true), 10000);
-  }, [recentProducts.length]);
+    
+    setCurrentIndex((prev) => {
+      if (direction === 'next') {
+        return prev >= maxIndex ? 0 : prev + 1;
+      } else {
+        return prev <= 0 ? maxIndex : prev - 1;
+      }
+    });
 
-  const prevSlide = useCallback(() => {
-    setIsAutoScrolling(false);
-    const maxIndex = Math.ceil(recentProducts.length / 2) - 1;
-    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
-    // Reativar auto-scroll após 10 segundos
-    setTimeout(() => setIsAutoScrolling(true), 10000);
-  }, [recentProducts.length]);
+    // Reset transition state and auto-scroll
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setTimeout(() => setIsAutoScrolling(true), 8000);
+    }, 300);
+  }, [maxIndex, isTransitioning]);
 
-  const handleProductClick = useCallback((productId: number) => {
+  const nextSlide = optimizedAction(useCallback(() => handleSlideChange('next'), [handleSlideChange]));
+  const prevSlide = optimizedAction(useCallback(() => handleSlideChange('prev'), [handleSlideChange]));
+
+  const handleProductClick = throttledAction(useCallback((productId: number) => {
     onProductClick(productId);
-  }, [onProductClick]);
+  }, [onProductClick]), 150);
 
   if (recentProducts.length === 0) return null;
 
@@ -79,7 +87,8 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
               size="sm"
               variant="ghost"
               onClick={prevSlide}
-              className="text-magical-starlight hover:bg-magical-gold/20 hover:text-magical-gold p-2 rounded-full transition-all duration-300"
+              disabled={isTransitioning}
+              className="text-magical-starlight hover:bg-magical-gold/20 hover:text-magical-gold p-2 rounded-full transition-all duration-200"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -87,7 +96,8 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
               size="sm"
               variant="ghost"
               onClick={nextSlide}
-              className="text-magical-starlight hover:bg-magical-gold/20 hover:text-magical-gold p-2 rounded-full transition-all duration-300"
+              disabled={isTransitioning}
+              className="text-magical-starlight hover:bg-magical-gold/20 hover:text-magical-gold p-2 rounded-full transition-all duration-200"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -96,27 +106,35 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
 
         <div className="relative overflow-hidden">
           <div 
-            className="flex transition-transform duration-700 ease-in-out gap-3"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            className="flex transition-transform duration-300 ease-out gap-3"
+            style={{ 
+              transform: `translateX(-${currentIndex * 100}%)`,
+              willChange: 'transform'
+            }}
           >
             {recentProducts.map((product, index) => (
               <Card
                 key={product.id}
-                className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/6 overflow-hidden cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-xl bg-magical-starlight/10 border-magical-gold/30 backdrop-blur-sm"
+                className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/6 overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl bg-magical-starlight/10 border-magical-gold/30 backdrop-blur-sm"
                 onClick={() => handleProductClick(product.id)}
+                style={{
+                  transform: 'translateZ(0)', // Force hardware acceleration
+                  backfaceVisibility: 'hidden'
+                }}
               >
                 <div className="relative aspect-[4/3]">
-                  <LazyImage
+                  <UltraFastImage
                     src={product.imagem1}
                     alt={product.produto}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                    loading={index < 4 ? "eager" : "lazy"}
+                    priority={index < 4}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-magical-midnight/60 to-transparent" />
                   
-                  {/* Badge NOVO para os 3 primeiros */}
                   {index < 3 && (
                     <div className="absolute top-2 left-2">
-                      <div className="bg-magical-gold text-magical-midnight text-xs font-bold px-2 py-1 rounded-full animate-pulse border border-magical-gold/30">
+                      <div className="bg-magical-gold text-magical-midnight text-xs font-bold px-2 py-1 rounded-full border border-magical-gold/30">
                         NOVO
                       </div>
                     </div>
@@ -136,17 +154,20 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
           </div>
         </div>
 
-        {/* Indicadores de slide otimizados */}
+        {/* Optimized slide indicators */}
         <div className="flex justify-center mt-4 gap-2">
-          {Array.from({ length: Math.ceil(recentProducts.length / 2) }).map((_, index) => (
+          {Array.from({ length: maxIndex + 1 }).map((_, index) => (
             <button
               key={index}
-              onClick={() => {
-                setCurrentIndex(index);
-                setIsAutoScrolling(false);
-                setTimeout(() => setIsAutoScrolling(true), 10000);
-              }}
-              className={`w-2 h-2 rounded-full transition-all duration-500 ${
+              onClick={optimizedAction(() => {
+                if (!isTransitioning) {
+                  setCurrentIndex(index);
+                  setIsAutoScrolling(false);
+                  setTimeout(() => setIsAutoScrolling(true), 8000);
+                }
+              })}
+              disabled={isTransitioning}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 currentIndex === index ? 'bg-magical-gold w-6' : 'bg-magical-starlight/50'
               }`}
               aria-label={`Ir para slide ${index + 1}`}
@@ -156,4 +177,6 @@ export const CategoryCarousel = ({ products, onProductClick }: CategoryCarouselP
       </div>
     </section>
   );
-};
+});
+
+CategoryCarousel.displayName = 'CategoryCarousel';

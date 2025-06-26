@@ -1,11 +1,20 @@
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 
 export const useOptimizedInteractions = () => {
   const timeoutRef = useRef<NodeJS.Timeout>();
   const throttleRef = useRef<boolean>(false);
+  const rafRef = useRef<number>();
 
-  const debounce = useCallback((func: Function, delay: number = 300) => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  const debounce = useCallback((func: Function, delay: number = 150) => {
     return (...args: any[]) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -14,7 +23,7 @@ export const useOptimizedInteractions = () => {
     };
   }, []);
 
-  const throttle = useCallback((func: Function, delay: number = 200) => {
+  const throttle = useCallback((func: Function, delay: number = 100) => {
     return (...args: any[]) => {
       if (!throttleRef.current) {
         func(...args);
@@ -28,8 +37,12 @@ export const useOptimizedInteractions = () => {
 
   const instantAction = useCallback((func: Function) => {
     return (...args: any[]) => {
-      // Use requestAnimationFrame for smooth performance
-      requestAnimationFrame(() => func(...args));
+      // Cancel any pending animation frame
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      // Use requestAnimationFrame for ultra-smooth performance
+      rafRef.current = requestAnimationFrame(() => func(...args));
     };
   }, []);
 

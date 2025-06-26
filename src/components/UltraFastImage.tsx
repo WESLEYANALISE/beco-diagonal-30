@@ -23,6 +23,7 @@ export const UltraFastImage = memo<UltraFastImageProps>(({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const observerRef = useRef<IntersectionObserver>();
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -34,18 +35,51 @@ export const UltraFastImage = memo<UltraFastImageProps>(({
     onError?.();
   }, [onError]);
 
-  // Preload critical images
+  // Preload critical images with ultra-optimization
   useEffect(() => {
     if (priority && src) {
-      const preloadImg = new Image();
-      preloadImg.src = src;
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = src;
+      document.head.appendChild(link);
+      
+      return () => {
+        document.head.removeChild(link);
+      };
     }
   }, [src, priority]);
 
+  // Intersection Observer for lazy loading optimization
+  useEffect(() => {
+    if (loading === 'lazy' && !priority && imgRef.current) {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          const [entry] = entries;
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement;
+            img.src = src;
+            observerRef.current?.unobserve(img);
+          }
+        },
+        {
+          rootMargin: '50px',
+          threshold: 0.1
+        }
+      );
+
+      observerRef.current.observe(imgRef.current);
+
+      return () => {
+        observerRef.current?.disconnect();
+      };
+    }
+  }, [src, loading, priority]);
+
   if (hasError) {
     return (
-      <div className={`bg-gray-100 flex items-center justify-center ${className}`}>
-        <span className="text-gray-400 text-xs">✨</span>
+      <div className={`bg-gradient-to-br from-magical-deepPurple/20 to-magical-mysticalPurple/20 flex items-center justify-center ${className} backdrop-blur-sm border border-magical-gold/20`}>
+        <span className="text-magical-gold text-xs animate-pulse">✨</span>
       </div>
     );
   }
@@ -53,9 +87,9 @@ export const UltraFastImage = memo<UltraFastImageProps>(({
   return (
     <img
       ref={imgRef}
-      src={src}
+      src={loading === 'eager' || priority ? src : undefined}
       alt={alt}
-      className={`${className} transition-opacity duration-150 ${
+      className={`${className} transition-opacity duration-100 ${
         isLoaded ? 'opacity-100' : 'opacity-0'
       }`}
       loading={loading}
@@ -64,7 +98,10 @@ export const UltraFastImage = memo<UltraFastImageProps>(({
       onError={handleError}
       style={{
         contentVisibility: 'auto',
-        containIntrinsicSize: '200px 200px'
+        containIntrinsicSize: '200px 200px',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        willChange: 'transform, opacity'
       }}
     />
   );
