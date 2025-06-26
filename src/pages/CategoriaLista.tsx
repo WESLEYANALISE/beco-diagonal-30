@@ -1,18 +1,16 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, ShoppingCart, Filter, Grid, Sparkles } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from '@/components/Header';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
-import { FavoriteButton } from '@/components/FavoriteButton';
-import { OptimizedImage } from '@/components/OptimizedImage';
 import { ProductGrid } from '@/components/ProductGrid';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
+import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -37,6 +35,7 @@ interface Product {
 const CategoriaLista = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { goBack, addToHistory } = useNavigationHistory();
   const categoria = searchParams.get('categoria') || '';
   const subcategoria = searchParams.get('subcategoria') || '';
   const tipo = searchParams.get('tipo') || 'categoria';
@@ -48,22 +47,22 @@ const CategoriaLista = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
-  const {
-    showSuccess,
-    showError
-  } = useToastNotifications();
+  const { showSuccess, showError } = useToastNotifications();
 
   useEffect(() => {
     fetchProducts();
-  }, [categoria, subcategoria, tipo]);
+    const title = tipo === 'subcategoria' && subcategoria 
+      ? `${categoria} - ${subcategoria}` 
+      : categoria || 'Categoria';
+    addToHistory(window.location.pathname + window.location.search, title);
+  }, [categoria, subcategoria, tipo, addToHistory]);
 
   const fetchProducts = useCallback(async () => {
     try {
-      console.log('Fetching products for categoria:', categoria, 'subcategoria:', subcategoria, 'tipo:', tipo);
-      
       let query = supabase
         .from('HARRY POTTER')
-        .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso');
+        .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso')
+        .limit(50); // Limit for better performance
       
       if (tipo === 'categoria' && categoria && categoria !== 'todas') {
         query = query.eq('categoria', categoria);
@@ -79,32 +78,19 @@ const CategoriaLista = () => {
       
       const { data, error } = await query;
       
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Raw data:', data);
-      
       if (!data || !Array.isArray(data)) {
-        console.warn('No data received');
         setProducts([]);
         showError("Nenhum artefato mágico encontrado");
         return;
       }
 
-      // Filter out invalid products
+      // Filter valid products
       const validProducts = data.filter(product => 
-        product && 
-        product.produto && 
-        product.valor && 
-        product.categoria &&
-        typeof product.produto === 'string' &&
-        typeof product.valor === 'string' &&
-        typeof product.categoria === 'string'
+        product?.produto && product?.valor && product?.categoria
       );
 
-      console.log('Valid products found:', validProducts.length);
       setProducts(validProducts);
       
       if (validProducts.length > 0) {
@@ -121,7 +107,7 @@ const CategoriaLista = () => {
     }
   }, [categoria, subcategoria, tipo, showSuccess, showError]);
 
-  // Memoized filtered and sorted products for better performance
+  // Memoized filtered and sorted products
   const filteredProducts = useMemo(() => {
     if (!Array.isArray(products)) return [];
     
@@ -181,13 +167,6 @@ const CategoriaLista = () => {
     return `Explore todos os artefatos de ${getMagicalCategoryName(categoria)}`;
   }, [tipo, subcategoria, categoria, getMagicalCategoryName]);
 
-  const getBackRoute = useCallback(() => {
-    if (tipo === 'subcategoria') {
-      return `/subcategoria-detalhes?categoria=${encodeURIComponent(categoria)}`;
-    }
-    return '/categorias';
-  }, [tipo, categoria]);
-
   const handleProductClick = useCallback((product: Product) => {
     if (!product) return;
     setSelectedProduct(product);
@@ -202,7 +181,7 @@ const CategoriaLista = () => {
           <div className="flex-1 container mx-auto px-4 py-8">
             <div className="animate-pulse space-y-4">
               {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="h-24 bg-magical-gold/20 rounded-lg backdrop-blur-sm border border-magical-gold/30 animate-magical-glow"></div>
+                <div key={index} className="h-24 bg-magical-gold/20 rounded-lg backdrop-blur-sm border border-magical-gold/30"></div>
               ))}
             </div>
           </div>
@@ -227,7 +206,7 @@ const CategoriaLista = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigate(getBackRoute())} 
+                  onClick={goBack} 
                   className="text-magical-gold hover:text-magical-darkGold hover:bg-magical-gold/20 p-1 sm:p-2 transition-all duration-300"
                 >
                   <ArrowLeft className="w-4 h-4 sm:mr-2" />
@@ -240,7 +219,7 @@ const CategoriaLista = () => {
                 <Sparkles className="w-5 h-5 text-magical-gold animate-sparkle" />
               </div>
 
-              {/* Controles de visualização e filtros */}
+              {/* Controles de visualização */}
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Select value={sortBy} onValueChange={(value: 'nome' | 'preco') => setSortBy(value)}>

@@ -6,8 +6,8 @@ import { MagicalParticles } from '@/components/MagicalParticles';
 import Header from '@/components/Header';
 import VideoFeed from '@/components/VideoFeed';
 import { CategoryCarouselExplorar } from '@/components/CategoryCarouselExplorar';
-import { useAdvancedBackgroundMusic } from '@/hooks/useAdvancedBackgroundMusic';
 import { useOptimizedInteractions } from '@/hooks/useOptimizedInteractions';
+import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -24,6 +24,7 @@ interface Product {
 export const Explorar = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { goBack, addToHistory } = useNavigationHistory();
   const categoryFromUrl = searchParams.get('categoria');
   const [products, setProducts] = useState<Product[]>([]);
   const [currentCategory, setCurrentCategory] = useState(categoryFromUrl || 'todos');
@@ -32,7 +33,6 @@ export const Explorar = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const { changeContext } = useAdvancedBackgroundMusic();
   const { instantAction, throttle } = useOptimizedInteractions();
 
   const handleProductBuy = instantAction(useCallback((product: Product) => {
@@ -42,13 +42,13 @@ export const Explorar = () => {
   }, []));
 
   const handleGoBack = instantAction(useCallback(() => {
-    navigate(-1);
-  }, [navigate]));
+    goBack();
+  }, [goBack]));
 
   useEffect(() => {
     fetchProducts();
-    changeContext('explorar-categoria');
-  }, [changeContext]);
+    addToHistory('/explorar', 'Explorar Vídeos');
+  }, [addToHistory]);
 
   useEffect(() => {
     if (categoryFromUrl) {
@@ -66,7 +66,8 @@ export const Explorar = () => {
         .from('HARRY POTTER')
         .select('id, produto, valor, video, imagem1, link, categoria')
         .not('video', 'is', null)
-        .not('video', 'eq', '');
+        .not('video', 'eq', '')
+        .limit(50); // Limit for better performance
 
       if (error) {
         console.error('Erro ao buscar produtos:', error);
@@ -107,10 +108,10 @@ export const Explorar = () => {
     setIsTransitioning(true);
     setCurrentIndex(prevIndex => {
       const nextIndex = (prevIndex + 1) % currentVideos.length;
-      setTimeout(() => setIsTransitioning(false), 200);
+      setTimeout(() => setIsTransitioning(false), 150);
       return nextIndex;
     });
-  }, [currentVideos.length, isTransitioning]), 100);
+  }, [currentVideos.length, isTransitioning]), 200);
 
   const goToPrevious = throttle(useCallback(() => {
     if (isTransitioning || currentVideos.length === 0) return;
@@ -118,15 +119,15 @@ export const Explorar = () => {
     setIsTransitioning(true);
     setCurrentIndex(prevIndex => {
       const prevIdx = prevIndex === 0 ? currentVideos.length - 1 : prevIndex - 1;
-      setTimeout(() => setIsTransitioning(false), 200);
+      setTimeout(() => setIsTransitioning(false), 150);
       return prevIdx;
     });
-  }, [currentVideos.length, isTransitioning]), 100);
+  }, [currentVideos.length, isTransitioning]), 200);
 
   // Optimized touch handlers
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const minSwipeDistance = 30;
+  const minSwipeDistance = 50; // Increased for better UX
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     setTouchEnd(null);
@@ -149,7 +150,7 @@ export const Explorar = () => {
     } else if (isDownSwipe) {
       goToPrevious();
     }
-  }, [touchStart, touchEnd, goToNext, goToPrevious]), 50);
+  }, [touchStart, touchEnd, goToNext, goToPrevious]), 100);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple">
@@ -190,12 +191,11 @@ export const Explorar = () => {
             {currentVideos.map((product, index) => (
               <div
                 key={product.id}
-                className={`absolute inset-0 transition-transform duration-200 ${
+                className={`absolute inset-0 transition-transform duration-150 ${
                   index === currentIndex ? 'translate-y-0' : 
                   index < currentIndex ? '-translate-y-full' : 'translate-y-full'
                 }`}
                 style={{ 
-                  marginBottom: index === currentVideos.length - 1 ? '100px' : '0',
                   willChange: 'transform'
                 }}
               >

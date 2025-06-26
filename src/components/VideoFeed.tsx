@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, memo } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ interface VideoFeedProps {
   onVideoEnd?: () => void;
 }
 
-export const VideoFeed: React.FC<VideoFeedProps> = ({
+export const VideoFeed = memo<VideoFeedProps>(({
   productId,
   videoUrl,
   title,
@@ -72,7 +72,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-magical-midnight/60 z-10" />
       
       <div className="absolute bottom-4 left-4 right-4 z-20 safe-area-bottom">
-        <div className="bg-magical-midnight/70 backdrop-blur-sm rounded-xl p-3 border border-magical-gold/20 shadow-xl transform transition-all duration-200 hover:scale-[1.01]">
+        <div className="bg-magical-midnight/70 backdrop-blur-sm rounded-xl p-3 border border-magical-gold/20 shadow-xl">
           <h3 className="text-magical-starlight font-bold text-sm mb-2 line-clamp-2 font-magical">
             {title}
           </h3>
@@ -93,6 +93,8 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
       </div>
     </div>
   );
-};
+});
+
+VideoFeed.displayName = 'VideoFeed';
 
 export default VideoFeed;

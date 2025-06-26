@@ -3,9 +3,9 @@ import { useCallback, useRef } from 'react';
 
 export const useOptimizedInteractions = () => {
   const timeoutRef = useRef<NodeJS.Timeout>();
-  const throttleRef = useRef<NodeJS.Timeout>();
+  const throttleRef = useRef<boolean>(false);
 
-  const debounce = useCallback((func: Function, delay: number = 150) => {
+  const debounce = useCallback((func: Function, delay: number = 300) => {
     return (...args: any[]) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -14,12 +14,13 @@ export const useOptimizedInteractions = () => {
     };
   }, []);
 
-  const throttle = useCallback((func: Function, delay: number = 100) => {
+  const throttle = useCallback((func: Function, delay: number = 200) => {
     return (...args: any[]) => {
       if (!throttleRef.current) {
         func(...args);
-        throttleRef.current = setTimeout(() => {
-          throttleRef.current = undefined;
+        throttleRef.current = true;
+        setTimeout(() => {
+          throttleRef.current = false;
         }, delay);
       }
     };
@@ -27,7 +28,7 @@ export const useOptimizedInteractions = () => {
 
   const instantAction = useCallback((func: Function) => {
     return (...args: any[]) => {
-      // Use requestAnimationFrame for smooth animations
+      // Use requestAnimationFrame for smooth performance
       requestAnimationFrame(() => func(...args));
     };
   }, []);

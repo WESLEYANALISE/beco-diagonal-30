@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { SubcategoryCard } from '@/components/SubcategoryCard';
 import { useToast } from '@/hooks/use-toast';
-import { useMagicalSounds } from '@/hooks/useMagicalSounds';
+import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 
 interface Subcategory {
   subcategoria: string;
@@ -18,10 +18,10 @@ interface Subcategory {
 export const SubcategoriaLista = () => {
   const { categoria } = useParams<{ categoria: string }>();
   const navigate = useNavigate();
+  const { goBack, addToHistory } = useNavigationHistory();
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { playRandomMagicalSound } = useMagicalSounds();
 
   const fetchSubcategories = useCallback(async () => {
     if (!categoria) return;
@@ -34,7 +34,8 @@ export const SubcategoriaLista = () => {
         .select('subcategoria, imagem1, produto')
         .eq('categoria', decodeURIComponent(categoria))
         .not('subcategoria', 'is', null)
-        .not('subcategoria', 'eq', '');
+        .not('subcategoria', 'eq', '')
+        .limit(100); // Performance limit
 
       if (error) {
         console.error('Erro ao buscar subcategorias:', error);
@@ -46,11 +47,11 @@ export const SubcategoriaLista = () => {
         return;
       }
 
-      // Group and count subcategories
+      // Group and count subcategories efficiently
       const subcategoryMap = new Map<string, Subcategory>();
       
       data?.forEach((item) => {
-        if (item.subcategoria && item.subcategoria.trim() !== '') {
+        if (item.subcategoria?.trim()) {
           const existing = subcategoryMap.get(item.subcategoria);
           if (existing) {
             existing.count++;
@@ -80,13 +81,12 @@ export const SubcategoriaLista = () => {
 
   useEffect(() => {
     fetchSubcategories();
-  }, [fetchSubcategories]);
+    addToHistory(window.location.pathname, `Subcategorias - ${categoria || ''}`);
+  }, [fetchSubcategories, addToHistory, categoria]);
 
   const handleSubcategoryClick = useCallback((subcategoria: string) => {
-    // Magic sound ONLY when clicking on subcategories
-    playRandomMagicalSound();
     navigate(`/categoria/${categoria}/subcategoria/${encodeURIComponent(subcategoria)}`);
-  }, [categoria, navigate, playRandomMagicalSound]);
+  }, [categoria, navigate]);
 
   const memoizedSubcategories = useMemo(() => subcategories, [subcategories]);
 
@@ -97,7 +97,7 @@ export const SubcategoriaLista = () => {
         <div className="flex items-center gap-4 mb-8 animate-fade-in">
           <Button
             variant="ghost"
-            onClick={() => navigate('/explorar')}
+            onClick={goBack}
             className="text-magical-starlight hover:bg-magical-gold/20 hover:text-magical-gold transition-all duration-300"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -139,7 +139,7 @@ export const SubcategoriaLista = () => {
             {memoizedSubcategories.map((subcategory, index) => (
               <div
                 key={subcategory.subcategoria}
-                className="group overflow-hidden cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl bg-gradient-to-br from-magical-starlight/10 to-magical-mysticalPurple/20 border-magical-gold/30 backdrop-blur-sm hover:border-magical-gold/60 animate-fade-in rounded-2xl border"
+                className="group overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 bg-gradient-to-br from-magical-starlight/10 to-magical-mysticalPurple/20 border-magical-gold/30 backdrop-blur-sm hover:border-magical-gold/60 animate-fade-in rounded-2xl border"
                 onClick={() => handleSubcategoryClick(subcategory.subcategoria)}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -147,7 +147,7 @@ export const SubcategoriaLista = () => {
                   <img
                     src={subcategory.sample_image}
                     alt={subcategory.subcategoria}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-magical-midnight/80 via-magical-midnight/20 to-transparent" />

@@ -89,7 +89,7 @@ export const UltraFastVideo = memo<UltraFastVideoProps>(({
     setIsLoading(false);
   }, []);
 
-  // Instant play/pause for active videos
+  // Optimized play/pause for active videos
   useEffect(() => {
     if (isActive && autoPlay && videoRef.current && !isLoading && !hasError) {
       handlePlay();
@@ -134,25 +134,25 @@ export const UltraFastVideo = memo<UltraFastVideoProps>(({
         style={{
           minHeight: '100%',
           objectFit: 'cover',
-          contentVisibility: 'auto'
+          willChange: 'auto'
         }}
       />
       
       {/* Minimal loading overlay */}
       {isLoading && (
         <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/80 to-magical-midnight/80 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-magical-gold border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-6 h-6 border-2 border-magical-gold border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
       
-      {/* Quick play/pause indicator */}
+      {/* Simple play/pause indicator */}
       {!isLoading && (
         <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200 bg-black/10">
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
             {isPlaying ? (
-              <Pause className="w-5 h-5 text-white" />
+              <Pause className="w-4 h-4 text-white" />
             ) : (
-              <Play className="w-5 h-5 text-white ml-0.5" />
+              <Play className="w-4 h-4 text-white ml-0.5" />
             )}
           </div>
         </div>
