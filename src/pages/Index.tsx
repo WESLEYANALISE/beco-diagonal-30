@@ -328,7 +328,7 @@ const Index = () => {
               <Wand2 className="w-4 h-4" />
               Todos os Artefatos
             </Button>
-            {Array.isArray(categories) && categories.slice(0, 6).map(category => {
+            {Array.isArray(categories) && categories.map(category => {
               const IconComponent = getCategoryIcon(category);
               return (
                 <Button 
@@ -351,7 +351,7 @@ const Index = () => {
 
       {videoProducts.length > 0 && <VideoCarouselHome products={videoProducts} />}
 
-      {!showingAI && Array.isArray(categories) && categories.slice(0, 4).map((category, index) => {
+      {!showingAI && Array.isArray(categories) && categories.map((category, index) => {
         const categoryProducts = getCategoryProducts(category);
         const IconComponent = getCategoryIcon(category);
         

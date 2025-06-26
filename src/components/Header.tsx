@@ -204,17 +204,6 @@ const Header = ({
                           </div>
                         </DialogContent>
                       </Dialog>
-
-                      {navItems.map(item => (
-                        <button
-                          key={item.path}
-                          onClick={() => handleNavigation(item.path)}
-                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 relative font-enchanted"
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span className="font-medium">{item.label}</span>
-                        </button>
-                      ))}
                       
                       <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
                       
@@ -222,7 +211,7 @@ const Header = ({
                         <h3 className="text-sm font-semibold text-magical-gold mb-3 font-magical">
                           🏰 Casas de Hogwarts
                         </h3>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
                           {categories.map(category => {
                             const IconComponent = getCategoryIcon(category);
                             
@@ -239,16 +228,6 @@ const Header = ({
                           })}
                         </div>
                       </div>
-                      
-                      <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
-                      
-                      <button
-                        onClick={handleEvaluateApp}
-                        className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted"
-                      >
-                        <Star className="w-5 h-5" />
-                        <span className="font-medium">Avaliar Universo</span>
-                      </button>
                     </nav>
                   </div>
                 </SheetContent>
