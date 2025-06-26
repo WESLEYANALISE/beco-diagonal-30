@@ -1,213 +1,232 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Menu, Search, X, Sparkles, Book, Wand2, Package, Shirt, Crown } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, Crown, Wand2, Home, Search, Grid3X3, Sparkles, Info, Star } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { PriceFilter } from '@/components/PriceFilter';
+import { useFavorites } from '@/hooks/useFavorites';
 import { MagicalLogo } from '@/components/MagicalLogo';
-import { supabase } from "@/integrations/supabase/client";
 
-const Header = () => {
+interface HeaderProps {
+  onSearch?: (searchTerm: string) => void;
+  onPriceFilter?: (minPrice: number, maxPrice: number) => void;
+}
+
+const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categories, setCategories] = useState<string[]>([]);
+  const location = useLocation();
+  const { favoritesCount } = useFavorites();
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const navItems = [
+    { path: '/', label: 'Salão Principal', icon: Home },
+    { path: '/categorias', label: 'Escolas de Magia', icon: Grid3X3 },
+    { path: '/favoritos', label: 'Grimório Pessoal', icon: Crown },
+    { path: '/novos', label: 'Novos Encantamentos', icon: Sparkles },
+    { path: '/explorar', label: 'Mapa do Maroto', icon: Search },
+  ];
 
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('HARRY POTTER')
-        .select('categoria')
-        .not('categoria', 'is', null);
-
-      if (error) throw error;
-
-      const uniqueCategories = [...new Set(data?.map(item => item.categoria) || [])];
-      setCategories(uniqueCategories);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/explorar?search=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-    }
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    onSearch(value);
   };
 
-  const getCategoryIcon = (category: string) => {
-    const iconMap: { [key: string]: React.ReactNode } = {
-      'Livros': <Book className="w-4 h-4" />,
-      'Varitas': <Wand2 className="w-4 h-4" />,
-      'Poções': <Package className="w-4 h-4" />,
-      'Roupas': <Shirt className="w-4 h-4" />,
-      'Acessórios': <Crown className="w-4 h-4" />,
-    };
-    return iconMap[category] || <Sparkles className="w-4 h-4" />;
+  const handlePriceFilterChange = (minPrice: number, maxPrice: number) => {
+    onPriceFilter(minPrice, maxPrice);
   };
 
-  const handleCategoryClick = (categoria: string) => {
-    navigate(`/categoria/${encodeURIComponent(categoria)}`);
-    setIsMenuOpen(false);
+  const handleClearFilter = () => {
+    onPriceFilter(0, 1000);
+  };
+
+  const handleEvaluateApp = () => {
+    window.open('https://play.google.com/store/apps/details?id=br.com.app.gpu3121847.gpu5864a3ed792bc282cc5655927ef358d2', '_blank');
+    setIsOpen(false);
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-r from-magical-deepPurple/90 via-magical-mysticalPurple/90 to-magical-deepPurple/90 backdrop-blur-xl border-b border-magical-gold/30 shadow-2xl">
-      <div className="max-w-md mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          {/* Menu Hambúrguer */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsMenuOpen(true)}
-            className="text-magical-starlight hover:text-magical-gold hover:bg-magical-gold/10 transition-colors duration-300"
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
+    <>
+      {/* Desktop/Mobile Header */}
+      <header className="bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-darkBlue text-magical-starlight shadow-2xl sticky top-0 z-50 backdrop-blur-sm border-b border-magical-gold/20">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
+              <MagicalLogo size="md" showText={true} />
+            </div>
 
-          {/* Logo */}
-          <div onClick={() => navigate('/')} className="cursor-pointer">
-            <MagicalLogo />
-          </div>
-
-          {/* Botão de Busca */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/explorar')}
-            className="text-magical-starlight hover:text-magical-gold hover:bg-magical-gold/10 transition-colors duration-300"
-          >
-            <Search className="w-5 h-5" />
-          </Button>
-        </div>
-
-        {/* Barra de busca (opcional, pode ser expandida) */}
-        <form onSubmit={handleSearch} className="mt-3">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Buscar artefatos mágicos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-magical-starlight/10 border-magical-gold/30 text-magical-starlight placeholder:text-magical-starlight/60 focus:border-magical-gold focus:ring-magical-gold/20 font-enchanted"
-            />
-            <Button
-              type="submit"
-              size="sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2 bg-magical-gold hover:bg-magical-bronze text-magical-midnight"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
-          </div>
-        </form>
-      </div>
-
-      {/* Menu Lateral */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="fixed inset-0 bg-magical-midnight/50 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
-          <div className="fixed top-0 left-0 bottom-0 w-80 bg-gradient-to-b from-magical-deepPurple via-magical-mysticalPurple to-magical-deepPurple border-r-2 border-magical-gold/30 shadow-2xl shadow-magical-gold/20 overflow-y-auto">
-            <div className="p-4">
-              {/* Header do Menu */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-6 h-6 text-magical-gold animate-pulse" />
-                  <h2 className="text-xl font-bold text-magical-starlight font-magical">Menu Mágico</h2>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-magical-starlight hover:text-magical-gold"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
+            <div className="flex items-center space-x-2">
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center space-x-2">
+                {navItems.slice(1).map((item) => (
+                  <Button
+                    key={item.path}
+                    variant="ghost"
+                    size="sm"
+                    className="text-magical-starlight hover:bg-magical-gold/20 rounded-xl relative font-enchanted hover:text-magical-gold transition-all duration-300"
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <item.icon className="w-4 h-4 mr-2" />
+                    {item.label}
+                  </Button>
+                ))}
               </div>
 
-              {/* Menu Items */}
-              <nav className="space-y-2">
-                {/* Sobre o Universo - Primeiro item */}
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-magical-starlight hover:text-magical-gold hover:bg-magical-gold/10 transition-all duration-300 font-enchanted p-3 rounded-lg border border-magical-gold/20"
-                  onClick={() => {
-                    navigate('/sobre');
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <Sparkles className="w-4 h-4 mr-3" />
-                  Sobre o Universo
-                </Button>
-
-                {/* Divisor */}
-                <div className="my-4 border-t border-magical-gold/30"></div>
-
-                {/* Categorias */}
-                <div className="mb-4">
-                  <h3 className="text-sm font-bold text-magical-gold mb-3 font-magical flex items-center gap-2">
-                    <Package className="w-4 h-4" />
-                    Categorias de Artefatos
-                  </h3>
-                  <div className="space-y-1 ml-2">
-                    {categories.map((category) => (
-                      <Button
-                        key={category}
-                        variant="ghost"
-                        className="w-full justify-start text-magical-starlight hover:text-magical-gold hover:bg-magical-gold/10 transition-all duration-300 font-enchanted p-2 rounded text-sm"
-                        onClick={() => handleCategoryClick(category)}
+              {/* Mobile Menu */}
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="md:hidden text-magical-starlight hover:bg-magical-gold/20 p-2 rounded-xl">
+                    <Menu className="w-6 h-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80 bg-gradient-to-b from-magical-deepPurple to-magical-mysticalPurple text-magical-starlight border-l border-magical-gold/30">
+                  <div className="py-6">
+                    <div className="flex items-center space-x-3 mb-8 px-2">
+                      <MagicalLogo size="md" showText={true} />
+                    </div>
+                    
+                    {/* Price Filter - Only show on homepage */}
+                    {location.pathname === '/' && (
+                      <div className="mb-6 mx-2">
+                        <PriceFilter
+                          onFilter={handlePriceFilterChange}
+                          onClear={handleClearFilter}
+                        />
+                      </div>
+                    )}
+                    
+                    <nav className="space-y-2">
+                      {navItems.map((item) => (
+                        <button
+                          key={item.path}
+                          onClick={() => handleNavigation(item.path)}
+                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 relative font-enchanted"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="font-medium">{item.label}</span>
+                        </button>
+                      ))}
+                      
+                      {/* Separator */}
+                      <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
+                      
+                      {/* About App */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted">
+                            <Info className="w-5 h-5" />
+                            <span className="font-medium">Sobre o Universo</span>
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-sm mx-4 bg-magical-midnight/95 backdrop-blur-xl border border-magical-gold/30 shadow-2xl max-h-[90vh] overflow-y-auto">
+                          <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/90 via-magical-mysticalPurple/90 to-magical-midnight/90 rounded-lg backdrop-blur-xl"></div>
+                          <div className="relative z-10">
+                            <DialogHeader className="space-y-3 text-center pb-4">
+                              <MagicalLogo size="lg" showText={false} />
+                              <DialogTitle className="text-xl font-magical font-bold bg-gradient-to-r from-magical-gold to-magical-bronze bg-clip-text text-transparent">
+                                Universo Potter
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 text-magical-starlight text-sm">
+                              <div className="text-center">
+                                <p className="font-semibold text-magical-gold mb-2 font-enchanted">
+                                  Bem-vindo ao mundo mágico de compras!
+                                </p>
+                                <p className="text-xs text-magical-silver leading-relaxed">
+                                  Descubra artefatos mágicos com os melhores preços do mundo bruxo
+                                </p>
+                              </div>
+                              
+                              <div className="space-y-3">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-magical-gold rounded-full mt-1.5 flex-shrink-0 animate-sparkle"></div>
+                                  <p className="text-xs leading-relaxed">
+                                    Nosso universo reúne cuidadosamente os <span className="font-semibold text-magical-gold">melhores artefatos mágicos</span>, oferecendo acesso aos itens mais essenciais para sua jornada bruxa.
+                                  </p>
+                                </div>
+                                
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 bg-magical-bronze rounded-full mt-1.5 flex-shrink-0 animate-sparkle"></div>
+                                  <p className="text-xs leading-relaxed">
+                                    Desde poções de beleza, decoração para sua casa até varinhas e acessórios mágicos, tudo selecionado para garantir <span className="font-semibold text-magical-bronze">qualidade e economia</span>.
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-gradient-to-r from-magical-gold/20 via-magical-bronze/20 to-magical-gold/20 p-3 rounded-lg border border-magical-gold/30 backdrop-blur-sm">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-base">✨</span>
+                                  <p className="text-xs font-semibold text-magical-gold font-magical">
+                                    Economize tempo e galeões
+                                  </p>
+                                </div>
+                                <p className="text-xs text-magical-bronze">
+                                  Encontre os melhores encantamentos em um só lugar!
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      
+                      {/* Rate App */}
+                      <button
+                        onClick={handleEvaluateApp}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted"
                       >
-                        {getCategoryIcon(category)}
-                        <span className="ml-3">{category}</span>
-                      </Button>
-                    ))}
+                        <Star className="w-5 h-5" />
+                        <span className="font-medium">Avaliar Universo</span>
+                      </button>
+                    </nav>
                   </div>
-                </div>
-
-                {/* Outras opções do menu */}
-                <div className="space-y-1">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-magical-starlight hover:text-magical-gold hover:bg-magical-gold/10 transition-all duration-300 font-enchanted p-3"
-                    onClick={() => {
-                      navigate('/favoritos');
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    <Crown className="w-4 h-4 mr-3" />
-                    Favoritos
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-magical-starlight hover:text-magical-gold hover:bg-magical-gold/10 transition-all duration-300 font-enchanted p-3"
-                    onClick={() => {
-                      navigate('/novos');
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    <Sparkles className="w-4 h-4 mr-3" />
-                    Novidades
-                  </Button>
-                </div>
-              </nav>
-
-              {/* Footer do Menu */}
-              <div className="mt-8 pt-4 border-t border-magical-gold/30">
-                <p className="text-xs text-magical-starlight/60 text-center font-enchanted">
-                  ✨ Explore o mundo mágico ✨
-                </p>
-              </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
-      )}
-    </header>
+
+        {/* Search Bar - Always visible at top - Smaller on desktop */}
+        {location.pathname === '/' && (
+          <div className="px-4 pb-3">
+            <div className="relative w-full max-w-md mx-auto md:max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-magical-gold/70 w-5 h-5" />
+              <Input
+                placeholder="Buscar artefatos mágicos..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-10 bg-magical-starlight/90 border-magical-gold/30 text-magical-midnight placeholder:text-magical-deepPurple/60 focus:bg-magical-starlight focus:border-magical-gold"
+              />
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Bottom Navigation for Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-magical-deepPurple to-magical-mysticalPurple border-t border-magical-gold/30 z-50 shadow-2xl">
+        <div className="grid grid-cols-5 gap-1 px-2 py-2">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => handleNavigation(item.path)}
+              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 text-magical-starlight hover:bg-magical-gold/20 relative"
+            >
+              <item.icon className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium truncate max-w-full font-enchanted">
+                {item.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
   );
 };
 
