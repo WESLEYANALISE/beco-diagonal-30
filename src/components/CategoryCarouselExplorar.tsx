@@ -20,10 +20,10 @@ export const CategoryCarouselExplorar: React.FC<CategoryCarouselExplorarProps> =
   // Adicionar "todos" no início das categorias
   const allCategories = ['todos', ...categories];
 
-  // Dividir categorias em grupos de 4 (2 linhas x 2 colunas)
+  // Dividir categorias em grupos menores para mobile
   const groupedCategories = [];
-  for (let i = 0; i < allCategories.length; i += 4) {
-    groupedCategories.push(allCategories.slice(i, i + 4));
+  for (let i = 0; i < allCategories.length; i += 3) {
+    groupedCategories.push(allCategories.slice(i, i + 3));
   }
 
   const nextSlide = () => {
@@ -39,14 +39,28 @@ export const CategoryCarouselExplorar: React.FC<CategoryCarouselExplorarProps> =
   };
 
   const getCategoryLabel = (category: string) => {
-    return category === 'todos' ? 'Todas as Escolas' : category;
+    return category === 'todos' ? '🏰 Todas' : `✨ ${category}`;
+  };
+
+  const getCategoryEmoji = (category: string) => {
+    const emojiMap: Record<string, string> = {
+      'todos': '🏰',
+      'Itens Colecionáveis': '👑',
+      'Bonecas e Brinquedos de Pelúcia': '🧸',
+      'Luminária': '💡',
+      'Colares': '📿',
+      'Moletons e Suéteres': '👕',
+      'Capinhas': '📱',
+      'Canecas': '☕'
+    };
+    return emojiMap[category] || '⚡';
   };
 
   return (
-    <div className="relative">
-      <div className="flex items-center justify-between mb-3">
+    <div className="relative bg-magical-midnight/30 backdrop-blur-sm rounded-2xl p-4 border border-magical-gold/20">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-magical-starlight font-magical">
-          Explorar por Categoria
+          🏰 Explorar por Casa
         </h3>
         <div className="flex gap-2">
           <Button
@@ -77,23 +91,20 @@ export const CategoryCarouselExplorar: React.FC<CategoryCarouselExplorarProps> =
         >
           {groupedCategories.map((group, groupIndex) => (
             <div key={groupIndex} className="w-full flex-shrink-0">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-3">
                 {group.map((category, index) => (
                   <Button
                     key={category}
                     onClick={() => onCategoryChange(category)}
-                    className={`h-12 text-xs font-medium transition-all duration-300 ${
+                    className={`h-14 text-sm font-medium transition-all duration-300 flex items-center justify-start gap-3 px-4 ${
                       currentCategory === category
-                        ? 'bg-magical-gold text-magical-midnight shadow-lg scale-105'
-                        : 'bg-magical-starlight/10 text-magical-starlight border border-magical-gold/30 hover:bg-magical-gold/20 hover:text-magical-gold'
+                        ? 'bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight shadow-lg scale-105 border-2 border-magical-gold/50'
+                        : 'bg-magical-starlight/10 text-magical-starlight border border-magical-gold/30 hover:bg-magical-gold/20 hover:text-magical-gold hover:scale-102'
                     }`}
                   >
-                    {getCategoryLabel(category)}
+                    <span className="text-xl">{getCategoryEmoji(category)}</span>
+                    <span className="flex-1 text-left">{getCategoryLabel(category)}</span>
                   </Button>
-                ))}
-                {/* Preencher espaços vazios se necessário */}
-                {group.length < 4 && Array.from({ length: 4 - group.length }).map((_, emptyIndex) => (
-                  <div key={`empty-${emptyIndex}`} className="h-12"></div>
                 ))}
               </div>
             </div>
@@ -101,15 +112,17 @@ export const CategoryCarouselExplorar: React.FC<CategoryCarouselExplorarProps> =
         </div>
       </div>
 
-      {/* Indicadores de slide */}
+      {/* Indicadores de slide otimizados */}
       {groupedCategories.length > 1 && (
-        <div className="flex justify-center mt-3 gap-2">
+        <div className="flex justify-center mt-4 gap-2">
           {groupedCategories.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                currentIndex === index ? 'bg-magical-gold w-4' : 'bg-magical-starlight/50'
+              className={`transition-all duration-300 rounded-full ${
+                currentIndex === index 
+                  ? 'bg-magical-gold w-6 h-2 shadow-md shadow-magical-gold/50' 
+                  : 'bg-magical-starlight/50 hover:bg-magical-starlight/80 w-2 h-2'
               }`}
             />
           ))}

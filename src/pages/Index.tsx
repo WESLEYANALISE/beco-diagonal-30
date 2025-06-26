@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Wand2, Crown, Shirt, Smartphone } from 'lucide-react';
+import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Wand2, Crown, Shirt, Smartphone, Video } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +14,7 @@ import { TabNavigation } from '@/components/TabNavigation';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGrid } from '@/components/ProductGrid';
 import { MagicalParticles } from '@/components/MagicalParticles';
+import { VideoCarouselHome } from '@/components/VideoCarouselHome';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +48,7 @@ const Index = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [videoProducts, setVideoProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl || 'todas');
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
@@ -77,14 +78,14 @@ const Index = () => {
     return parseFloat(cleanPrice) || 0;
   }, []);
 
-  // Optimized data fetching with better caching
+  // Otimizada com melhor cache
   const fetchProducts = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('HARRY POTTER')
         .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, descricao, uso')
         .order('id')
-        .limit(100); // Limit initial load
+        .limit(60); // Reduzido para melhor performance
       
       if (error) throw error;
 
@@ -95,7 +96,6 @@ const Index = () => {
         return;
       }
 
-      // Filter valid products
       const validProducts = data.filter(product => 
         product?.produto && product?.valor && product?.categoria
       );
@@ -106,6 +106,10 @@ const Index = () => {
 
       const initialFeatured = processedProducts.slice(0, 6);
       setFeaturedProducts(initialFeatured);
+      
+      // Produtos com vídeo para o carousel especial
+      const withVideos = processedProducts.filter(product => product.video).slice(0, 8);
+      setVideoProducts(withVideos);
       
       const uniqueCategories = [...new Set(validProducts
         .map(product => product.categoria)
@@ -279,6 +283,11 @@ const Index = () => {
     }
   }, [navigate, addToHistory]);
 
+  const handleExplorarVideosClick = useCallback(() => {
+    addToHistory(window.location.pathname, document.title);
+    navigate('/explorar');
+  }, [navigate, addToHistory]);
+
   // Memoized components to prevent unnecessary re-renders
   const memoizedCategoryCarousel = useMemo(() => (
     Array.isArray(filteredProducts) && filteredProducts.length > 0 && (
@@ -307,7 +316,6 @@ const Index = () => {
       
       <Header onSearch={setSearchTerm} onPriceFilter={() => {}} />
       
-      {/* Search Preview */}
       {searchTerm && Array.isArray(filteredProducts) && (
         <SearchPreview 
           searchTerm={searchTerm} 
@@ -319,10 +327,22 @@ const Index = () => {
         />
       )}
 
-      {/* Category Carousel */}
       {memoizedCategoryCarousel}
       
-      {/* Quick Access Buttons */}
+      {/* Botão destacado para Explorar Vídeos */}
+      <section className="px-4 py-4 animate-fade-in">
+        <div className="max-w-7xl mx-auto">
+          <Button 
+            onClick={handleExplorarVideosClick}
+            className="w-full bg-gradient-to-r from-magical-crimson via-magical-gold to-magical-bronze text-magical-starlight hover:from-magical-darkGold hover:to-magical-crimson font-bold text-lg py-4 mb-4 shadow-2xl border-2 border-magical-gold/50 transition-all duration-300 hover:scale-[1.02] font-magical animate-pulse"
+          >
+            <Video className="w-6 h-6 mr-3" />
+            ⚡ Explorar Vídeos das Relíquias
+            <Sparkles className="w-6 h-6 ml-3" />
+          </Button>
+        </div>
+      </section>
+
       <section className="px-4 py-2 animate-fade-in">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -354,10 +374,12 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Hero Section */}
       <HeroSection productsCount={filteredProducts.length} />
 
-      {/* Category Product Carousels */}
+      {videoProducts.length > 0 && (
+        <VideoCarouselHome products={videoProducts} />
+      )}
+
       {!showingAI && Array.isArray(categories) && categories.slice(0, 4).map((category, index) => {
         const categoryProducts = getCategoryProducts(category);
         const IconComponent = getCategoryIcon(category);
@@ -404,7 +426,6 @@ const Index = () => {
         );
       })}
 
-      {/* Featured Products */}
       <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-mysticalPurple/30 via-magical-deepPurple/30 to-magical-mysticalPurple/30 backdrop-blur-sm animate-fade-in border-y border-magical-gold/40 relative">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
@@ -475,7 +496,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Products Grid */}
       {!showingAI && (
         <section className="px-4 md:px-6 py-8 md:py-12">
           <div className="max-w-7xl mx-auto">
@@ -558,7 +578,6 @@ const Index = () => {
         </section>
       )}
 
-      {/* AI Analysis Modal */}
       <AIAnalysisModal 
         isOpen={showAnalysisModal} 
         onClose={() => setShowAnalysisModal(false)} 

@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useCallback, memo } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Heart, Share2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UltraFastVideo } from '@/components/UltraFastVideo';
@@ -30,6 +30,7 @@ export const VideoFeed = memo<VideoFeedProps>(({
   onVideoEnd
 }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [isLiked, setIsLiked] = useState(false);
   const { instantAction } = useOptimizedInteractions();
 
   const handleVideoLoad = useCallback(() => {
@@ -41,16 +42,29 @@ export const VideoFeed = memo<VideoFeedProps>(({
     onBuy();
   }, [onBuy]));
 
+  const handleLikeClick = instantAction(useCallback(() => {
+    setIsLiked(!isLiked);
+  }, [isLiked]));
+
+  const handleShareClick = instantAction(useCallback(() => {
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: `Confira esta relíquia mágica: ${title}`,
+        url: window.location.href
+      });
+    }
+  }, [title]));
+
   return (
     <div className="relative w-full h-full bg-magical-midnight overflow-hidden">
-      {/* Minimal loading skeleton */}
+      {/* Loading skeleton minimalista */}
       {isLoading && (
-        <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/60 to-magical-midnight/60 animate-pulse">
+        <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/40 to-magical-midnight/40 animate-pulse">
           <div className="absolute bottom-4 left-4 right-4">
-            <div className="bg-magical-midnight/30 rounded-xl p-3 space-y-2">
-              <div className="h-3 bg-magical-gold/20 rounded animate-pulse"></div>
-              <div className="h-2 bg-magical-gold/20 rounded w-2/3 animate-pulse"></div>
-              <div className="h-6 bg-magical-gold/20 rounded animate-pulse"></div>
+            <div className="bg-magical-midnight/20 rounded-xl p-3 space-y-2 backdrop-blur-sm">
+              <div className="h-3 bg-magical-gold/10 rounded animate-pulse"></div>
+              <div className="h-2 bg-magical-gold/10 rounded w-2/3 animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -69,25 +83,57 @@ export const VideoFeed = memo<VideoFeedProps>(({
         priority={isActive}
       />
       
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-magical-midnight/60 z-10" />
+      {/* Gradiente sutil */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-magical-midnight/80 z-10" />
       
-      <div className="absolute bottom-4 left-4 right-4 z-20 safe-area-bottom">
-        <div className="bg-magical-midnight/70 backdrop-blur-sm rounded-xl p-3 border border-magical-gold/20 shadow-xl">
-          <h3 className="text-magical-starlight font-bold text-sm mb-2 line-clamp-2 font-magical">
+      {/* Controles laterais estilo TikTok */}
+      <div className="absolute right-4 bottom-32 z-20 flex flex-col gap-6">
+        <button
+          onClick={handleLikeClick}
+          className="w-12 h-12 bg-magical-starlight/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-magical-gold/30 transition-all duration-200 active:scale-95"
+        >
+          <Heart 
+            className={`w-6 h-6 transition-colors ${
+              isLiked ? 'text-red-500 fill-current' : 'text-magical-starlight'
+            }`} 
+          />
+        </button>
+        
+        <button
+          onClick={handleShareClick}
+          className="w-12 h-12 bg-magical-starlight/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-magical-gold/30 transition-all duration-200 active:scale-95"
+        >
+          <Share2 className="w-6 h-6 text-magical-starlight" />
+        </button>
+      </div>
+      
+      {/* Info do produto otimizada para mobile */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 p-4 pb-6">
+        <div className="space-y-3">
+          {/* Título */}
+          <h3 className="text-magical-starlight font-bold text-lg leading-tight font-magical line-clamp-2 drop-shadow-lg">
             {title}
           </h3>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-magical-gold font-bold text-base font-magical">Menos de {price}</span>
-            <Badge className="bg-magical-gold/20 text-magical-gold border-magical-gold/30 text-xs">
-              {category}
-            </Badge>
+          
+          {/* Preço e categoria */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-magical-gold font-bold text-xl font-magical drop-shadow-lg">
+                Menos de R$ {price}
+              </span>
+              <Badge className="bg-magical-gold/90 text-magical-midnight border-magical-gold/30 text-sm font-semibold">
+                {category}
+              </Badge>
+            </div>
           </div>
+          
+          {/* Botão de compra destacado */}
           <Button 
             onClick={handleBuyClick}
-            className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-200 hover:scale-[1.02] font-enchanted shadow-lg text-sm py-2 transform active:scale-[0.98]"
+            className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-bold transition-all duration-200 hover:scale-[1.02] font-enchanted shadow-2xl text-base py-3 transform active:scale-[0.98] border-2 border-magical-gold/50"
           >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Adquirir Artefato Mágico
+            <ShoppingCart className="w-5 h-5 mr-2" />
+            ⚡ Adquirir Esta Relíquia
           </Button>
         </div>
       </div>
