@@ -42,8 +42,8 @@ const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
-  // Initialize background music for the entire app - no manual control
-  useBackgroundMusic();
+  // Initialize background music hook but don't auto-play
+  const { playMusic } = useBackgroundMusic();
   
   const categoryFromUrl = searchParams.get('categoria');
   const [products, setProducts] = useState<Product[]>([]);
@@ -359,6 +359,32 @@ const Index = () => {
     return shuffleArray(withVideos, false).slice(0, 8);
   }, [filteredProducts, shuffleArray]);
 
+  const handleExplorarColecaoClick = useCallback(async (category: string) => {
+    // Play music when clicking "Explorar Coleção"
+    playMusic();
+    
+    // Check if category has subcategories
+    try {
+      const { data } = await supabase
+        .from('HARRY POTTER')
+        .select('subcategoria')
+        .eq('categoria', category)
+        .not('subcategoria', 'is', null)
+        .not('subcategoria', 'eq', '');
+
+      if (data && data.length > 0) {
+        // Has subcategories, show them
+        navigate(`/categoria/${encodeURIComponent(category)}`);
+      } else {
+        // No subcategories, go to category list
+        navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
+      }
+    } catch (error) {
+      console.error('Error checking subcategories:', error);
+      navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
+    }
+  }, [navigate, playMusic]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20 relative">
@@ -415,7 +441,7 @@ const Index = () => {
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => navigate('/categoria-lista?categoria=todas&tipo=categoria')} 
+              onClick={() => handleExplorarColecaoClick('todas')} 
               className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/30 text-magical-starlight border-magical-gold/50 hover:bg-magical-gold/40 flex items-center gap-2 font-enchanted shadow-lg hover:shadow-magical-gold/20"
             >
               <Wand2 className="w-4 h-4" />
@@ -430,7 +456,7 @@ const Index = () => {
                   key={category} 
                   size="sm" 
                   variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  onClick={() => handleExplorarColecaoClick(category)} 
                   className="whitespace-nowrap transition-all duration-300 hover:scale-105 bg-magical-gold/20 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/30 flex items-center gap-2 font-enchanted shadow-md hover:shadow-magical-gold/20"
                 >
                   <IconComponent className="w-4 h-4" />
@@ -475,7 +501,7 @@ const Index = () => {
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  onClick={() => navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`)} 
+                  onClick={() => handleExplorarColecaoClick(category)} 
                   className="bg-magical-gold/30 text-magical-starlight border-magical-gold/40 hover:bg-magical-gold/40 text-xs px-3 py-1 h-auto font-enchanted shadow-md hover:shadow-magical-gold/20 transition-all duration-300 hover:scale-105"
                 >
                   Explorar Coleção
@@ -572,7 +598,7 @@ const Index = () => {
               
               <div className="text-center animate-fade-in">
                 <Button 
-                  onClick={() => navigate('/categoria-lista?tipo=mais-vendidos')} 
+                  onClick={() => handleExplorarColecaoClick('mais-vendidos')} 
                   className="bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-2xl hover:shadow-magical-gold/30"
                 >
                   Explorar Mais Relíquias

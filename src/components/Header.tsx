@@ -1,7 +1,6 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Crown, Wand2, Home, Search, Grid3X3, Sparkles, Info, Star } from 'lucide-react';
+import { Menu, X, Crown, Wand2, Home, Search, Grid3X3, Sparkles, Info, Star, ShoppingCart, Shirt, Smartphone, Package } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { PriceFilter } from '@/components/PriceFilter';
 import { useFavorites } from '@/hooks/useFavorites';
 import { MagicalLogo } from '@/components/MagicalLogo';
+import { supabase } from "@/integrations/supabase/client";
 
 interface HeaderProps {
   onSearch?: (searchTerm: string) => void;
@@ -18,6 +18,7 @@ interface HeaderProps {
 const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [categories, setCategories] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
   const { favoritesCount } = useFavorites();
@@ -30,8 +31,49 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
     { path: '/explorar', label: 'Mapa do Maroto', icon: Search },
   ];
 
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('HARRY POTTER')
+        .select('categoria')
+        .not('categoria', 'is', null)
+        .not('categoria', 'eq', '');
+
+      if (error) throw error;
+
+      if (data) {
+        const uniqueCategories = [...new Set(data.map(item => item.categoria))];
+        setCategories(uniqueCategories);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    const iconMap: Record<string, React.ComponentType<any>> = {
+      'Itens Colecionáveis': Crown,
+      'Bonecas e Brinquedos de Pelúcia': Sparkles,
+      'Luminária': Wand2,
+      'Colares': Crown,
+      'Moletons e Suéteres': Shirt,
+      'Capinhas': Smartphone,
+      'Canecas': ShoppingCart
+    };
+    return iconMap[category] || Package;
+  };
+
   const handleNavigation = (path: string) => {
     navigate(path);
+    setIsOpen(false);
+  };
+
+  const handleCategoryNavigation = (category: string) => {
+    navigate(`/categoria/${encodeURIComponent(category)}`);
     setIsOpen(false);
   };
 
@@ -104,21 +146,7 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                     )}
                     
                     <nav className="space-y-2">
-                      {navItems.map((item) => (
-                        <button
-                          key={item.path}
-                          onClick={() => handleNavigation(item.path)}
-                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 relative font-enchanted"
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span className="font-medium">{item.label}</span>
-                        </button>
-                      ))}
-                      
-                      {/* Separator */}
-                      <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
-                      
-                      {/* About App */}
+                      {/* About App - First item */}
                       <Dialog>
                         <DialogTrigger asChild>
                           <button className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted">
@@ -176,6 +204,46 @@ const Header = ({ onSearch = () => {}, onPriceFilter = () => {} }: HeaderProps) 
                           </div>
                         </DialogContent>
                       </Dialog>
+
+                      {/* Navigation Items */}
+                      {navItems.map((item) => (
+                        <button
+                          key={item.path}
+                          onClick={() => handleNavigation(item.path)}
+                          className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 relative font-enchanted"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="font-medium">{item.label}</span>
+                        </button>
+                      ))}
+                      
+                      {/* Separator */}
+                      <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
+                      
+                      {/* Product Categories */}
+                      <div className="px-4 py-2">
+                        <h3 className="text-sm font-semibold text-magical-gold mb-3 font-magical">
+                          🏰 Casas de Hogwarts
+                        </h3>
+                        <div className="space-y-1">
+                          {categories.map((category) => {
+                            const IconComponent = getCategoryIcon(category);
+                            return (
+                              <button
+                                key={category}
+                                onClick={() => handleCategoryNavigation(category)}
+                                className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-300 w-full text-left hover:bg-magical-gold/20 text-sm font-enchanted"
+                              >
+                                <IconComponent className="w-4 h-4 text-magical-bronze" />
+                                <span className="font-medium">{category}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      {/* Separator */}
+                      <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
                       
                       {/* Rate App */}
                       <button

@@ -29,12 +29,6 @@ export const useBackgroundMusic = () => {
     
     const handleCanPlay = () => {
       setIsLoaded(true);
-      // Auto-play immediately when loaded
-      if (!hasPlayed) {
-        audio.play().catch(() => {
-          // Silent fail for autoplay restrictions
-        });
-      }
     };
 
     const handlePlay = () => setIsPlaying(true);
@@ -49,29 +43,6 @@ export const useBackgroundMusic = () => {
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
 
-    // Try immediate play for browsers that allow it
-    const tryPlay = () => {
-      if (!hasPlayed) {
-        audio.play().catch(() => {
-          // Add user interaction listeners for restricted browsers
-          const handleUserInteraction = () => {
-            if (!hasPlayed && audioRef.current) {
-              audioRef.current.play().catch(() => {});
-              document.removeEventListener('click', handleUserInteraction);
-              document.removeEventListener('keydown', handleUserInteraction);
-              document.removeEventListener('touchstart', handleUserInteraction);
-            }
-          };
-
-          document.addEventListener('click', handleUserInteraction);
-          document.addEventListener('keydown', handleUserInteraction);
-          document.addEventListener('touchstart', handleUserInteraction);
-        });
-      }
-    };
-
-    tryPlay();
-
     return () => {
       if (audioRef.current === globalAudioInstance) {
         audio.removeEventListener('canplaythrough', handleCanPlay);
@@ -83,7 +54,15 @@ export const useBackgroundMusic = () => {
         isAudioInitialized = false;
       }
     };
-  }, [hasPlayed]);
+  }, []);
 
-  return { isPlaying, isLoaded, hasPlayed };
+  const playMusic = () => {
+    if (audioRef.current && !hasPlayed) {
+      audioRef.current.play().catch(() => {
+        // Silent fail for autoplay restrictions
+      });
+    }
+  };
+
+  return { isPlaying, isLoaded, hasPlayed, playMusic };
 };
