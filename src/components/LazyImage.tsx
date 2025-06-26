@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface LazyImageProps {
@@ -9,7 +9,7 @@ interface LazyImageProps {
   placeholder?: string;
 }
 
-export const LazyImage: React.FC<LazyImageProps> = ({ 
+export const LazyImage = memo<LazyImageProps>(({ 
   src, 
   alt, 
   className = "", 
@@ -20,7 +20,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // Intersection observer otimizado para carregamento mais eficiente
+  // Intersection observer otimizado para carregamento mais rápido
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -30,16 +30,21 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         }
       },
       { 
-        threshold: 0.05, // Reduzido para carregar mais cedo
-        rootMargin: '100px' // Aumentado para pré-carregar mais imagens
+        threshold: 0.01, // Carrega mais cedo
+        rootMargin: '200px' // Pré-carrega ainda mais imagens
       }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    const currentRef = imgRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
   }, []);
 
   const handleLoad = useCallback(() => {
@@ -53,15 +58,15 @@ export const LazyImage: React.FC<LazyImageProps> = ({
 
   return (
     <div ref={imgRef} className={`relative ${className}`}>
-      {!isLoaded && (
-        <Skeleton className="absolute inset-0 w-full h-full animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
+      {!isLoaded && !hasError && (
+        <Skeleton className="absolute inset-0 w-full h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
       )}
       {isInView && (
         <img
           src={hasError ? (placeholder || '/placeholder.svg') : src}
           alt={alt}
-          className={`${className} transition-all duration-500 ${
-            isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          className={`${className} transition-opacity duration-300 ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           onLoad={handleLoad}
           onError={handleError}
@@ -71,4 +76,6 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       )}
     </div>
   );
-};
+});
+
+LazyImage.displayName = 'LazyImage';

@@ -57,7 +57,7 @@ export const useBackgroundMusic = () => {
   }, []);
 
   const playMusic = () => {
-    if (audioRef.current && !hasPlayed) {
+    if (audioRef.current && !hasPlayed && isLoaded) {
       audioRef.current.play().catch(() => {
         // Silent fail for autoplay restrictions
       });

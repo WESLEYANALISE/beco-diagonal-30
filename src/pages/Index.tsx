@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone, Wand2, Crown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,9 @@ import { MagicalParticles } from '@/components/MagicalParticles';
 import { useProductClicks } from '@/hooks/useProductClicks';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { supabase } from "@/integrations/supabase/client";
+
+// Lazy load heavy components
+const ProductPhotosModal = lazy(() => import('@/components/ProductPhotosModal').then(module => ({ default: module.ProductPhotosModal })));
 
 interface Product {
   id: number;
@@ -80,46 +84,15 @@ const Index = () => {
     return shuffled;
   }, []);
 
-  // Parse price from string to number
+  // Parse price from string to number - memoized
   const parsePrice = useCallback((priceString: string): number => {
     if (!priceString || typeof priceString !== 'string') return 0;
     const cleanPrice = priceString.replace(/[^\d,]/g, '').replace(',', '.');
     return parseFloat(cleanPrice) || 0;
   }, []);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  useEffect(() => {
-    if (categoryFromUrl) {
-      setSelectedCategory(categoryFromUrl);
-    }
-  }, [categoryFromUrl]);
-
-  useEffect(() => {
-    filterProducts();
-  }, [selectedCategory, filteredProducts, searchTerm, sortBy, sortOrder]);
-
-  useEffect(() => {
-    applyPriceFilter();
-  }, [products, priceFilter]);
-
-  // Auto-rotate featured products by category every 20 seconds
-  useEffect(() => {
-    if (categories.length > 0 && products.length > 0 && !categoryFromUrl) {
-      const interval = setInterval(() => {
-        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-        setCurrentFeaturedCategory(randomCategory);
-        const categoryProducts = products.filter(p => p.categoria === randomCategory);
-        const shuffledProducts = shuffleArray(categoryProducts, true);
-        setFeaturedProducts(shuffledProducts.slice(0, 6));
-      }, 20000);
-      return () => clearInterval(interval);
-    }
-  }, [categories, products, categoryFromUrl, shuffleArray]);
-
-  const fetchProducts = async () => {
+  // Optimize data fetching with better caching
+  const fetchProducts = useCallback(async () => {
     try {
       console.log('Fetching products...');
       const { data, error } = await supabase
@@ -131,8 +104,6 @@ const Index = () => {
         console.error('Supabase error:', error);
         throw error;
       }
-
-      console.log('Raw data from Supabase:', data);
 
       if (!data || !Array.isArray(data)) {
         console.warn('No data received from Supabase');
@@ -153,10 +124,9 @@ const Index = () => {
         typeof product.categoria === 'string'
       );
 
-      console.log('Valid products:', validProducts.length);
-
-      let processedProducts = shuffleArray(validProducts, true);
+      const processedProducts = shuffleArray(validProducts, true);
       setProducts(processedProducts);
+      setFilteredProducts(processedProducts);
 
       const initialFeatured = shuffleArray(processedProducts, true).slice(0, 6);
       setFeaturedProducts(initialFeatured);
@@ -167,7 +137,6 @@ const Index = () => {
         .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '')
       )];
       
-      console.log('Categories found:', uniqueCategories);
       setCategories(uniqueCategories);
 
       if (uniqueCategories.length > 0) {
@@ -180,8 +149,9 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [shuffleArray]);
 
+  // Memoize expensive operations
   const applyPriceFilter = useCallback(() => {
     if (!Array.isArray(products)) {
       setFilteredProducts([]);
@@ -240,6 +210,39 @@ const Index = () => {
     setDisplayedProducts(filtered);
   }, [filteredProducts, selectedCategory, searchTerm, sortBy, sortOrder, parsePrice]);
 
+  // Optimize effects with proper dependencies
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [categoryFromUrl]);
+
+  useEffect(() => {
+    filterProducts();
+  }, [filterProducts]);
+
+  useEffect(() => {
+    applyPriceFilter();
+  }, [applyPriceFilter]);
+
+  // Auto-rotate featured products by category every 20 seconds - optimized
+  useEffect(() => {
+    if (categories.length > 0 && products.length > 0 && !categoryFromUrl) {
+      const interval = setInterval(() => {
+        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+        setCurrentFeaturedCategory(randomCategory);
+        const categoryProducts = products.filter(p => p.categoria === randomCategory);
+        const shuffledProducts = shuffleArray(categoryProducts, true);
+        setFeaturedProducts(shuffledProducts.slice(0, 6));
+      }, 20000);
+      return () => clearInterval(interval);
+    }
+  }, [categories, products, categoryFromUrl, shuffleArray]);
+
   // Debounced search function for better performance
   const handleSearch = useCallback((term: string) => {
     setSearchTerm(term || '');
@@ -260,7 +263,9 @@ const Index = () => {
     if (!productId) return;
     
     try {
-      await trackProductClick(productId, 'product_view');
+      // Track click asynchronously without blocking UI
+      trackProductClick(productId, 'product_view').catch(console.error);
+      
       const productElement = document.getElementById(`product-${productId}`);
       if (productElement) {
         productElement.scrollIntoView({
@@ -270,7 +275,7 @@ const Index = () => {
         setSearchTerm('');
       }
     } catch (error) {
-      console.error('Error tracking product click:', error);
+      console.error('Error handling product click:', error);
     }
   }, [trackProductClick]);
 
@@ -385,6 +390,17 @@ const Index = () => {
     }
   }, [navigate, playMusic]);
 
+  // Memoize heavy components to prevent unnecessary re-renders
+  const memoizedCategoryCarousel = useMemo(() => (
+    Array.isArray(filteredProducts) && filteredProducts.length > 0 && (
+      <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
+    )
+  ), [filteredProducts, handleProductClick]);
+
+  const memoizedVideoCarousel = useMemo(() => (
+    !showingAI && productsWithVideos.length > 0 && <VideoCarouselHome products={productsWithVideos} />
+  ), [showingAI, productsWithVideos]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-magical-midnight via-magical-deepPurple to-magical-mysticalPurple pb-20 relative">
@@ -429,10 +445,8 @@ const Index = () => {
         />
       )}
 
-      {/* Novidades Carousel */}
-      {Array.isArray(filteredProducts) && filteredProducts.length > 0 && (
-        <CategoryCarousel products={filteredProducts} onProductClick={handleProductClick} />
-      )}
+      {/* Novidades Carousel - Memoized */}
+      {memoizedCategoryCarousel}
       
       {/* Category Quick Access Buttons - SHOWING ALL CATEGORIES from HARRY POTTER table */}
       <section className="px-4 py-2 animate-fade-in">
@@ -471,10 +485,10 @@ const Index = () => {
       {/* Hero Section */}
       <HeroSection productsCount={filteredProducts.length} />
 
-      {/* Video Carousel - Strategic placement after hero */}
-      {!showingAI && productsWithVideos.length > 0 && <VideoCarouselHome products={productsWithVideos} />}
+      {/* Video Carousel - Strategic placement after hero - Memoized */}
+      {memoizedVideoCarousel}
 
-      {/* Category Product Carousels - show ALL categories when not in AI mode */}
+      {/* Category Product Carousels - show ALL categories when not in AI mode - Optimized */}
       {!showingAI && Array.isArray(categories) && categories.map((category, index) => {
         if (!category) return null;
         
@@ -525,9 +539,8 @@ const Index = () => {
         );
       })}
 
-      {/* Enhanced Featured Products Carousel with Toggle - TEMÁTICO SEM LARANJA */}
+      {/* Enhanced Featured Products Carousel with Toggle */}
       <section className="px-4 md:px-6 py-8 md:py-12 bg-gradient-to-r from-magical-mysticalPurple/30 via-magical-deepPurple/30 to-magical-mysticalPurple/30 backdrop-blur-sm animate-fade-in border-y border-magical-gold/40 shadow-2xl relative overflow-hidden">
-        {/* Magical background overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/30 via-magical-mysticalPurple/30 to-magical-darkBlue/30"></div>
         
         <div className="max-w-7xl mx-auto relative z-10">
@@ -738,13 +751,15 @@ const Index = () => {
         </section>
       )}
 
-      {/* AI Analysis Modal */}
-      <AIAnalysisModal 
-        isOpen={showAnalysisModal} 
-        onClose={() => setShowAnalysisModal(false)} 
-        selectedProducts={selectedProducts} 
-        onAnalyze={analyzeProducts} 
-      />
+      {/* AI Analysis Modal - Lazy loaded */}
+      <Suspense fallback={<div>Carregando...</div>}>
+        <AIAnalysisModal 
+          isOpen={showAnalysisModal} 
+          onClose={() => setShowAnalysisModal(false)} 
+          selectedProducts={selectedProducts} 
+          onAnalyze={analyzeProducts} 
+        />
+      </Suspense>
     </div>
   );
 };

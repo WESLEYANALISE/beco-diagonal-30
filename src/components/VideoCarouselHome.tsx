@@ -1,11 +1,11 @@
 
-import React, { useCallback, useRef, useEffect } from 'react';
-import { Crown, Play, Zap, Eye, Images } from 'lucide-react';
+import React, { useCallback, useRef, useEffect, memo } from 'react';
+import { Crown, Play, Zap, Eye, Images, ShoppingCart } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LazyImage } from '@/components/LazyImage';
+import { FastImage } from '@/components/FastImage';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 
 interface Product {
@@ -27,7 +27,7 @@ interface VideoCarouselHomeProps {
   products: Product[];
 }
 
-export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
+export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({
   products
 }) => {
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
@@ -42,7 +42,7 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
     const video = videoRefs.current[productId];
     if (video) {
       if (video.paused) {
-        video.play();
+        video.play().catch(console.error);
       } else {
         video.pause();
       }
@@ -104,10 +104,11 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
                       </div>
                     ) : (
                       <>
-                        <LazyImage 
+                        <FastImage 
                           src={product.imagem1} 
                           alt={product.produto} 
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          loading="eager"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-red-900/80 via-red-900/20 to-transparent" />
                       </>
@@ -143,7 +144,7 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
                             Menos de
                           </span>
                           <span className="text-yellow-400 font-bold text-lg font-magical">
-                            {product.valor}
+                            R$ {product.valor}
                           </span>
                         </div>
                         <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
@@ -156,7 +157,7 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
                         <ProductPhotosModal
                           images={getProductImages(product)}
                           productName={product.produto}
-                          productPrice={product.valor}
+                          productPrice={`R$ ${product.valor}`}
                           productLink={product.link}
                           videoUrl={product.video}
                         />
@@ -165,8 +166,8 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
                           onClick={() => handleBuyClick(product.link)} 
                           className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-red-900 hover:from-yellow-400 hover:to-yellow-500 font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-lg hover:shadow-yellow-500/20"
                         >
-                          <Zap className="w-4 h-4 mr-2" />
-                          Adquirir Artefato
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Ver Mais
                         </Button>
                       </div>
                     </div>
@@ -181,4 +182,6 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
       </div>
     </section>
   );
-};
+});
+
+VideoCarouselHome.displayName = 'VideoCarouselHome';
