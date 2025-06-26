@@ -1,10 +1,12 @@
-import React, { useCallback, useRef, useEffect } from 'react';
-import { Crown, Play, Zap } from 'lucide-react';
+
+import React, { useCallback, useRef, useEffect, useState } from 'react';
+import { Crown, Play, Zap, Eye, Package } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LazyImage } from '@/components/LazyImage';
+import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 
 interface Product {
   id: number;
@@ -12,8 +14,13 @@ interface Product {
   valor: string;
   video: string;
   imagem1: string;
+  imagem2?: string;
+  imagem3?: string;
+  imagem4?: string;
+  imagem5?: string;
   link: string;
   categoria: string;
+  descricao?: string;
 }
 
 interface VideoCarouselHomeProps {
@@ -41,6 +48,12 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
       }
     }
   }, []);
+
+  const getProductImages = (product: Product): string[] => {
+    const images = [product.imagem1, product.imagem2, product.imagem3, product.imagem4, product.imagem5]
+      .filter((img): img is string => Boolean(img));
+    return images;
+  };
 
   if (!products || products.length === 0) {
     return null;
@@ -113,25 +126,41 @@ export const VideoCarouselHome: React.FC<VideoCarouselHomeProps> = ({
                     )}
                   </div>
                   
-                  <CardContent className="p-4 bg-gradient-to-br from-red-900/40 to-yellow-600/20 bg-indigo-800">
+                  <CardContent className="p-4 bg-gradient-to-br from-red-900/40 to-yellow-600/20">
                     <div className="space-y-3">
                       <h3 className="font-bold text-magical-starlight text-sm line-clamp-2 group-hover:text-yellow-400 transition-colors duration-300 font-enchanted">
                         {product.produto}
                       </h3>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-yellow-400 font-bold text-lg font-magical">
-                          {product.valor}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-yellow-400/80 text-xs font-enchanted">Menos de</span>
+                          <span className="text-yellow-400 font-bold text-lg font-magical">
+                            {product.valor}
+                          </span>
+                        </div>
                         <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
                           {product.categoria}
                         </Badge>
                       </div>
                       
-                      <Button onClick={() => handleBuyClick(product.link)} className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-red-900 hover:from-yellow-400 hover:to-yellow-500 font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-lg hover:shadow-yellow-500/20">
-                        <Zap className="w-4 h-4 mr-2" />
-                        Adquirir Artefato
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => handleBuyClick(product.link)} 
+                          className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-red-900 hover:from-yellow-400 hover:to-yellow-500 font-semibold transition-all duration-300 hover:scale-105 font-enchanted shadow-lg hover:shadow-yellow-500/20"
+                        >
+                          <Zap className="w-4 h-4 mr-2" />
+                          Adquirir
+                        </Button>
+                        
+                        <ProductPhotosModal
+                          images={getProductImages(product)}
+                          productName={product.produto}
+                          productPrice={product.valor}
+                          productLink={product.link}
+                          videoUrl={product.video}
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

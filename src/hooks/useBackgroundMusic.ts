@@ -9,7 +9,6 @@ export const useBackgroundMusic = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [hasPlayed, setHasPlayed] = useState(false);
 
   useEffect(() => {
     // Prevent multiple instances
@@ -29,48 +28,19 @@ export const useBackgroundMusic = () => {
     
     const handleCanPlay = () => {
       setIsLoaded(true);
-      // Auto-play immediately when loaded
-      if (!hasPlayed) {
-        audio.play().catch(() => {
-          // Silent fail for autoplay restrictions
-        });
-      }
+      // Não toca automaticamente mais - apenas carrega
     };
 
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleEnded = () => {
       setIsPlaying(false);
-      setHasPlayed(true);
     };
 
     audio.addEventListener('canplaythrough', handleCanPlay);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
-
-    // Try immediate play for browsers that allow it
-    const tryPlay = () => {
-      if (!hasPlayed) {
-        audio.play().catch(() => {
-          // Add user interaction listeners for restricted browsers
-          const handleUserInteraction = () => {
-            if (!hasPlayed && audioRef.current) {
-              audioRef.current.play().catch(() => {});
-              document.removeEventListener('click', handleUserInteraction);
-              document.removeEventListener('keydown', handleUserInteraction);
-              document.removeEventListener('touchstart', handleUserInteraction);
-            }
-          };
-
-          document.addEventListener('click', handleUserInteraction);
-          document.addEventListener('keydown', handleUserInteraction);
-          document.addEventListener('touchstart', handleUserInteraction);
-        });
-      }
-    };
-
-    tryPlay();
 
     return () => {
       if (audioRef.current === globalAudioInstance) {
@@ -83,7 +53,7 @@ export const useBackgroundMusic = () => {
         isAudioInitialized = false;
       }
     };
-  }, [hasPlayed]);
+  }, []);
 
-  return { isPlaying, isLoaded, hasPlayed };
+  return { isPlaying, isLoaded };
 };
