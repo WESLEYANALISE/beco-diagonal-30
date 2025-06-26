@@ -4162,6 +4162,24 @@ export type Database = {
         }
         Relationships: []
       }
+      musicasharrypotter: {
+        Row: {
+          "explorar-categoria": string | null
+          id: number
+          intro: string | null
+        }
+        Insert: {
+          "explorar-categoria"?: string | null
+          id?: number
+          intro?: string | null
+        }
+        Update: {
+          "explorar-categoria"?: string | null
+          id?: number
+          intro?: string | null
+        }
+        Relationships: []
+      }
       noticias: {
         Row: {
           area_direito: string | null

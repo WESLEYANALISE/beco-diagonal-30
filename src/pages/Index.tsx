@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, SortAsc, DollarSign, Sparkles, Home, Gamepad2, Shirt, Smartphone, Wand2, Crown } from 'lucide-react';
@@ -17,7 +16,7 @@ import { ProductGrid } from '@/components/ProductGrid';
 import { VideoCarouselHome } from '@/components/VideoCarouselHome';
 import { MagicalParticles } from '@/components/MagicalParticles';
 import { useProductClicks } from '@/hooks/useProductClicks';
-import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
+import { useAdvancedBackgroundMusic } from '@/hooks/useAdvancedBackgroundMusic';
 import { supabase } from "@/integrations/supabase/client";
 
 // Lazy load heavy components
@@ -46,8 +45,16 @@ const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
-  // Initialize background music hook but don't auto-play
-  const { playMusic } = useBackgroundMusic();
+  // Initialize advanced background music system
+  const { 
+    isPlaying, 
+    currentTrack, 
+    context, 
+    volume, 
+    startMusic, 
+    changeContext,
+    changeVolume 
+  } = useAdvancedBackgroundMusic();
   
   const categoryFromUrl = searchParams.get('categoria');
   const [products, setProducts] = useState<Product[]>([]);
@@ -365,8 +372,8 @@ const Index = () => {
   }, [filteredProducts, shuffleArray]);
 
   const handleExplorarColecaoClick = useCallback(async (category: string) => {
-    // Play music when clicking "Explorar Coleção"
-    playMusic();
+    // Change music context to "explorar-categoria"
+    changeContext('explorar-categoria');
     
     // Check if category has subcategories
     try {
@@ -388,7 +395,7 @@ const Index = () => {
       console.error('Error checking subcategories:', error);
       navigate(`/categoria-lista?categoria=${encodeURIComponent(category)}&tipo=categoria`);
     }
-  }, [navigate, playMusic]);
+  }, [navigate, changeContext]);
 
   // Memoize heavy components to prevent unnecessary re-renders
   const memoizedCategoryCarousel = useMemo(() => (

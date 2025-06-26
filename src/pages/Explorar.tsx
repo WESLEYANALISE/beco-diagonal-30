@@ -5,6 +5,7 @@ import { MagicalParticles } from '@/components/MagicalParticles';
 import Header from '@/components/Header';
 import VideoFeed from '@/components/VideoFeed';
 import { CategoryCarouselExplorar } from '@/components/CategoryCarouselExplorar';
+import { useAdvancedBackgroundMusic } from '@/hooks/useAdvancedBackgroundMusic';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -26,6 +27,9 @@ export const Explorar = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [categories, setCategories] = useState<string[]>([]);
 
+  // Use advanced background music system
+  const { changeContext } = useAdvancedBackgroundMusic();
+
   const handleProductBuy = useCallback((product: Product) => {
     if (product.link) {
       window.open(product.link, '_blank', 'noopener,noreferrer');
@@ -34,7 +38,9 @@ export const Explorar = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+    // Set music context to "explorar-categoria" when entering Explorar page
+    changeContext('explorar-categoria');
+  }, [changeContext]);
 
   useEffect(() => {
     if (categoryFromUrl) {

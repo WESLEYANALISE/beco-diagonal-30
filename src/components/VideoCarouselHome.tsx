@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FastImage } from '@/components/FastImage';
+import { FastVideo } from '@/components/FastVideo';
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 
 interface Product {
@@ -30,22 +31,9 @@ interface VideoCarouselHomeProps {
 export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({
   products
 }) => {
-  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
-
   const handleBuyClick = useCallback((link: string) => {
     if (link) {
       window.open(link, '_blank', 'noopener,noreferrer');
-    }
-  }, []);
-
-  const handleVideoClick = useCallback((productId: number) => {
-    const video = videoRefs.current[productId];
-    if (video) {
-      if (video.paused) {
-        video.play().catch(console.error);
-      } else {
-        video.pause();
-      }
     }
   }, []);
 
@@ -89,19 +77,14 @@ export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({
                 }}>
                   <div className="relative aspect-video overflow-hidden">
                     {product.video ? (
-                      <div className="relative w-full h-full">
-                        <video
-                          ref={(el) => videoRefs.current[product.id] = el}
-                          src={product.video}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          autoPlay
-                          muted
-                          loop
-                          playsInline
-                          onClick={() => handleVideoClick(product.id)}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-red-900/60 via-transparent to-transparent" />
-                      </div>
+                      <FastVideo
+                        src={product.video}
+                        className="w-full h-full transition-transform duration-700 group-hover:scale-110"
+                        autoPlay={true}
+                        muted={true}
+                        loop={true}
+                        preload="metadata"
+                      />
                     ) : (
                       <>
                         <FastImage 
@@ -122,14 +105,7 @@ export const VideoCarouselHome = memo<VideoCarouselHomeProps>(({
                       </Badge>
                     </div>
                     
-                    {/* Play button overlay for videos */}
-                    {product.video && (
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="w-16 h-16 bg-yellow-500/90 rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-yellow-400 shadow-xl animate-pulse">
-                          <Play className="w-6 h-6 text-red-900 ml-1" />
-                        </div>
-                      </div>
-                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-red-900/60 via-transparent to-transparent" />
                   </div>
                   
                   <CardContent className="p-4 bg-gradient-to-br from-red-900/40 to-yellow-600/20 bg-indigo-800">

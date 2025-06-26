@@ -3,6 +3,7 @@ import React, { useRef, useState, useCallback } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FastVideo } from '@/components/FastVideo';
 
 interface VideoFeedProps {
   productId: number;
@@ -27,43 +28,17 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   onBuy,
   onVideoEnd
 }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const handleVideoClick = useCallback(() => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        videoRef.current.play();
-        setIsPlaying(true);
-      }
-    }
-  }, [isPlaying]);
-
-  const handleVideoEnded = useCallback(() => {
-    setIsPlaying(false);
-    if (onVideoEnd) {
-      onVideoEnd();
-    }
-  }, [onVideoEnd]);
-
   return (
     <div className="relative w-full h-full bg-magical-midnight overflow-hidden">
-      <video
-        ref={videoRef}
+      <FastVideo
         src={videoUrl}
-        className="w-full h-full object-cover cursor-pointer"
-        muted
-        loop
-        onClick={handleVideoClick}
-        onEnded={handleVideoEnded}
+        className="w-full h-full"
         autoPlay={isActive}
-        style={{
-          minHeight: '100%',
-          objectFit: 'cover'
-        }}
+        muted={true}
+        loop={false}
+        isActive={isActive}
+        onEnded={onVideoEnd}
+        preload="metadata"
       />
       
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-magical-midnight/80 z-10" />
