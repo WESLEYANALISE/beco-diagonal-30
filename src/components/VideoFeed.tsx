@@ -1,11 +1,9 @@
-
 import React, { useRef, useState, useCallback, memo } from 'react';
 import { ShoppingCart, Heart, Share2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UltraFastVideo } from '@/components/UltraFastVideo';
 import { useOptimizedInteractions } from '@/hooks/useOptimizedInteractions';
-
 interface VideoFeedProps {
   productId: number;
   videoUrl: string;
@@ -17,7 +15,6 @@ interface VideoFeedProps {
   onBuy: () => void;
   onVideoEnd?: () => void;
 }
-
 export const VideoFeed = memo<VideoFeedProps>(({
   productId,
   videoUrl,
@@ -31,21 +28,19 @@ export const VideoFeed = memo<VideoFeedProps>(({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const { instantAction } = useOptimizedInteractions();
-
+  const {
+    instantAction
+  } = useOptimizedInteractions();
   const handleVideoLoad = useCallback(() => {
     setIsLoading(false);
   }, []);
-
   const handleBuyClick = instantAction(useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onBuy();
   }, [onBuy]));
-
   const handleLikeClick = instantAction(useCallback(() => {
     setIsLiked(!isLiked);
   }, [isLiked]));
-
   const handleShareClick = instantAction(useCallback(() => {
     if (navigator.share) {
       navigator.share({
@@ -55,57 +50,24 @@ export const VideoFeed = memo<VideoFeedProps>(({
       });
     }
   }, [title]));
-
-  return (
-    <div className="relative w-full h-full bg-magical-midnight overflow-hidden">
+  return <div className="relative w-full h-full bg-magical-midnight overflow-hidden">
       {/* Loading skeleton minimalista */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/40 to-magical-midnight/40 animate-pulse">
+      {isLoading && <div className="absolute inset-0 bg-gradient-to-br from-magical-deepPurple/40 to-magical-midnight/40 animate-pulse">
           <div className="absolute bottom-4 left-4 right-4">
             <div className="bg-magical-midnight/20 rounded-xl p-3 space-y-2 backdrop-blur-sm">
               <div className="h-3 bg-magical-gold/10 rounded animate-pulse"></div>
               <div className="h-2 bg-magical-gold/10 rounded w-2/3 animate-pulse"></div>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
-      <UltraFastVideo
-        src={videoUrl}
-        className="w-full h-full"
-        autoPlay={isActive}
-        muted={true}
-        loop={false}
-        isActive={isActive}
-        onEnded={onVideoEnd}
-        onLoadedData={handleVideoLoad}
-        preload={isActive ? "auto" : "metadata"}
-        priority={isActive}
-      />
+      <UltraFastVideo src={videoUrl} className="w-full h-full" autoPlay={isActive} muted={true} loop={false} isActive={isActive} onEnded={onVideoEnd} onLoadedData={handleVideoLoad} preload={isActive ? "auto" : "metadata"} priority={isActive} />
       
       {/* Gradiente sutil */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-magical-midnight/80 z-10" />
       
       {/* Controles laterais estilo TikTok */}
-      <div className="absolute right-4 bottom-32 z-20 flex flex-col gap-6">
-        <button
-          onClick={handleLikeClick}
-          className="w-12 h-12 bg-magical-starlight/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-magical-gold/30 transition-all duration-200 active:scale-95"
-        >
-          <Heart 
-            className={`w-6 h-6 transition-colors ${
-              isLiked ? 'text-red-500 fill-current' : 'text-magical-starlight'
-            }`} 
-          />
-        </button>
-        
-        <button
-          onClick={handleShareClick}
-          className="w-12 h-12 bg-magical-starlight/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-magical-gold/30 transition-all duration-200 active:scale-95"
-        >
-          <Share2 className="w-6 h-6 text-magical-starlight" />
-        </button>
-      </div>
+      
       
       {/* Info do produto otimizada para mobile */}
       <div className="absolute bottom-0 left-0 right-0 z-20 p-4 pb-6">
@@ -128,19 +90,13 @@ export const VideoFeed = memo<VideoFeedProps>(({
           </div>
           
           {/* Botão de compra destacado */}
-          <Button 
-            onClick={handleBuyClick}
-            className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-bold transition-all duration-200 hover:scale-[1.02] font-enchanted shadow-2xl text-base py-3 transform active:scale-[0.98] border-2 border-magical-gold/50"
-          >
+          <Button onClick={handleBuyClick} className="w-full bg-gradient-to-r from-magical-gold to-magical-bronze text-magical-midnight hover:from-magical-darkGold hover:to-magical-bronze font-bold transition-all duration-200 hover:scale-[1.02] font-enchanted shadow-2xl text-base py-3 transform active:scale-[0.98] border-2 border-magical-gold/50">
             <ShoppingCart className="w-5 h-5 mr-2" />
             ⚡ Adquirir Esta Relíquia
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 });
-
 VideoFeed.displayName = 'VideoFeed';
-
 export default VideoFeed;
