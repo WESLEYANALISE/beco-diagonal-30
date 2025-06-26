@@ -11,6 +11,7 @@ import { ProductSelector } from '@/components/ProductSelector';
 import { AIAnalysisModal } from '@/components/AIAnalysisModal';
 import { HeroSection } from '@/components/HeroSection';
 import { TabNavigation } from '@/components/TabNavigation';
+import { ProductCard } from '@/components/ProductCard';
 import { OptimizedProductCard } from '@/components/OptimizedProductCard';
 import { VirtualizedGrid } from '@/components/VirtualizedGrid';
 import { MagicalParticles } from '@/components/MagicalParticles';
@@ -80,12 +81,12 @@ const Index = () => {
     return parseFloat(cleanPrice) || 0;
   }, []);
 
-  // Optimized data fetching with reduced data transfer
+  // Optimized data fetching with all required fields
   const fetchProducts = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('HARRY POTTER')
-        .select('id, produto, valor, video, imagem1, link, categoria')
+        .select('id, produto, valor, video, imagem1, imagem2, imagem3, imagem4, imagem5, imagem6, imagem7, link, categoria, subcategoria, uso, descricao')
         .order('id')
         .limit(60); // Reduced initial load
 

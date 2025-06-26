@@ -30,7 +30,7 @@ export const usePerformanceOptimization = () => {
     };
   }, []);
 
-  const memoizeExpensive = useCallback((computeFunction: Function, dependencies: any[]) => {
+  const memoizeExpensive = useCallback(<T>(computeFunction: () => T, dependencies: any[]): T => {
     return useMemo(computeFunction, dependencies);
   }, []);
 
