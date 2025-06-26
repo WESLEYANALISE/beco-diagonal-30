@@ -23,7 +23,6 @@ const Header = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
-  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, string[]>>({});
   const navigate = useNavigate();
   const location = useLocation();
   const { favoritesCount } = useFavorites();
@@ -37,14 +36,14 @@ const Header = ({
   ];
 
   useEffect(() => {
-    fetchCategoriesAndSubcategories();
+    fetchCategories();
   }, []);
 
-  const fetchCategoriesAndSubcategories = async () => {
+  const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
         .from('HARRY POTTER')
-        .select('categoria, subcategoria')
+        .select('categoria')
         .not('categoria', 'is', null)
         .not('categoria', 'eq', '');
 
@@ -53,20 +52,6 @@ const Header = ({
       if (data) {
         const uniqueCategories = [...new Set(data.map(item => item.categoria))];
         setCategories(uniqueCategories);
-
-        // Group subcategories by category
-        const subcatMap: Record<string, string[]> = {};
-        data.forEach(item => {
-          if (item.categoria && item.subcategoria) {
-            if (!subcatMap[item.categoria]) {
-              subcatMap[item.categoria] = [];
-            }
-            if (!subcatMap[item.categoria].includes(item.subcategoria)) {
-              subcatMap[item.categoria].push(item.subcategoria);
-            }
-          }
-        });
-        setSubcategoriesMap(subcatMap);
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -96,11 +81,6 @@ const Header = ({
     setIsOpen(false);
   };
 
-  const handleSubcategoryNavigation = (category: string, subcategory: string) => {
-    navigate(`/categoria/${encodeURIComponent(category)}/subcategoria/${encodeURIComponent(subcategory)}`);
-    setIsOpen(false);
-  };
-
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     onSearch(value);
@@ -121,7 +101,6 @@ const Header = ({
 
   return (
     <>
-      {/* Desktop/Mobile Header */}
       <header className="bg-gradient-to-r from-magical-deepPurple via-magical-mysticalPurple to-magical-darkBlue text-magical-starlight shadow-2xl sticky top-0 z-50 backdrop-blur-sm border-b border-magical-gold/20">
         <div className="px-4 py-2 md:py-3">
           <div className="flex items-center justify-between">
@@ -130,8 +109,7 @@ const Header = ({
             </div>
 
             <div className="flex items-center space-x-2">
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-2">
+              <div className="hidden lg:flex items-center space-x-2">
                 {navItems.slice(1).map(item => (
                   <Button
                     key={item.path}
@@ -146,13 +124,12 @@ const Header = ({
                 ))}
               </div>
 
-              {/* Mobile Menu */}
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="md:hidden text-magical-starlight hover:bg-magical-gold/20 p-2 rounded-xl"
+                    className="lg:hidden text-magical-starlight hover:bg-magical-gold/20 p-2 rounded-xl"
                   >
                     <Menu className="w-6 h-6" />
                   </Button>
@@ -163,7 +140,6 @@ const Header = ({
                       <MagicalLogo size="md" showText={true} />
                     </div>
                     
-                    {/* Price Filter - Only show on homepage */}
                     {location.pathname === '/' && (
                       <div className="mb-6 mx-2">
                         <PriceFilter onFilter={handlePriceFilterChange} onClear={handleClearFilter} />
@@ -171,7 +147,6 @@ const Header = ({
                     )}
                     
                     <nav className="space-y-2">
-                      {/* About App - First item */}
                       <Dialog>
                         <DialogTrigger asChild>
                           <button className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted">
@@ -230,7 +205,6 @@ const Header = ({
                         </DialogContent>
                       </Dialog>
 
-                      {/* Navigation Items */}
                       {navItems.map(item => (
                         <button
                           key={item.path}
@@ -242,62 +216,32 @@ const Header = ({
                         </button>
                       ))}
                       
-                      {/* Separator */}
                       <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
                       
-                      {/* Product Categories and Subcategories */}
                       <div className="px-4 py-2">
                         <h3 className="text-sm font-semibold text-magical-gold mb-3 font-magical">
                           🏰 Casas de Hogwarts
                         </h3>
-                        <div className="space-y-2">
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
                           {categories.map(category => {
                             const IconComponent = getCategoryIcon(category);
-                            const subcategories = subcategoriesMap[category] || [];
                             
                             return (
-                              <div key={category} className="space-y-1">
-                                <button
-                                  onClick={() => handleCategoryNavigation(category)}
-                                  className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-300 w-full text-left hover:bg-magical-gold/20 text-sm font-enchanted"
-                                >
-                                  <IconComponent className="w-4 h-4 text-magical-bronze" />
-                                  <span className="font-medium">{category}</span>
-                                </button>
-                                
-                                {/* Subcategories */}
-                                {subcategories.length > 0 && (
-                                  <div className="ml-6 space-y-1">
-                                    {subcategories.slice(0, 3).map(subcategory => (
-                                      <button
-                                        key={subcategory}
-                                        onClick={() => handleSubcategoryNavigation(category, subcategory)}
-                                        className="flex items-center space-x-2 px-3 py-1 rounded-md transition-all duration-300 w-full text-left hover:bg-magical-gold/10 text-xs text-magical-starlight/80 font-enchanted"
-                                      >
-                                        <div className="w-2 h-2 bg-magical-gold/50 rounded-full"></div>
-                                        <span>{subcategory}</span>
-                                      </button>
-                                    ))}
-                                    {subcategories.length > 3 && (
-                                      <button
-                                        onClick={() => handleCategoryNavigation(category)}
-                                        className="flex items-center space-x-2 px-3 py-1 rounded-md transition-all duration-300 w-full text-left hover:bg-magical-gold/10 text-xs text-magical-gold font-enchanted"
-                                      >
-                                        <span>+ {subcategories.length - 3} mais...</span>
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
+                              <button
+                                key={category}
+                                onClick={() => handleCategoryNavigation(category)}
+                                className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-300 w-full text-left hover:bg-magical-gold/20 text-sm font-enchanted"
+                              >
+                                <IconComponent className="w-4 h-4 text-magical-bronze" />
+                                <span className="font-medium">{category}</span>
+                              </button>
                             );
                           })}
                         </div>
                       </div>
                       
-                      {/* Separator */}
                       <div className="border-t border-magical-gold/20 my-4 mx-4"></div>
                       
-                      {/* Rate App */}
                       <button
                         onClick={handleEvaluateApp}
                         className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left hover:bg-magical-gold/20 font-enchanted"
@@ -313,10 +257,9 @@ const Header = ({
           </div>
         </div>
 
-        {/* Search Bar - Always visible at top - Smaller on desktop */}
         {location.pathname === '/' && (
           <div className="px-4 pb-3">
-            <div className="relative w-full max-w-md mx-auto md:max-w-sm">
+            <div className="relative w-full max-w-md mx-auto lg:max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-magical-gold/70 w-5 h-5" />
               <Input
                 placeholder="Buscar artefatos mágicos..."

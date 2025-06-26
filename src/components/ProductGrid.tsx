@@ -42,7 +42,6 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
   if (loading) {
     return (
       <div className="space-y-4">
-        {/* Controles de visualização otimizados */}
         {isMobile && (
           <div className="flex justify-end gap-2 px-4">
             <Button
@@ -95,7 +94,6 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Controles de visualização - apenas mobile/tablet */}
       {isMobile && (
         <div className="flex justify-end gap-2 px-4">
           <Button
@@ -117,7 +115,6 @@ const ProductGridComponent: React.FC<ProductGridProps> = ({
         </div>
       )}
 
-      {/* Container dos produtos responsivo */}
       <div className={`${
         viewMode === 'list' && isMobile 
           ? 'space-y-4 px-4' 

@@ -8,7 +8,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { ProductPhotosModal } from '@/components/ProductPhotosModal';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { FavoriteButton } from '@/components/FavoriteButton';
-import { ProductImage } from '@/components/ProductImage';
+import { AdvancedImage } from '@/components/AdvancedImage';
 
 interface Product {
   id: number;
@@ -72,7 +72,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   }, []);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
-    // Evitar abrir o modal se clicar em botões específicos
     if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('[role="button"]') || (e.target as HTMLElement).closest('.carousel-nav')) {
       return;
     }
@@ -107,9 +106,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         >
           <CardContent className="p-3">
             <div className="flex gap-3">
-              {/* Image */}
-              <div className="relative w-24 h-24 flex-shrink-0">
-                <ProductImage 
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+                <AdvancedImage 
                   src={product.imagem1} 
                   alt={product.produto} 
                   className="w-full h-full rounded-lg border border-magical-gold/20"
@@ -124,7 +122,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                 )}
               </div>
 
-              {/* Content */}
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-magical-starlight text-sm line-clamp-2 mb-2 font-enchanted">
                   {product.produto}
@@ -177,6 +174,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           backdrop-blur-sm hover:border-magical-gold/50 hover:shadow-magical-gold/20
           ${selected ? 'ring-2 ring-magical-gold' : ''}
           ${showBadge ? 'hover:animate-magical-glow' : ''}
+          w-full max-w-sm mx-auto
         `} 
         onClick={handleCardClick}
       >
@@ -186,11 +184,11 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               {images.map((image, index) => (
                 <CarouselItem key={index}>
                   <div className="aspect-square overflow-hidden">
-                    <ProductImage 
+                    <AdvancedImage 
                       src={image} 
                       alt={`${product.produto} - ${index + 1}`} 
                       className="w-full h-full transition-transform duration-500 group-hover:scale-110"
-                      priority={index === 0 && showBadge} // Priorizar primeira imagem de produtos em destaque
+                      priority={index === 0 && showBadge}
                     />
                   </div>
                 </CarouselItem>
@@ -232,7 +230,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             </div>
           )}
 
-          {/* Favorite button - versão melhorada para "Mais Vendidos" */}
           {!showBadge && !selectable && (
             <div className={`absolute ${compact ? 'top-1 left-1' : 'top-2 left-2'}`}>
               <FavoriteButton 
@@ -244,7 +241,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        <CardContent className={compact ? "p-2" : "p-3"}>
+        <CardContent className={`${compact ? "p-2" : "p-3"} space-y-2`}>
           <h3 className={`font-medium text-magical-starlight mb-2 line-clamp-2 hover:text-magical-gold transition-colors font-enchanted ${compact ? 'text-xs leading-tight' : 'text-sm'}`}>
             {product.produto}
           </h3>
@@ -260,7 +257,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
           
           <div className="space-y-1">
-            {/* Botão de favoritar melhorado para produtos com badge */}
             {(showBadge || selectable) && (
               <div className="flex gap-1 mb-1">
                 <FavoriteButton 
