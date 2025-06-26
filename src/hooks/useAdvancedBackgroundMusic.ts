@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface MusicTrack {
   id: number;
   intro: string;
-  explorar_categoria: string;
+  'explorar-categoria': string;
 }
 
 type MusicContext = 'intro' | 'explorar-categoria';
@@ -27,9 +27,9 @@ export const useAdvancedBackgroundMusic = () => {
     try {
       const { data, error } = await supabase
         .from('musicasharrypotter')
-        .select('id, intro, explorar_categoria')
+        .select('id, intro, "explorar-categoria"')
         .not('intro', 'is', null)
-        .not('explorar_categoria', 'is', null);
+        .not('"explorar-categoria"', 'is', null);
 
       if (error) {
         console.error('Error fetching music tracks:', error);
@@ -48,7 +48,7 @@ export const useAdvancedBackgroundMusic = () => {
   // Create shuffled playlist for current context
   const createShuffledPlaylist = useCallback((trackList: MusicTrack[], newContext: MusicContext) => {
     const validTracks = trackList.filter(track => {
-      const url = newContext === 'intro' ? track.intro : track.explorar_categoria;
+      const url = newContext === 'intro' ? track.intro : track['explorar-categoria'];
       return url && url.trim() !== '';
     });
 
@@ -96,7 +96,7 @@ export const useAdvancedBackgroundMusic = () => {
     const nextTrack = getNextTrack();
     if (!nextTrack) return;
 
-    const url = context === 'intro' ? nextTrack.intro : nextTrack.explorar_categoria;
+    const url = context === 'intro' ? nextTrack.intro : nextTrack['explorar-categoria'];
     if (!url || url.trim() === '') return;
 
     if (audioRef.current) {
